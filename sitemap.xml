@@ -4,9 +4,16 @@
   <url><loc>https://quantcore-labs.com/code/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/option-greeks-calc/</loc><lastmod>2026-11-08T08:52:59+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/code/duckdb-parquet-ticks/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/rolling-window-numba/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/vectorized-backtest/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/adf-test/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/amihud-illiquidity/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/cointegration/</loc></url>
   <url><loc>https://quantcore-labs.com/glossary/hurst-exponent/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/information-coefficient/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/ofi/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/var-expected-shortfall/</loc></url>
   <url><loc>https://quantcore-labs.com/glossary/vwap/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/iv-smile/</loc><lastmod>2026-11-08T09:56:23+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/monte-carlo-asset-sim/</loc><lastmod>2026-11-08T09:08:27+08:00</lastmod></url>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vectorised Daily Backtest with A-share Trading Constraints: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.">
+<link rel="canonical" href="https://quantcore-labs.com/code/vectorized-backtest/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Vectorised Daily Backtest with A-share Trading Constraints: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.">
+<meta property="og:url" content="https://quantcore-labs.com/code/vectorized-backtest/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/vectorized-backtest/#article",
+      "headline": "Vectorised Daily Backtest with A-share Trading Constraints: Tested Python Implementation",
+      "description": "A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T22:30:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/vectorized-backtest/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/vectorized-backtest/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/vectorized-backtest/#code",
+      "name": "Vectorised Backtest in Python",
+      "description": "Tested Python reference implementation: A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas, polars",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/vectorized-backtest/",
+      "contentUrl": "https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py",
+      "text": "import numpy as np\nimport pandas as pd\n\ndef backtest(signal: pd.DataFrame, close: pd.DataFrame, tradable_buy: pd.DataFrame,\n             tradable_sell: pd.DataFrame, cost_bps: float = 15.0) -> pd.DataFrame:\n    \"\"\"Daily long-only, equal-weight backtest, dates x stocks, no Python loop over assets.\n\n    signal[t]        : True = want to hold, decided with data up to the close of t\n    tradable_buy[t]  : can buy at the close of t   (A-shares: not suspended, not at limit-up)\n    tradable_sell[t] : can sell at the close of t  (not suspended, not at limit-down)\n    Orders for signal[t] execute at the close of t+1; returns are close-to-close.\n    cost_bps is charged on one-way turnover (commission + stamp duty + slippage).\"\"\"\n    want = signal.shift(1).fillna(False).astype(bool)          # no look-ahead\n    held = np.zeros(signal.shape[1], dtype=bool)\n    hold = np.zeros(signal.shape, dtype=bool)\n    tb, ts, w = tradable_buy.to_numpy(bool), tradable_sell.to_numpy(bool), want.to_numpy(bool)\n    for t in range(len(signal)):                                # loop over dates only\n        held = np.where(w[t] & ~held & tb[t], True, held)       # enter if allowed\n        held = np.where(~w[t] & held & ts[t], False, held)      # exit if allowed (else stuck)\n        hold[t] = held\n    n = hold.sum(axis=1, keepdims=True)\n    weight = pd.DataFrame(np.divide(hold, n, out=np.zeros(hold.shape), where=n > 0),\n                          index=signal.index, columns=signal.columns)\n    ret = close.pct_change(fill_method=None).fillna(0.0)\n    gross = (weight.shift(1).fillna(0.0) * ret).sum(axis=1)      # weight set at close t earns t+1\n    turnover = weight.diff().abs().sum(axis=1).fillna(weight.abs().sum(axis=1))\n    net = gross - turnover * cost_bps / 1e4\n    return pd.DataFrame({\"gross\": gross, \"turnover\": turnover, \"net\": net,\n                         \"equity\": (1 + net).cumprod(), \"n_held\": n.ravel()})\n\ndef backtest_polars(signal_long, cost_bps: float = 15.0):\n    \"\"\"Polars version for the simple case (always tradable) on long data with columns\n    date, code, close, signal. Same timing convention as backtest().\"\"\"\n    import polars as pl\n    df = (signal_long.sort(\"code\", \"date\")\n          .with_columns(want=pl.col(\"signal\").shift(1).over(\"code\").fill_null(False),\n                        ret=(pl.col(\"close\") / pl.col(\"close\").shift(1) - 1).over(\"code\").fill_null(0.0))\n          .with_columns(n=pl.col(\"want\").sum().over(\"date\"))\n          .with_columns(weight=pl.when(pl.col(\"n\") > 0).then(pl.col(\"want\").cast(pl.Float64) / pl.col(\"n\")).otherwise(0.0))\n          .with_columns(w_prev=pl.col(\"weight\").shift(1).over(\"code\").fill_null(0.0)))\n    daily = (df.group_by(\"date\").agg(gross=(pl.col(\"w_prev\") * pl.col(\"ret\")).sum(),\n                                     turnover=(pl.col(\"weight\") - pl.col(\"w_prev\")).abs().sum())\n             .sort(\"date\")\n             .with_columns(net=pl.col(\"gross\") - pl.col(\"turnover\") * cost_bps / 1e4))\n    return daily.with_columns(equity=(1 + pl.col(\"net\")).cum_prod())\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is there still a loop over dates?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Holdings are path-dependent once trading constraints exist: a stock at limit-down cannot be sold, so whether it is held today depends on yesterday's holdings. The loop runs over dates only, with every operation inside vectorised across the whole universe, so a 20-year daily backtest on 5,000 stocks is about 5,000 vectorised steps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I avoid look-ahead bias?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Shift every signal by at least one period before it can affect positions, and decide the execution price in advance. In this code a signal formed at the close of t trades at the close of t+1 and first earns the t+1 to t+2 return; the test suite checks that a signal built from the t to t+1 return earns nothing."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Vectorised Backtest",
+          "item": "https://quantcore-labs.com/code/vectorized-backtest/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">vectorized-backtest</span></nav><div class="tag">CODE · VECTORISED BACKTEST</div></div></header>
+<main>
+<article>
+<h1>Vectorised Daily Backtest with A-share Trading Constraints</h1>
+<p class="lede">Backtesting · Snippet ID: <code>vectorized-backtest</code></p>
+<p class="def"><strong>What it does.</strong> The backtest turns a dates × stocks boolean signal into equal-weight holdings and daily net returns. Every operation is vectorised across stocks. Only the loop over dates remains, because whether a stock can be bought or sold today depends on what is already held: a stock stuck at limit-down cannot be sold and stays in the book. Orders decided at the close of day t execute at the close of t+1, so a signal can never use the return it trades on.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">Timing:   signal[t] (data ≤ close t) → order at close t+1 → earns close(t+1) → close(t+2)
+
+want_t    = signal_{t−1}
+held_t    = enter if want ∧ ¬held ∧ buyable_t ;  exit if ¬want ∧ held ∧ sellable_t
+weight_t  = held_t / Σ held_t
+gross_t   = Σ_i weight_{t−1,i} · r_{t,i}
+turnover_t= Σ_i |weight_{t,i} − weight_{t−1,i}|
+net_t     = gross_t − turnover_t · cost_bps / 10⁴</pre></section>
+
+<section><h2>What the tests check</h2>
+<ul>
+<li>Net returns match a naive per-stock, per-day loop to within 1e−17.</li>
+<li>The Polars version matches the pandas version when every stock is tradable.</li>
+<li><strong>Look-ahead probe.</strong> Two hypothetical signals were run. One uses only the next day's return, which this timing can never capture; it earns about zero (0.03% per day, which is noise). The other uses the return two days ahead, which this timing does capture; it earns 1.6% per day, the size of gain that look-ahead leaks would produce.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Costs.</strong> A-share stamp duty is charged on sells only (0.05% since 28 August 2023), plus commission and slippage. A single symmetric <code>cost_bps</code> is an approximation; use separate buy and sell rates for precision.</li>
+<li><strong>Prices.</strong> Use dividend- and split-adjusted closes, such as back-adjusted 后复权 prices, or returns will show false jumps.</li>
+<li><strong>Survivorship.</strong> Include delisted stocks and the universe as it was on each date, not today's constituents.</li>
+<li><strong>Close execution is optimistic.</strong> Trading exactly at the close ignores closing-auction impact. Stress-test with next-day VWAP or open execution.</li>
+<li><strong>Tradability flags.</strong> Derive limit-up and limit-down from the previous close and the board's limit (±10% main board, ±20% ChiNext/STAR, ±5% ST). A close at the limit price is the usual proxy for "could not trade in that direction".</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, pandas, polars. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/vectorized-backtest/vectorized-backtest.py">Download vectorized-backtest.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+import pandas as pd
+
+def backtest(signal: pd.DataFrame, close: pd.DataFrame, tradable_buy: pd.DataFrame,
+             tradable_sell: pd.DataFrame, cost_bps: float = 15.0) -&gt; pd.DataFrame:
+    &quot;&quot;&quot;Daily long-only, equal-weight backtest, dates x stocks, no Python loop over assets.
+
+    signal[t]        : True = want to hold, decided with data up to the close of t
+    tradable_buy[t]  : can buy at the close of t   (A-shares: not suspended, not at limit-up)
+    tradable_sell[t] : can sell at the close of t  (not suspended, not at limit-down)
+    Orders for signal[t] execute at the close of t+1; returns are close-to-close.
+    cost_bps is charged on one-way turnover (commission + stamp duty + slippage).&quot;&quot;&quot;
+    want = signal.shift(1).fillna(False).astype(bool)          # no look-ahead
+    held = np.zeros(signal.shape[1], dtype=bool)
+    hold = np.zeros(signal.shape, dtype=bool)
+    tb, ts, w = tradable_buy.to_numpy(bool), tradable_sell.to_numpy(bool), want.to_numpy(bool)
+    for t in range(len(signal)):                                # loop over dates only
+        held = np.where(w[t] &amp; ~held &amp; tb[t], True, held)       # enter if allowed
+        held = np.where(~w[t] &amp; held &amp; ts[t], False, held)      # exit if allowed (else stuck)
+        hold[t] = held
+    n = hold.sum(axis=1, keepdims=True)
+    weight = pd.DataFrame(np.divide(hold, n, out=np.zeros(hold.shape), where=n &gt; 0),
+                          index=signal.index, columns=signal.columns)
+    ret = close.pct_change(fill_method=None).fillna(0.0)
+    gross = (weight.shift(1).fillna(0.0) * ret).sum(axis=1)      # weight set at close t earns t+1
+    turnover = weight.diff().abs().sum(axis=1).fillna(weight.abs().sum(axis=1))
+    net = gross - turnover * cost_bps / 1e4
+    return pd.DataFrame({&quot;gross&quot;: gross, &quot;turnover&quot;: turnover, &quot;net&quot;: net,
+                         &quot;equity&quot;: (1 + net).cumprod(), &quot;n_held&quot;: n.ravel()})
+
+def backtest_polars(signal_long, cost_bps: float = 15.0):
+    &quot;&quot;&quot;Polars version for the simple case (always tradable) on long data with columns
+    date, code, close, signal. Same timing convention as backtest().&quot;&quot;&quot;
+    import polars as pl
+    df = (signal_long.sort(&quot;code&quot;, &quot;date&quot;)
+          .with_columns(want=pl.col(&quot;signal&quot;).shift(1).over(&quot;code&quot;).fill_null(False),
+                        ret=(pl.col(&quot;close&quot;) / pl.col(&quot;close&quot;).shift(1) - 1).over(&quot;code&quot;).fill_null(0.0))
+          .with_columns(n=pl.col(&quot;want&quot;).sum().over(&quot;date&quot;))
+          .with_columns(weight=pl.when(pl.col(&quot;n&quot;) &gt; 0).then(pl.col(&quot;want&quot;).cast(pl.Float64) / pl.col(&quot;n&quot;)).otherwise(0.0))
+          .with_columns(w_prev=pl.col(&quot;weight&quot;).shift(1).over(&quot;code&quot;).fill_null(0.0)))
+    daily = (df.group_by(&quot;date&quot;).agg(gross=(pl.col(&quot;w_prev&quot;) * pl.col(&quot;ret&quot;)).sum(),
+                                     turnover=(pl.col(&quot;weight&quot;) - pl.col(&quot;w_prev&quot;)).abs().sum())
+             .sort(&quot;date&quot;)
+             .with_columns(net=pl.col(&quot;gross&quot;) - pl.col(&quot;turnover&quot;) * cost_bps / 1e4))
+    return daily.with_columns(equity=(1 + pl.col(&quot;net&quot;)).cum_prod())
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is there still a loop over dates?</h3><p>Holdings are path-dependent once trading constraints exist: a stock at limit-down cannot be sold, so whether it is held today depends on yesterday&#x27;s holdings. The loop runs over dates only, with every operation inside vectorised across the whole universe, so a 20-year daily backtest on 5,000 stocks is about 5,000 vectorised steps.</p><h3>How do I avoid look-ahead bias?</h3><p>Shift every signal by at least one period before it can affect positions, and decide the execution price in advance. In this code a signal formed at the close of t trades at the close of t+1 and first earns the t+1 to t+2 return; the test suite checks that a signal built from the t to t+1 return earns nothing.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Vectorised Daily Backtest with A-share Trading Constraints</p>
+<p>&gt; A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.</p>
+<p>- Category: Backtesting</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/vectorized-backtest/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/information-coefficient/">Information Coefficient (IC)</a> <a href="/glossary/var-expected-shortfall/">Value at Risk (VaR) and Expected Shortfall (ES)</a> <a href="/glossary/amihud-illiquidity/">Amihud Illiquidity Measure (ILLIQ)</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

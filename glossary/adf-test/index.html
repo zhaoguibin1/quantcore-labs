@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Augmented Dickey-Fuller (ADF) Test: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/adf-test/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Augmented Dickey-Fuller (ADF) Test: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/adf-test/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/adf-test/#term",
+      "name": "Augmented Dickey-Fuller (ADF) Test",
+      "termCode": "adf-test",
+      "description": "The Augmented Dickey-Fuller test asks whether a series has a unit root, meaning shocks never decay and the series wanders like a random walk. The null hypothesis is a unit root (non-stationary). A sufficiently negative test statistic rejects it in favour of a stationary, mean-reverting series. Lagged differences are added to the regression to absorb serial correlation.",
+      "url": "https://quantcore-labs.com/glossary/adf-test/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/adf-test/#article",
+      "headline": "Augmented Dickey-Fuller (ADF) Test: Definition, Formula and Python",
+      "description": "A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/adf-test/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T22:30:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/adf-test/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/adf-test/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/adf-test/#code",
+      "name": "ADF Test in Python",
+      "description": "Tested Python reference implementation: A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, statsmodels",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/adf-test/",
+      "contentUrl": "https://quantcore-labs.com/glossary/adf-test/adf-test.py",
+      "text": "import numpy as np\nfrom statsmodels.tsa.stattools import adfuller\n\ndef adf_stat(y, lags: int = 1) -> float:\n    \"\"\"ADF t-statistic with a constant, by plain OLS (for understanding).\n    Regression: dy_t = a + g*y_{t-1} + sum_{i=1..lags} b_i*dy_{t-i} + e_t ;  returns t(g).\"\"\"\n    y = np.asarray(y, dtype=float)\n    dy = np.diff(y)\n    T = len(dy) - lags\n    X = [np.ones(T), y[lags:-1]]\n    X += [dy[lags - i:-i] for i in range(1, lags + 1)]\n    X = np.column_stack(X)\n    target = dy[lags:]\n    beta, *_ = np.linalg.lstsq(X, target, rcond=None)\n    resid = target - X @ beta\n    s2 = resid @ resid / (T - X.shape[1])\n    se = np.sqrt(s2 * np.linalg.inv(X.T @ X)[1, 1])\n    return float(beta[1] / se)\n\ndef adf_test(y, regression: str = \"c\") -> dict:\n    \"\"\"Production test: lag order by AIC and MacKinnon p-values via statsmodels.\n    regression: \"c\" constant, \"ct\" constant + trend, \"n\" none.\"\"\"\n    y = np.asarray(y, float)\n    try:   # statsmodels >= 0.15 lets us pin the classic tuple return\n        res = adfuller(y, regression=regression, autolag=\"AIC\", result_object=False)\n    except TypeError:\n        res = adfuller(y, regression=regression, autolag=\"AIC\")\n    return {\"stat\": res[0], \"pvalue\": res[1], \"lags\": res[2], \"nobs\": res[3], \"crit\": res[4]}\n\ndef half_life(y) -> float:\n    \"\"\"Mean-reversion half-life in periods from dy_t = a + g*y_{t-1}: ln(2) / -ln(1+g).\n    Returns inf if the series is not mean-reverting (g >= 0).\"\"\"\n    y = np.asarray(y, dtype=float)\n    X = np.column_stack([np.ones(len(y) - 1), y[:-1]])\n    g = np.linalg.lstsq(X, np.diff(y), rcond=None)[0][1]\n    return float(np.log(2) / -np.log1p(g)) if g < -1e-10 else float(\"inf\")\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/adf-test/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the difference between the ADF and KPSS tests?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "They reverse the hypotheses. ADF's null is a unit root (non-stationary); KPSS's null is stationarity. Rejecting ADF and failing to reject KPSS together is the strongest evidence of stationarity; conflicting results usually mean the sample is too short or the series is near a unit root."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which p-value threshold should I use for pairs selection?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "5% is conventional for a single test, but screening many pairs inflates false discoveries. Use a stricter threshold such as 1%, a false-discovery-rate correction, or confirm stationarity on a later out-of-sample window before trading."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "ADF Test",
+          "item": "https://quantcore-labs.com/glossary/adf-test/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">adf-test</span></nav><div class="tag">GLOSSARY · ADF TEST</div></div></header>
+<main>
+<article>
+<h1>Augmented Dickey-Fuller (ADF) Test</h1>
+<p class="lede">Time Series &amp; Stat-Arb · Term ID: <code>adf-test</code></p>
+<p class="def"><strong>Definition.</strong> The Augmented Dickey-Fuller test asks whether a series has a unit root, meaning shocks never decay and the series wanders like a random walk. The null hypothesis is a unit root (non-stationary). A sufficiently negative test statistic rejects it in favour of a stationary, mean-reverting series. Lagged differences are added to the regression to absorb serial correlation.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">Δy_t = α + β·t + γ·y_{t−1} + Σ_{i=1..p} δ_i·Δy_{t−i} + ε_t
+
+H0: γ = 0 (unit root)     H1: γ &lt; 0 (stationary)
+ADF statistic = γ̂ / se(γ̂)     → compare with Dickey-Fuller (MacKinnon) critical values,
+                                  NOT Student-t
+Large-sample critical values, constant only:  1% −3.43   5% −2.86   10% −2.57
+
+Mean-reversion half-life (from Δy_t = a + g·y_{t−1}):  HL = ln 2 / −ln(1 + g)</pre></section>
+
+<section><h2>Institutional usage</h2>
+<ul>
+<li><strong>Pairs and basket spreads.</strong> A spread is traded only if ADF rejects a unit root. The half-life then sets the holding period and the look-back for the rolling mean and standard deviation of the z-score.</li>
+<li><strong>Model hygiene.</strong> Regressing one non-stationary series on another gives spurious R² and t-stats. Test levels first, and difference or use cointegration methods when a unit root is present.</li>
+<li><strong>Feature engineering.</strong> Testing candidate features for stationarity before feeding them to ML models avoids features whose distribution drifts out of the training range.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Low power.</strong> With a few hundred observations, ADF often cannot tell a slowly mean-reverting series (AR coefficient 0.98) from a random walk. Failing to reject is not evidence of a unit root. Pair it with KPSS, whose null is the reverse.</li>
+<li><strong>Deterministic terms matter.</strong> Including a trend when there is none, or omitting one that exists, shifts the critical values and the conclusion. Use <code>"c"</code> for spreads and <code>"ct"</code> only for trending series.</li>
+<li><strong>Structural breaks.</strong> A level shift, such as a regime change or an index inclusion, makes a stationary series look non-stationary (Perron, 1989).</li>
+<li><strong>Estimated spreads.</strong> If the series is a regression residual, ordinary ADF p-values are too optimistic. Use residual-based critical values: see <a href="/glossary/cointegration/">cointegration</a>.</li>
+<li><strong>Multiple testing.</strong> Screening thousands of A-share pairs at 5% yields hundreds of false positives. Adjust the threshold, or require out-of-sample confirmation.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, statsmodels. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/adf-test/adf-test.py">Download adf-test.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+from statsmodels.tsa.stattools import adfuller
+
+def adf_stat(y, lags: int = 1) -&gt; float:
+    &quot;&quot;&quot;ADF t-statistic with a constant, by plain OLS (for understanding).
+    Regression: dy_t = a + g*y_{t-1} + sum_{i=1..lags} b_i*dy_{t-i} + e_t ;  returns t(g).&quot;&quot;&quot;
+    y = np.asarray(y, dtype=float)
+    dy = np.diff(y)
+    T = len(dy) - lags
+    X = [np.ones(T), y[lags:-1]]
+    X += [dy[lags - i:-i] for i in range(1, lags + 1)]
+    X = np.column_stack(X)
+    target = dy[lags:]
+    beta, *_ = np.linalg.lstsq(X, target, rcond=None)
+    resid = target - X @ beta
+    s2 = resid @ resid / (T - X.shape[1])
+    se = np.sqrt(s2 * np.linalg.inv(X.T @ X)[1, 1])
+    return float(beta[1] / se)
+
+def adf_test(y, regression: str = &quot;c&quot;) -&gt; dict:
+    &quot;&quot;&quot;Production test: lag order by AIC and MacKinnon p-values via statsmodels.
+    regression: &quot;c&quot; constant, &quot;ct&quot; constant + trend, &quot;n&quot; none.&quot;&quot;&quot;
+    y = np.asarray(y, float)
+    try:   # statsmodels &gt;= 0.15 lets us pin the classic tuple return
+        res = adfuller(y, regression=regression, autolag=&quot;AIC&quot;, result_object=False)
+    except TypeError:
+        res = adfuller(y, regression=regression, autolag=&quot;AIC&quot;)
+    return {&quot;stat&quot;: res[0], &quot;pvalue&quot;: res[1], &quot;lags&quot;: res[2], &quot;nobs&quot;: res[3], &quot;crit&quot;: res[4]}
+
+def half_life(y) -&gt; float:
+    &quot;&quot;&quot;Mean-reversion half-life in periods from dy_t = a + g*y_{t-1}: ln(2) / -ln(1+g).
+    Returns inf if the series is not mean-reverting (g &gt;= 0).&quot;&quot;&quot;
+    y = np.asarray(y, dtype=float)
+    X = np.column_stack([np.ones(len(y) - 1), y[:-1]])
+    g = np.linalg.lstsq(X, np.diff(y), rcond=None)[0][1]
+    return float(np.log(2) / -np.log1p(g)) if g &lt; -1e-10 else float(&quot;inf&quot;)
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>What is the difference between the ADF and KPSS tests?</h3><p>They reverse the hypotheses. ADF&#x27;s null is a unit root (non-stationary); KPSS&#x27;s null is stationarity. Rejecting ADF and failing to reject KPSS together is the strongest evidence of stationarity; conflicting results usually mean the sample is too short or the series is near a unit root.</p><h3>Which p-value threshold should I use for pairs selection?</h3><p>5% is conventional for a single test, but screening many pairs inflates false discoveries. Use a stricter threshold such as 1%, a false-discovery-rate correction, or confirm stationarity on a later out-of-sample window before trading.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Augmented Dickey-Fuller (ADF) Test</p>
+<p>&gt; A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.</p>
+<p>- Category: Time Series &amp; Stat-Arb</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/adf-test/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/adf-test/adf-test.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/cointegration/">Cointegration (Engle-Granger &amp; Johansen)</a> <a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a> <a href="/code/rolling-window-numba/">Fast Rolling Mean, Std, Beta and Z-score with Numba</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

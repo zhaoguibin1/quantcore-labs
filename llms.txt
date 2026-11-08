@@ -19,14 +19,25 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [Order Flow Imbalance (OFI)](https://quantcore-labs.com/glossary/ofi/): Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.
 - [Hurst Exponent (H)](https://quantcore-labs.com/glossary/hurst-exponent/): A scaling exponent that measures long-range dependence in a time series. H < 0.5 indicates mean reversion, H = 0.5 a random walk, and H > 0.5 a persistent, trending series.
 - [Information Coefficient (IC)](https://quantcore-labs.com/glossary/information-coefficient/): The cross-sectional correlation between a factor's values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.
+- [Augmented Dickey-Fuller (ADF) Test](https://quantcore-labs.com/glossary/adf-test/): A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.
+- [Cointegration (Engle-Granger & Johansen)](https://quantcore-labs.com/glossary/cointegration/): Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.
+- [Value at Risk (VaR) and Expected Shortfall (ES)](https://quantcore-labs.com/glossary/var-expected-shortfall/): VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.
+- [Amihud Illiquidity Measure (ILLIQ)](https://quantcore-labs.com/glossary/amihud-illiquidity/): The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.
 
 ## Code
 
 - [Code snippets index](https://quantcore-labs.com/code/): tested Python implementations, MIT licensed
+- [rolling-window-numba.py](https://quantcore-labs.com/code/rolling-window-numba/rolling-window-numba.py): Numba Rolling Operators (numpy, numba)
+- [duckdb-parquet-ticks.py](https://quantcore-labs.com/code/duckdb-parquet-ticks/duckdb-parquet-ticks.py): DuckDB + Parquet Ticks (duckdb)
+- [vectorized-backtest.py](https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py): Vectorised Backtest (numpy, pandas, polars)
 - [vwap.py](https://quantcore-labs.com/glossary/vwap/vwap.py): VWAP in Python (numpy, pandas)
 - [ofi.py](https://quantcore-labs.com/glossary/ofi/ofi.py): OFI in Python (numpy, pandas)
 - [hurst-exponent.py](https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py): Hurst Exponent in Python (numpy)
 - [information-coefficient.py](https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py): Information Coefficient in Python (numpy, pandas)
+- [adf-test.py](https://quantcore-labs.com/glossary/adf-test/adf-test.py): ADF Test in Python (numpy, statsmodels)
+- [cointegration.py](https://quantcore-labs.com/glossary/cointegration/cointegration.py): Cointegration in Python (numpy, statsmodels)
+- [var-expected-shortfall.py](https://quantcore-labs.com/glossary/var-expected-shortfall/var-expected-shortfall.py): VaR & ES in Python (numpy, scipy)
+- [amihud-illiquidity.py](https://quantcore-labs.com/glossary/amihud-illiquidity/amihud-illiquidity.py): Amihud Illiquidity in Python (numpy, pandas)
 
 ## Optional
 

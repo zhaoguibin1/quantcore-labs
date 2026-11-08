@@ -72,16 +72,16 @@
       "url": "https://quantcore-labs.com/glossary/vwap/",
       "contentUrl": "https://quantcore-labs.com/glossary/vwap/vwap.py",
       "text": "import numpy as np\nimport pandas as pd\n\ndef vwap(price: pd.Series, volume: pd.Series) -> float:\n    \"\"\"Session VWAP: sum(p * v) / sum(v).\"\"\"\n    v = volume.astype(float)\n    return float((price * v).sum() / v.sum())\n\ndef intraday_vwap(bars: pd.DataFrame) -> pd.Series:\n    \"\"\"Running VWAP that resets each trading day.\n    bars: DatetimeIndex, columns high, low, close, volume.\"\"\"\n    tp = (bars[\"high\"] + bars[\"low\"] + bars[\"close\"]) / 3.0  # typical price\n    pv = tp * bars[\"volume\"]\n    day = bars.index.normalize()\n    return pv.groupby(day).cumsum() / bars[\"volume\"].groupby(day).cumsum()\n\ndef slippage_bps(avg_fill: float, bench_vwap: float, side: int) -> float:\n    \"\"\"Execution cost vs VWAP in basis points. side=+1 buy, -1 sell.\n    Positive = worse than VWAP.\"\"\"\n    return side * (avg_fill - bench_vwap) / bench_vwap * 1e4\n",
-      "about": {
-        "@id": "https://quantcore-labs.com/glossary/vwap/#term"
-      },
       "isPartOf": {
         "@id": "https://quantcore-labs.com/code/#hub"
       },
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "dateModified": "2026-11-07T21:45:00-05:00"
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vwap/#term"
+      }
     },
     {
       "@type": "FAQPage",
@@ -224,7 +224,7 @@ def slippage_bps(avg_fill: float, bench_vwap: float, side: int) -&gt; float:
 <p>- Python source: https://quantcore-labs.com/glossary/vwap/vwap.py</p>
 </section>
 
-<section class="related"><h2>Related terms</h2><a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/">← All terms</a></section>
+<section class="related"><h2>Related</h2><a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/amihud-illiquidity/">Amihud Illiquidity Measure (ILLIQ)</a> <a href="/glossary/">← All terms</a></section>
 </article>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>

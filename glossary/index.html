@@ -76,6 +76,50 @@
           "inDefinedTermSet": {
             "@id": "https://quantcore-labs.com/glossary/#set"
           }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/adf-test/#term",
+          "name": "Augmented Dickey-Fuller (ADF) Test",
+          "termCode": "adf-test",
+          "description": "The Augmented Dickey-Fuller test asks whether a series has a unit root, meaning shocks never decay and the series wanders like a random walk. The null hypothesis is a unit root (non-stationary). A sufficiently negative test statistic rejects it in favour of a stationary, mean-reverting series. Lagged differences are added to the regression to absorb serial correlation.",
+          "url": "https://quantcore-labs.com/glossary/adf-test/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/cointegration/#term",
+          "name": "Cointegration (Engle-Granger & Johansen)",
+          "termCode": "cointegration",
+          "description": "Cointegration means that individually non-stationary series share a common stochastic trend, so a weighted combination of them (the spread) is stationary and mean-reverts. The Engle-Granger two-step method tests one pair through a regression residual. The Johansen method tests several series at once and estimates how many independent cointegrating relationships exist.",
+          "url": "https://quantcore-labs.com/glossary/cointegration/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/var-expected-shortfall/#term",
+          "name": "Value at Risk (VaR) and Expected Shortfall (ES)",
+          "termCode": "var-expected-shortfall",
+          "description": "Value at Risk at confidence level α is the loss that is not exceeded with probability α over a given horizon. Expected Shortfall (also called CVaR) is the average loss given that the loss exceeds VaR. ES therefore accounts for how bad the tail is, not only where it starts. Unlike VaR, it is a coherent risk measure (subadditive).",
+          "url": "https://quantcore-labs.com/glossary/var-expected-shortfall/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/amihud-illiquidity/#term",
+          "name": "Amihud Illiquidity Measure (ILLIQ)",
+          "termCode": "amihud-illiquidity",
+          "description": "Amihud (2002) illiquidity is the average, over a window of days, of the absolute daily return divided by the day's traded value. A high value means small amounts of trading move the price a lot. It needs only daily returns and turnover, so it can be computed for every stock over long histories. That makes it the standard low-frequency liquidity measure in asset-pricing research.",
+          "url": "https://quantcore-labs.com/glossary/amihud-illiquidity/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
         }
       ]
     },
@@ -159,6 +203,26 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <h2><a href="/glossary/information-coefficient/">Information Coefficient (IC)</a></h2>
 <p>The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</p>
 </article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">Term ID: adf-test</span></div>
+<h2><a href="/glossary/adf-test/">Augmented Dickey-Fuller (ADF) Test</a></h2>
+<p>A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">Term ID: cointegration</span></div>
+<h2><a href="/glossary/cointegration/">Cointegration (Engle-Granger &amp; Johansen)</a></h2>
+<p>Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Risk Management</span><span class="id">Term ID: var-expected-shortfall</span></div>
+<h2><a href="/glossary/var-expected-shortfall/">Value at Risk (VaR) and Expected Shortfall (ES)</a></h2>
+<p>VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">Term ID: amihud-illiquidity</span></div>
+<h2><a href="/glossary/amihud-illiquidity/">Amihud Illiquidity Measure (ILLIQ)</a></h2>
+<p>The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</p>
+</article>
 </section>
 <section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
 <p># QuantCore Labs Glossary</p>
@@ -166,7 +230,11 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <ul style="list-style:none;padding:0"><li>- [VWAP](https://quantcore-labs.com/glossary/vwap/): The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.</li>
 <li>- [OFI](https://quantcore-labs.com/glossary/ofi/): Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.</li>
 <li>- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/): A scaling exponent that measures long-range dependence in a time series. H &lt; 0.5 indicates mean reversion, H = 0.5 a random walk, and H &gt; 0.5 a persistent, trending series.</li>
-<li>- [Information Coefficient](https://quantcore-labs.com/glossary/information-coefficient/): The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</li></ul>
+<li>- [Information Coefficient](https://quantcore-labs.com/glossary/information-coefficient/): The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</li>
+<li>- [ADF Test](https://quantcore-labs.com/glossary/adf-test/): A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.</li>
+<li>- [Cointegration](https://quantcore-labs.com/glossary/cointegration/): Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.</li>
+<li>- [VaR &amp; ES](https://quantcore-labs.com/glossary/var-expected-shortfall/): VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.</li>
+<li>- [Amihud Illiquidity](https://quantcore-labs.com/glossary/amihud-illiquidity/): The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</li></ul>
 </section>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>

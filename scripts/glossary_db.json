@@ -25,8 +25,10 @@
       }
     ],
     "related": [
-      "ofi"
-    ]
+      "ofi",
+      "amihud-illiquidity"
+    ],
+    "test": "\nimport pandas as pd\nassert abs(vwap(pd.Series([10, 11, 12.]), pd.Series([100, 200, 700])) - 11.6) < 1e-12\nassert abs(slippage_bps(10.02, 10.0, 1) - 20) < 1e-9 and abs(slippage_bps(9.98, 10.0, -1) - 20) < 1e-9\n"
   },
   {
     "term_id": "ofi",
@@ -60,7 +62,8 @@
     "related": [
       "vwap",
       "hurst-exponent"
-    ]
+    ],
+    "test": "\nimport pandas as pd\nbk = pd.DataFrame({\"bid_px\": [10, 10, 10.01, 10.01], \"bid_sz\": [100, 150, 50, 50],\n                   \"ask_px\": [10.02, 10.02, 10.02, 10.01], \"ask_sz\": [200, 200, 100, 80]})\nassert ofi(bk).tolist() == [0.0, 50.0, 150.0, -80.0]\n"
   },
   {
     "term_id": "hurst-exponent",
@@ -88,8 +91,11 @@
       }
     ],
     "related": [
-      "ofi"
-    ]
+      "ofi",
+      "adf-test",
+      "cointegration"
+    ],
+    "test": "\nimport numpy as np\nrng = np.random.default_rng(0); r = rng.standard_normal(4096)\nassert 0.5 < hurst_rs(r) < 0.6 and 0.45 < hurst_lag_var(np.cumsum(r)) < 0.55\n"
   },
   {
     "term_id": "information-coefficient",
@@ -123,7 +129,269 @@
     ],
     "related": [
       "hurst-exponent",
+      "vwap",
+      "vectorized-backtest",
+      "amihud-illiquidity"
+    ],
+    "test": "\nimport numpy as np, pandas as pd\nfrom scipy.stats import spearmanr\nrng = np.random.default_rng(1); a = rng.standard_normal((30, 200)); r = 0.05 * a + rng.standard_normal((30, 200))\nic = information_coefficient(pd.DataFrame(a), pd.DataFrame(r))\nassert max(abs(ic[t] - spearmanr(a[t], r[t]).statistic) for t in range(30)) < 1e-12\nassert forward_returns(pd.DataFrame({\"a\": [10, 11, 12, 13.]}))[\"a\"].iloc[0] == 12 / 11 - 1\n"
+  },
+  {
+    "term_id": "adf-test",
+    "name": "Augmented Dickey-Fuller (ADF) Test",
+    "short": "ADF Test",
+    "category": "Time Series & Stat-Arb",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.",
+    "definition": "The Augmented Dickey-Fuller test asks whether a series has a unit root, meaning shocks never decay and the series wanders like a random walk. The null hypothesis is a unit root (non-stationary). A sufficiently negative test statistic rejects it in favour of a stationary, mean-reverting series. Lagged differences are added to the regression to absorb serial correlation.",
+    "formula": "Δy_t = α + β·t + γ·y_{t−1} + Σ_{i=1..p} δ_i·Δy_{t−i} + ε_t\n\nH0: γ = 0 (unit root)     H1: γ < 0 (stationary)\nADF statistic = γ̂ / se(γ̂)     → compare with Dickey-Fuller (MacKinnon) critical values,\n                                  NOT Student-t\nLarge-sample critical values, constant only:  1% −3.43   5% −2.86   10% −2.57\n\nMean-reversion half-life (from Δy_t = a + g·y_{t−1}):  HL = ln 2 / −ln(1 + g)",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Pairs and basket spreads.</strong> A spread is traded only if ADF rejects a unit root. The half-life then sets the holding period and the look-back for the rolling mean and standard deviation of the z-score.</li>\n<li><strong>Model hygiene.</strong> Regressing one non-stationary series on another gives spurious R² and t-stats. Test levels first, and difference or use cointegration methods when a unit root is present.</li>\n<li><strong>Feature engineering.</strong> Testing candidate features for stationarity before feeding them to ML models avoids features whose distribution drifts out of the training range.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Low power.</strong> With a few hundred observations, ADF often cannot tell a slowly mean-reverting series (AR coefficient 0.98) from a random walk. Failing to reject is not evidence of a unit root. Pair it with KPSS, whose null is the reverse.</li>\n<li><strong>Deterministic terms matter.</strong> Including a trend when there is none, or omitting one that exists, shifts the critical values and the conclusion. Use <code>\"c\"</code> for spreads and <code>\"ct\"</code> only for trending series.</li>\n<li><strong>Structural breaks.</strong> A level shift, such as a regime change or an index inclusion, makes a stationary series look non-stationary (Perron, 1989).</li>\n<li><strong>Estimated spreads.</strong> If the series is a regression residual, ordinary ADF p-values are too optimistic. Use residual-based critical values: see <a href=\"/glossary/cointegration/\">cointegration</a>.</li>\n<li><strong>Multiple testing.</strong> Screening thousands of A-share pairs at 5% yields hundreds of false positives. Adjust the threshold, or require out-of-sample confirmation.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nfrom statsmodels.tsa.stattools import adfuller\n\ndef adf_stat(y, lags: int = 1) -> float:\n    \"\"\"ADF t-statistic with a constant, by plain OLS (for understanding).\n    Regression: dy_t = a + g*y_{t-1} + sum_{i=1..lags} b_i*dy_{t-i} + e_t ;  returns t(g).\"\"\"\n    y = np.asarray(y, dtype=float)\n    dy = np.diff(y)\n    T = len(dy) - lags\n    X = [np.ones(T), y[lags:-1]]\n    X += [dy[lags - i:-i] for i in range(1, lags + 1)]\n    X = np.column_stack(X)\n    target = dy[lags:]\n    beta, *_ = np.linalg.lstsq(X, target, rcond=None)\n    resid = target - X @ beta\n    s2 = resid @ resid / (T - X.shape[1])\n    se = np.sqrt(s2 * np.linalg.inv(X.T @ X)[1, 1])\n    return float(beta[1] / se)\n\ndef adf_test(y, regression: str = \"c\") -> dict:\n    \"\"\"Production test: lag order by AIC and MacKinnon p-values via statsmodels.\n    regression: \"c\" constant, \"ct\" constant + trend, \"n\" none.\"\"\"\n    y = np.asarray(y, float)\n    try:   # statsmodels >= 0.15 lets us pin the classic tuple return\n        res = adfuller(y, regression=regression, autolag=\"AIC\", result_object=False)\n    except TypeError:\n        res = adfuller(y, regression=regression, autolag=\"AIC\")\n    return {\"stat\": res[0], \"pvalue\": res[1], \"lags\": res[2], \"nobs\": res[3], \"crit\": res[4]}\n\ndef half_life(y) -> float:\n    \"\"\"Mean-reversion half-life in periods from dy_t = a + g*y_{t-1}: ln(2) / -ln(1+g).\n    Returns inf if the series is not mean-reverting (g >= 0).\"\"\"\n    y = np.asarray(y, dtype=float)\n    X = np.column_stack([np.ones(len(y) - 1), y[:-1]])\n    g = np.linalg.lstsq(X, np.diff(y), rcond=None)[0][1]\n    return float(np.log(2) / -np.log1p(g)) if g < -1e-10 else float(\"inf\")\n",
+    "test": "\nimport numpy as np\nfrom statsmodels.tsa.stattools import adfuller\nrng = np.random.default_rng(5)\nx = np.zeros(1000)\nfor t in range(1, 1000): x[t] = 0.95 * x[t-1] + rng.standard_normal()\nfor L in (1, 3):\n    assert abs(adf_stat(x, L) - adfuller(x, maxlag=L, autolag=None, regression=\"c\")[0]) < 1e-9\nassert adf_test(x)[\"pvalue\"] < 0.01\nassert adf_test(np.cumsum(rng.standard_normal(1000)))[\"pvalue\"] > 0.05\nassert 8 < half_life(x) < 30 and half_life(np.arange(100.0)) == float(\"inf\")\n",
+    "faq": [
+      {
+        "question": "What is the difference between the ADF and KPSS tests?",
+        "answer": "They reverse the hypotheses. ADF's null is a unit root (non-stationary); KPSS's null is stationarity. Rejecting ADF and failing to reject KPSS together is the strongest evidence of stationarity; conflicting results usually mean the sample is too short or the series is near a unit root."
+      },
+      {
+        "question": "Which p-value threshold should I use for pairs selection?",
+        "answer": "5% is conventional for a single test, but screening many pairs inflates false discoveries. Use a stricter threshold such as 1%, a false-discovery-rate correction, or confirm stationarity on a later out-of-sample window before trading."
+      }
+    ],
+    "related": [
+      "cointegration",
+      "hurst-exponent",
+      "rolling-window-numba"
+    ]
+  },
+  {
+    "term_id": "cointegration",
+    "name": "Cointegration (Engle-Granger & Johansen)",
+    "short": "Cointegration",
+    "category": "Time Series & Stat-Arb",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.",
+    "definition": "Cointegration means that individually non-stationary series share a common stochastic trend, so a weighted combination of them (the spread) is stationary and mean-reverts. The Engle-Granger two-step method tests one pair through a regression residual. The Johansen method tests several series at once and estimates how many independent cointegrating relationships exist.",
+    "formula": "Engle-Granger (two steps):\n  1. y_t = α + β·x_t + u_t            (OLS; β = hedge ratio)\n  2. ADF on û_t with residual-based MacKinnon critical values\n     (2 series, constant: 1% −3.90   5% −3.34   10% −3.04)\n\nJohansen (VECM):\n  Δy_t = Π·y_{t−1} + Σ_{i=1..k} Γ_i·Δy_{t−i} + ε_t ,   rank(Π) = r cointegrating vectors\n  Trace statistic for H0: rank ≤ r :  λ_trace(r) = −T · Σ_{i=r+1..n} ln(1 − λ̂_i)",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Pairs trading.</strong> Go long the spread when its z-score is low and short when it is high. Size the legs with the hedge ratio β.</li>\n<li><strong>Basket and index arbitrage.</strong> Johansen finds stationary portfolios across three or more assets, for example an ETF against its largest constituents.</li>\n<li><strong>Cross-market spreads.</strong> Examples include A/H dual-listed shares, futures calendar spreads, and commodity crack or crush spreads.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Wrong p-values.</strong> Running a plain ADF on an estimated residual overstates significance, because OLS already minimised the residual variance. In the test for this page, an unrelated pair gets p = 0.11 from plain ADF but p = 0.27 from the correct residual-based test.</li>\n<li><strong>Asymmetry.</strong> Regressing y on x and x on y give different hedge ratios and can give different conclusions. Johansen is symmetric.</li>\n<li><strong>Unstable hedge ratios.</strong> A β estimated once drifts over time. Re-estimate on a rolling window, or let β vary with a Kalman filter.</li>\n<li><strong>Correlation is not cointegration.</strong> Two stocks can have highly correlated returns yet drift apart without bound in price.</li>\n<li><strong>A-share implementation.</strong> Short legs depend on margin-lending availability (融券), which is limited and was further restricted from 2023. Many A-share pair strategies are therefore run as long-only relative-value switches or hedged with index futures.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import warnings\nimport numpy as np\nfrom statsmodels.tsa.stattools import coint\nfrom statsmodels.tsa.vector_ar.vecm import coint_johansen\n\ndef engle_granger(y, x) -> dict:\n    \"\"\"Two-step Engle-Granger test of y ~ a + b*x.\n    Uses residual-based MacKinnon critical values (statsmodels.coint), NOT the\n    ordinary ADF p-value, which is too lenient for an estimated spread.\"\"\"\n    y, x = np.asarray(y, float), np.asarray(x, float)\n    X = np.column_stack([np.ones_like(x), x])\n    (a, b), *_ = np.linalg.lstsq(X, y, rcond=None)\n    stat, p, crit = coint(y, x, trend=\"c\", autolag=\"AIC\")\n    return {\"alpha\": a, \"hedge_ratio\": b, \"spread\": y - a - b * x,\n            \"stat\": stat, \"pvalue\": p, \"crit\": crit}\n\ndef johansen(prices, det_order: int = 0, k_ar_diff: int = 1) -> dict:\n    \"\"\"Johansen trace test for an (T x n) price matrix.\n    det_order: -1 none, 0 constant, 1 trend. Returns the cointegration rank\n    at 95% and the first cointegrating vector (normalised on asset 0).\"\"\"\n    with warnings.catch_warnings():  # recent NumPy: harmless ComplexWarning inside statsmodels\n        warnings.simplefilter(\"ignore\", np.exceptions.ComplexWarning)\n        res = coint_johansen(np.asarray(prices, float), det_order, k_ar_diff)\n    trace, cv95 = res.lr1, res.cvt[:, 1]\n    rank = 0\n    while rank < len(trace) and trace[rank] > cv95[rank]:\n        rank += 1\n    vec = np.real(res.evec[:, 0] / res.evec[0, 0])\n    return {\"rank\": rank, \"trace\": trace, \"cv95\": cv95, \"weights\": vec}\n",
+    "test": "\nimport numpy as np\nrng = np.random.default_rng(5)\nx = np.cumsum(rng.standard_normal(1500)) + 50\ny = 2 + 1.5 * x + rng.standard_normal(1500)\nz = np.cumsum(rng.standard_normal(1500))\neg = engle_granger(y, x)\nassert abs(eg[\"hedge_ratio\"] - 1.5) < 0.01 and eg[\"pvalue\"] < 0.01\nassert engle_granger(z + 50, x)[\"pvalue\"] > 0.05\nj = johansen(np.column_stack([y, x, z]))\nassert j[\"rank\"] == 1 and abs(j[\"weights\"][1] + 1.5) < 0.02 and abs(j[\"weights\"][2]) < 0.05\n",
+    "faq": [
+      {
+        "question": "Should I use Engle-Granger or Johansen?",
+        "answer": "Engle-Granger is simple and fine for a single pair, but its result depends on which series is the dependent variable and it finds at most one relationship. Johansen handles three or more series, is symmetric and estimates the number of cointegrating vectors, at the cost of sensitivity to lag length and deterministic-term choices."
+      },
+      {
+        "question": "How is cointegration different from correlation?",
+        "answer": "Correlation measures co-movement of returns over a window; cointegration is about the price levels staying tied together over time. Highly correlated stocks can drift apart permanently, while cointegrated ones are pulled back to an equilibrium spread."
+      }
+    ],
+    "related": [
+      "adf-test",
+      "hurst-exponent",
+      "rolling-window-numba"
+    ]
+  },
+  {
+    "term_id": "var-expected-shortfall",
+    "name": "Value at Risk (VaR) and Expected Shortfall (ES)",
+    "short": "VaR & ES",
+    "category": "Risk Management",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.",
+    "definition": "Value at Risk at confidence level α is the loss that is not exceeded with probability α over a given horizon. Expected Shortfall (also called CVaR) is the average loss given that the loss exceeds VaR. ES therefore accounts for how bad the tail is, not only where it starts. Unlike VaR, it is a coherent risk measure (subadditive).",
+    "formula": "VaR_α = −q_{1−α}(r)                         (q = quantile of returns)\nES_α  = −E[ r | r ≤ q_{1−α}(r) ]\n\nNormal:          VaR = −(μ + σ·z),   ES = −(μ − σ·φ(z)/(1−α)),   z = Φ⁻¹(1−α)\nCornish-Fisher:  z_cf = z + (z²−1)S/6 + (z³−3z)K/24 − (2z³−5z)S²/36\n                 (S = skewness, K = excess kurtosis)\n\nKupiec POF backtest (x exceptions in n days, p = 1−α, p̂ = x/n):\n  LR = −2·ln[ (1−p)^{n−x} p^x / ((1−p̂)^{n−x} p̂^x) ]  ~ χ²(1)",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Risk limits and reporting.</strong> Daily 99% VaR is the classic desk limit. Basel FRTB replaced it with 97.5% ES for market-risk capital because ES captures tail severity.</li>\n<li><strong>Backtesting.</strong> Regulators and risk teams count VaR exceptions and run the Kupiec test. Too many exceptions mean the model understates risk.</li>\n<li><strong>Strategy evaluation.</strong> Historical VaR and ES of a backtest's daily returns are reported alongside Sharpe and max drawdown. The <a href=\"/tools/performance-analytics/\">performance calculator</a> computes them from a pasted equity curve.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Normal VaR understates fat tails.</strong> On simulated Student-t (4 degrees of freedom) returns, 99% normal VaR is 3.26% against a historical 3.75%, and normal ES misses by even more (3.74% against 5.12%).</li>\n<li><strong>Cornish-Fisher can overshoot.</strong> The expansion is only valid for moderate skew and kurtosis. On the same t(4) sample it gives 6.03%, far above the true quantile. Prefer historical or filtered-historical methods for heavy tails.</li>\n<li><strong>Sample size.</strong> A 99% historical VaR from 250 days rests on about 2.5 observations. Use longer windows, or 97.5% ES, which averages more points.</li>\n<li><strong>√h scaling.</strong> Multiplying 1-day VaR by √10 assumes i.i.d. returns. Volatility clustering and autocorrelation break it.</li>\n<li><strong>A-share price limits.</strong> The ±10% daily limit (±20% on ChiNext and STAR, ±5% for ST) truncates observed daily losses. Consecutive limit-down days then produce multi-day losses far beyond the 1-day historical VaR.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nfrom scipy.stats import norm, chi2\n\ndef var_es(returns, alpha: float = 0.99, method: str = \"historical\") -> tuple:\n    \"\"\"One-period VaR and Expected Shortfall as positive loss fractions.\n    method: \"historical\" | \"normal\" | \"cornish-fisher\" (skew/kurtosis-adjusted\n    quantile; returns ES = nan because the expansion defines no tail mean).\"\"\"\n    r = np.asarray(returns, dtype=float)\n    r = r[~np.isnan(r)]\n    if method == \"historical\":\n        q = np.quantile(r, 1 - alpha)\n        return -q, -r[r <= q].mean()\n    mu, sd = r.mean(), r.std(ddof=1)\n    z = norm.ppf(1 - alpha)\n    if method == \"normal\":\n        return -(mu + sd * z), -(mu - sd * norm.pdf(z) / (1 - alpha))\n    if method == \"cornish-fisher\":\n        # VaR only: CF adjusts the quantile, it does not define a tail mean.\n        x = (r - mu) / sd\n        s, k = np.mean(x ** 3), np.mean(x ** 4) - 3\n        zc = z + (z**2 - 1) * s / 6 + (z**3 - 3*z) * k / 24 - (2*z**3 - 5*z) * s**2 / 36\n        return -(mu + sd * zc), float(\"nan\")\n    raise ValueError(method)\n\ndef kupiec_pof(returns, var_series, alpha: float = 0.99) -> dict:\n    \"\"\"Kupiec proportion-of-failures backtest. var_series: forecast VaR (positive)\n    made BEFORE each return. H0: exception rate = 1 - alpha.\"\"\"\n    r, v = np.asarray(returns, float), np.asarray(var_series, float)\n    n, x, p = len(r), int((r < -v).sum()), 1 - alpha\n    ph = x / n\n    ll0 = (n - x) * np.log(1 - p) + x * np.log(p)\n    ll1 = (0.0 if x == n else (n - x) * np.log(1 - ph)) + (0.0 if x == 0 else x * np.log(ph))\n    lr = -2 * (ll0 - ll1)\n    return {\"n\": n, \"exceptions\": x, \"expected\": n * p, \"lr\": lr, \"pvalue\": 1 - chi2.cdf(lr, 1)}\n",
+    "test": "\nimport numpy as np\nfrom scipy.stats import norm\nrng = np.random.default_rng(5)\nr = rng.standard_normal(200000) * 0.01 + 0.0005\ntv, te = -(0.0005 + 0.01 * norm.ppf(0.01)), -(0.0005 - 0.01 * norm.pdf(norm.ppf(0.01)) / 0.01)\nfor m in (\"historical\", \"normal\"):\n    v, e = var_es(r, 0.99, m)\n    assert abs(v - tv) < 3e-4 and abs(e - te) < 3e-4, m\nv, e = var_es(r, 0.99, \"cornish-fisher\"); assert abs(v - tv) < 3e-4 and np.isnan(e)\nk = kupiec_pof(rng.standard_normal(2000) * 0.01, np.full(2000, 0.015))\nassert k[\"pvalue\"] < 0.01 and k[\"exceptions\"] > k[\"expected\"]\nassert kupiec_pof(np.zeros(10), np.ones(10))[\"exceptions\"] == 0\n",
+    "faq": [
+      {
+        "question": "Should I use 95%, 99% or 97.5%?",
+        "answer": "99% one-day VaR is the traditional trading-desk limit and Basel VaR standard; 97.5% ES is the Basel FRTB standard and is roughly comparable in level to 99% VaR under normality while being more stable to estimate. 95% is common for strategy reporting because it has more tail observations."
+      },
+      {
+        "question": "Why is Expected Shortfall preferred to VaR?",
+        "answer": "VaR says nothing about losses beyond the threshold and is not subadditive, so combining two portfolios can show higher VaR than the sum of their VaRs. ES averages the whole tail and is coherent, which makes it better for limits and capital allocation."
+      }
+    ],
+    "related": [
+      "information-coefficient",
+      "vectorized-backtest"
+    ]
+  },
+  {
+    "term_id": "amihud-illiquidity",
+    "name": "Amihud Illiquidity Measure (ILLIQ)",
+    "short": "Amihud Illiquidity",
+    "category": "Execution & Market Microstructure",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.",
+    "definition": "Amihud (2002) illiquidity is the average, over a window of days, of the absolute daily return divided by the day's traded value. A high value means small amounts of trading move the price a lot. It needs only daily returns and turnover, so it can be computed for every stock over long histories. That makes it the standard low-frequency liquidity measure in asset-pricing research.",
+    "formula": "ILLIQ_{i,T} = (1 / D_{i,T}) · Σ_{d ∈ T} |r_{i,d}| / VOLD_{i,d}  × scale\n\nr_{i,d}    : daily return of stock i\nVOLD_{i,d} : traded value that day (A-shares: 成交额 in yuan, not 成交量 in shares)\nD_{i,T}    : number of valid trading days in window T (zero-turnover days excluded)\nscale      : e.g. 10⁸ → |return| per 100 million yuan traded",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Liquidity factor.</strong> Illiquid stocks earn a return premium in many markets, and Amihud ILLIQ is the usual sort variable. It is a common factor in A-share multi-factor models, often in log form.</li>\n<li><strong>Capacity and cost estimates.</strong> ILLIQ times the planned trade size gives a rough expected price move. This is used to cap position sizes in small-cap strategies.</li>\n<li><strong>Universe filters.</strong> Excluding the most illiquid decile before backtesting avoids returns that could never be captured at scale.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Use value, not volume.</strong> Dividing by share volume makes a ¥5 stock look far more liquid than a ¥500 stock with the same yuan turnover.</li>\n<li><strong>Suspensions.</strong> Zero-turnover days give infinite ratios. The code drops them and requires a minimum number of valid days.</li>\n<li><strong>Price-limit days.</strong> A stock that is locked at limit-up shows about a 10% move on tiny turnover, which creates extreme ILLIQ values. Winsorise, or exclude limit-locked days, and note that ChiNext and STAR moved to ±20% limits, so mixed-regime histories are not directly comparable.</li>\n<li><strong>Skew.</strong> The cross-section spans several orders of magnitude. Use log(ILLIQ) or ranks in regressions and factor models.</li>\n<li><strong>Size proxy.</strong> ILLIQ is strongly correlated with market cap. Neutralise against size before claiming a separate liquidity effect.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef amihud(ret: pd.DataFrame, amount: pd.DataFrame, window: int = 20,\n           min_days: int = 15, scale: float = 1e8) -> pd.DataFrame:\n    \"\"\"Rolling Amihud illiquidity, dates x stocks, fully vectorised.\n    ILLIQ = mean(|r_t| / amount_t) * scale over the window.\n    amount: traded value in currency (A-shares: yuan turnover, 成交额), so with\n    scale=1e8 the result reads as |return| per 100 million yuan traded.\n    Zero-amount days (suspensions) are excluded rather than producing inf.\"\"\"\n    a = amount.where(amount > 0)\n    daily = ret.abs() / a\n    return daily.rolling(window, min_periods=min_days).mean() * scale\n\ndef amihud_monthly(ret: pd.DataFrame, amount: pd.DataFrame, scale: float = 1e8) -> pd.DataFrame:\n    \"\"\"Original Amihud (2002) style: average within each calendar month.\"\"\"\n    daily = ret.abs() / amount.where(amount > 0)\n    return daily.groupby(daily.index.to_period(\"M\")).mean() * scale\n",
+    "test": "\nimport numpy as np, pandas as pd\nrng = np.random.default_rng(5)\nd = pd.bdate_range(\"2024-01-01\", periods=60)\nR = pd.DataFrame(rng.standard_normal((60, 3)) * 0.02, d, list(\"abc\"))\nA = pd.DataFrame(rng.uniform(1e7, 1e9, (60, 3)), d, list(\"abc\")); A.iloc[10:15, 1] = 0\nil = amihud(R, A)\nref = np.mean([abs(R.iloc[t, 1]) / A.iloc[t, 1] for t in range(40, 60)]) * 1e8\nassert abs(il.iloc[59, 1] - ref) < 1e-15 and np.isfinite(il.iloc[24, 1])\nassert amihud_monthly(R, A).shape == (3, 3)\n",
+    "faq": [
+      {
+        "question": "Why take the log of Amihud illiquidity?",
+        "answer": "Raw ILLIQ is extremely right-skewed: the most illiquid stocks can be thousands of times the median. Log or rank transforms keep a few outliers from dominating regressions, factor portfolios and IC calculations."
+      },
+      {
+        "question": "Monthly or rolling window?",
+        "answer": "The original paper averages within each calendar month or year. A rolling 20-day window updates daily and suits trading signals; use at least 15 valid days so suspensions do not produce noisy values."
+      }
+    ],
+    "related": [
+      "vwap",
+      "information-coefficient",
+      "duckdb-parquet-ticks"
+    ]
+  },
+  {
+    "term_id": "rolling-window-numba",
+    "kind": "snippet",
+    "name": "Fast Rolling Mean, Std, Beta and Z-score with Numba",
+    "short": "Numba Rolling Operators",
+    "category": "High-Performance Python",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "O(n) rolling mean, standard deviation, OLS beta and 2-D z-score compiled with Numba. In tests here they run 4 to 7 times faster than pandas and are more accurate on large-valued series.",
+    "definition": "These functions compute rolling statistics with running sums in a single compiled pass, instead of recomputing each window. Values are re-centred on the first window's mean, which avoids the catastrophic cancellation that running sums suffer on series with large levels, such as prices or index points. Numba compiles plain Python loops to machine code, so there is no build step: install with pip and call the functions on NumPy arrays.",
+    "formula": "Running sums over the window, after centring v = x − c:\n  S₁ += v_new − v_old       S₂ += v_new² − v_old²\n  mean = S₁/w + c            var = (S₂ − w·(S₁/w)²) / (w − 1)\n  beta = (S_xy − S_x·S_y/w) / (S_xx − S_x²/w)\n\nMeasured here, 1,000,000 points, window 250 (mean + std + beta):  Numba ≈ 20 ms, pandas ≈ 135 ms\n2,000 × 500 matrix, rolling z-score, window 60:                   Numba ≈ 11 ms, pandas ≈ 52 ms\nMax relative std error vs exact two-pass:                         Numba 1.6e−9, pandas 2.2e−8",
+    "sections": [
+      {
+        "heading": "When to use it",
+        "html": "<ul>\n<li>Long minute-bar or tick series where pandas rolling is the bottleneck.</li>\n<li>Rolling hedge ratios for <a href=\"/glossary/cointegration/\">pairs</a>, and rolling z-scores across a whole stock universe in one call.</li>\n<li>Inside larger Numba-compiled backtest loops, since these functions can be called from other <code>@njit</code> code.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>NaN handling.</strong> The inputs must be NaN-free. Running sums propagate a NaN forever. Fill, drop or split around gaps first.</li>\n<li><strong>Compile time.</strong> The first call compiles, which takes about a second. <code>cache=True</code> stores the compiled code next to the file so later runs start instantly.</li>\n<li><strong>Numerical drift.</strong> Without centring, the variance of a series around 10,000 loses most of its significant digits. If the level changes enormously over the sample, re-centre periodically.</li>\n<li><strong>Parallelism.</strong> For very wide matrices, switch the column loop in <code>rolling_zscore_2d</code> to <code>numba.prange</code> with <code>parallel=True</code>.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nfrom numba import njit\n\n@njit(cache=True)\ndef rolling_mean_std(x, window):\n    \"\"\"O(n) rolling mean and sample std (ddof=1) with running sums.\n    Values are re-centred on the first window's mean to limit cancellation error.\n    NaN where fewer than `window` observations; input must contain no NaN.\"\"\"\n    n = x.shape[0]\n    mean = np.full(n, np.nan)\n    std = np.full(n, np.nan)\n    if n < window:\n        return mean, std\n    shift = x[:window].mean()\n    s = 0.0\n    s2 = 0.0\n    for i in range(n):\n        v = x[i] - shift\n        s += v\n        s2 += v * v\n        if i >= window:\n            o = x[i - window] - shift\n            s -= o\n            s2 -= o * o\n        if i >= window - 1:\n            m = s / window\n            mean[i] = m + shift\n            var = (s2 - window * m * m) / (window - 1)\n            std[i] = np.sqrt(var) if var > 0 else 0.0\n    return mean, std\n\n@njit(cache=True)\ndef rolling_beta(y, x, window):\n    \"\"\"Rolling OLS slope cov(y, x) / var(x), O(n). Use for hedge ratios or market beta.\n    Inputs are re-centred on their first-window means to limit cancellation error.\"\"\"\n    n = y.shape[0]\n    out = np.full(n, np.nan)\n    if n < window:\n        return out\n    cx = x[:window].mean()\n    cy = y[:window].mean()\n    sx = sy = sxx = sxy = 0.0\n    for i in range(n):\n        a = x[i] - cx\n        b = y[i] - cy\n        sx += a; sy += b; sxx += a * a; sxy += a * b\n        if i >= window:\n            a = x[i - window] - cx\n            b = y[i - window] - cy\n            sx -= a; sy -= b; sxx -= a * a; sxy -= a * b\n        if i >= window - 1:\n            cov = sxy - sx * sy / window\n            var = sxx - sx * sx / window\n            if var > 0:\n                out[i] = cov / var\n    return out\n\n@njit(cache=True)\ndef rolling_zscore_2d(X, window):\n    \"\"\"Rolling z-score for every column of a (T x N) float matrix, in one compiled pass.\"\"\"\n    T, N = X.shape\n    Z = np.full((T, N), np.nan)\n    for j in range(N):\n        m, s = rolling_mean_std(X[:, j].copy(), window)\n        for i in range(T):\n            if s[i] > 0:\n                Z[i, j] = (X[i, j] - m[i]) / s[i]\n    return Z\n",
+    "test": "\nimport numpy as np, pandas as pd\nrng = np.random.default_rng(3)\nx = rng.standard_normal(20000).cumsum() + 1e4\ny = 0.7 * x + rng.standard_normal(20000)\nm, s = rolling_mean_std(x, 250); b = rolling_beta(y, x, 250)\nX, Y = pd.Series(x), pd.Series(y)\nassert np.nanmax(np.abs(m - X.rolling(250).mean())) < 1e-8\nassert np.nanmax(np.abs(s - X.rolling(250).std()) / X.rolling(250).std()) < 1e-6\ni = 12345; ex = np.polyfit(x[i-249:i+1], y[i-249:i+1], 1)[0]\nassert abs(b[i] - ex) < 1e-8 and np.isnan(b[248]) and not np.isnan(b[249])\nM = rng.standard_normal((300, 20)).cumsum(0)\nD = pd.DataFrame(M)\nassert np.nanmax(np.abs(rolling_zscore_2d(M, 60) - ((D - D.rolling(60).mean()) / D.rolling(60).std()).values)) < 1e-8\n",
+    "faq": [
+      {
+        "question": "Why Numba instead of Cython?",
+        "answer": "Numba needs no compiler toolchain or build step: decorate a function and it is compiled on first call. Performance for simple numeric loops is comparable to Cython, and the code stays plain Python that can be copied and run directly."
+      },
+      {
+        "question": "Is pandas rolling not already fast?",
+        "answer": "pandas rolling is implemented in Cython and is fine for most work, but each statistic is a separate pass with object overhead, and combinations such as rolling beta need several calls. A single fused Numba pass was 4–7× faster in the benchmarks above."
+      }
+    ],
+    "related": [
+      "cointegration",
+      "adf-test"
+    ]
+  },
+  {
+    "term_id": "duckdb-parquet-ticks",
+    "kind": "snippet",
+    "name": "Query Tick Data in Parquet with DuckDB",
+    "short": "DuckDB + Parquet Ticks",
+    "category": "Data Engineering for Quants",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "Build 1-minute OHLCV and VWAP bars, and daily turnover, straight from Hive-partitioned tick Parquet files with DuckDB. There is no database server and no loading step, and filters skip unneeded files and row groups.",
+    "definition": "DuckDB is an in-process analytical database that queries Parquet files in place. With one folder per trading day (Hive partitioning), a date filter skips whole folders. Sorting rows by stock code inside each file lets Parquet's row-group min/max statistics skip most of the data for a code filter. The snippet shows the storage layout, a writer that produces it, and queries for minute bars and daily turnover.",
+    "formula": "Layout:  ticks/date=YYYY-MM-DD/part-0.parquet   (ts, seq, code, price, volume)\n\nread_parquet('ticks/*/*.parquet', hive_partitioning = true)\n  WHERE date BETWEEN ? AND ?      → partition pruning (folders never opened)\n    AND code IN (...)             → row-group pruning via min/max statistics\n\nopen  = arg_min(price, (ts, seq))      close = arg_max(price, (ts, seq))\nvwap  = Σ price·volume / Σ volume       bucket = time_bucket(INTERVAL 1 MINUTE, ts)",
+    "sections": [
+      {
+        "heading": "Why this layout",
+        "html": "<ul>\n<li><strong>One partition per day</strong> matches how tick data arrives and how research queries are scoped. Adding a day means writing one new folder.</li>\n<li><strong>Sorted by code, zstd-compressed.</strong> This gives small files and effective code filters. Avoid thousands of tiny files: aim for one to a few files per day.</li>\n<li>The same files are readable by pandas, Polars and Spark, so there is no lock-in.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Timestamp ties.</strong> Several ticks often share one timestamp. Ordering by <code>ts</code> alone picked the wrong open or close in 27–30% of minutes in the test for this page. Always carry the exchange sequence number and order by <code>(ts, seq)</code>.</li>\n<li><strong>Auction ticks.</strong> A-share opening (09:15–09:25) and closing (14:57–15:00) call-auction prints are single-price matches. Decide whether bars include them, and filter by time if not.</li>\n<li><strong>Time zones.</strong> Store exchange-local timestamps consistently, either naive local time or TIMESTAMPTZ, but never mixed.</li>\n<li><strong>Partition column type.</strong> Hive values are parsed from folder names. Compare against values of the same type, and check with <code>DESCRIBE</code>.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import duckdb\n\n# Layout this snippet assumes (Hive partitioning, one folder per trading day):\n#   ticks/date=2024-03-01/part-0.parquet    columns: ts TIMESTAMP, seq BIGINT, code VARCHAR, price DOUBLE, volume BIGINT\n# seq = exchange sequence number. Several ticks often share one timestamp, so open/close\n# must be ordered by (ts, seq); ordering by ts alone picks an arbitrary tick on ties.\n#   ticks/date=2024-03-04/part-0.parquet    ...\n\ndef connect(threads: int = 0) -> duckdb.DuckDBPyConnection:\n    con = duckdb.connect()                      # in-memory; Parquet stays on disk\n    if threads:\n        con.execute(f\"SET threads = {threads}\")\n    return con\n\ndef minute_bars(con, root: str, codes: list, start: str, end: str):\n    \"\"\"1-minute OHLCV + VWAP straight from tick Parquet.\n    The date filter prunes whole partition folders and the code filter is pushed down\n    to Parquet row-group statistics, so only the needed bytes are read.\"\"\"\n    return con.execute(f\"\"\"\n        SELECT code,\n               time_bucket(INTERVAL 1 MINUTE, ts)   AS minute,\n               arg_min(price, (ts, seq))             AS open,\n               max(price)                            AS high,\n               min(price)                            AS low,\n               arg_max(price, (ts, seq))             AS close,\n               sum(volume)                           AS volume,\n               sum(price * volume) / sum(volume)     AS vwap\n        FROM read_parquet('{root}/*/*.parquet', hive_partitioning = true)\n        WHERE date BETWEEN ? AND ? AND code IN (SELECT unnest(?))\n        GROUP BY ALL\n        ORDER BY code, minute\n    \"\"\", [start, end, codes]).df()\n\ndef daily_turnover(con, root: str, start: str, end: str):\n    \"\"\"Per-stock daily traded value, e.g. the 'amount' input for the Amihud measure.\"\"\"\n    return con.execute(f\"\"\"\n        SELECT date, code, sum(price * volume) AS amount\n        FROM read_parquet('{root}/*/*.parquet', hive_partitioning = true)\n        WHERE date BETWEEN ? AND ?\n        GROUP BY ALL ORDER BY date, code\n    \"\"\", [start, end]).df()\n\ndef write_partitioned(con, df, root: str):\n    \"\"\"Write a pandas DataFrame with a 'date' column as Hive-partitioned, zstd Parquet,\n    sorted by code so row-group min/max statistics make code filters effective.\"\"\"\n    con.register(\"src\", df)\n    con.execute(f\"\"\"COPY (SELECT * FROM src ORDER BY date, code, ts, seq)\n                    TO '{root}' (FORMAT parquet, PARTITION_BY (date), COMPRESSION zstd, OVERWRITE_OR_IGNORE)\"\"\")\n    con.unregister(\"src\")\n",
+    "test": "\nimport numpy as np, pandas as pd, tempfile, os\nrng = np.random.default_rng(3)\ndays = pd.bdate_range(\"2024-03-01\", periods=3); n = 30000\ndf = pd.DataFrame({\"date\": np.repeat(days.strftime(\"%Y-%m-%d\"), n // 3),\n    \"ts\": (pd.to_datetime(np.repeat(days, n // 3)) + pd.to_timedelta(34200 + np.tile(np.sort(rng.integers(0, 7200, n // 3)), 3), unit=\"s\")).values,\n    \"seq\": np.arange(n), \"code\": rng.choice([\"600000\", \"600519\", \"000001\"], n),\n    \"price\": rng.uniform(10, 11, n).round(2), \"volume\": rng.integers(1, 100, n) * 100})\nroot = os.path.join(tempfile.mkdtemp(), \"ticks\")\ncon = connect(); write_partitioned(con, df, root)\nbars = minute_bars(con, root, [\"600519\"], \"2024-03-04\", \"2024-03-05\")\nsub = df[(df.date >= \"2024-03-04\") & (df.code == \"600519\")].sort_values([\"ts\", \"seq\"])\nsub = sub.assign(minute=sub.ts.dt.floor(\"min\"))\ng = sub.groupby(\"minute\").agg(open=(\"price\", \"first\"), close=(\"price\", \"last\"), volume=(\"volume\", \"sum\")).reset_index()\nm = bars.merge(g, on=\"minute\", suffixes=(\"\", \"_pd\"))\nassert len(m) == len(g) == len(bars)\nassert (m.open == m.open_pd).all() and (m.close == m.close_pd).all() and (m.volume == m.volume_pd).all()\nassert np.isclose(daily_turnover(con, root, \"2024-03-01\", \"2024-03-05\").amount.sum(), (df.price * df.volume).sum())\n",
+    "faq": [
+      {
+        "question": "Why DuckDB instead of loading everything into pandas?",
+        "answer": "DuckDB reads only the partitions, columns and row groups a query needs, runs multi-threaded, and spills to disk when data exceeds memory. Tens of millions of ticks that would not fit comfortably in a pandas DataFrame can be aggregated directly from Parquet."
+      },
+      {
+        "question": "Should I store ticks in a .duckdb file or in Parquet?",
+        "answer": "Both work. Parquet is open, portable across pandas/Polars/Spark and easy to append by day; a .duckdb database file is convenient for derived tables and indexes. A common pattern is raw ticks in partitioned Parquet and derived bars or factors in a DuckDB file."
+      }
+    ],
+    "related": [
+      "amihud-illiquidity",
       "vwap"
+    ]
+  },
+  {
+    "term_id": "vectorized-backtest",
+    "kind": "snippet",
+    "name": "Vectorised Daily Backtest with A-share Trading Constraints",
+    "short": "Vectorised Backtest",
+    "category": "Backtesting",
+    "date_published": "2026-11-07T22:30:00-05:00",
+    "summary": "A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.",
+    "definition": "The backtest turns a dates × stocks boolean signal into equal-weight holdings and daily net returns. Every operation is vectorised across stocks. Only the loop over dates remains, because whether a stock can be bought or sold today depends on what is already held: a stock stuck at limit-down cannot be sold and stays in the book. Orders decided at the close of day t execute at the close of t+1, so a signal can never use the return it trades on.",
+    "formula": "Timing:   signal[t] (data ≤ close t) → order at close t+1 → earns close(t+1) → close(t+2)\n\nwant_t    = signal_{t−1}\nheld_t    = enter if want ∧ ¬held ∧ buyable_t ;  exit if ¬want ∧ held ∧ sellable_t\nweight_t  = held_t / Σ held_t\ngross_t   = Σ_i weight_{t−1,i} · r_{t,i}\nturnover_t= Σ_i |weight_{t,i} − weight_{t−1,i}|\nnet_t     = gross_t − turnover_t · cost_bps / 10⁴",
+    "sections": [
+      {
+        "heading": "What the tests check",
+        "html": "<ul>\n<li>Net returns match a naive per-stock, per-day loop to within 1e−17.</li>\n<li>The Polars version matches the pandas version when every stock is tradable.</li>\n<li><strong>Look-ahead probe.</strong> Two hypothetical signals were run. One uses only the next day's return, which this timing can never capture; it earns about zero (0.03% per day, which is noise). The other uses the return two days ahead, which this timing does capture; it earns 1.6% per day, the size of gain that look-ahead leaks would produce.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Costs.</strong> A-share stamp duty is charged on sells only (0.05% since 28 August 2023), plus commission and slippage. A single symmetric <code>cost_bps</code> is an approximation; use separate buy and sell rates for precision.</li>\n<li><strong>Prices.</strong> Use dividend- and split-adjusted closes, such as back-adjusted 后复权 prices, or returns will show false jumps.</li>\n<li><strong>Survivorship.</strong> Include delisted stocks and the universe as it was on each date, not today's constituents.</li>\n<li><strong>Close execution is optimistic.</strong> Trading exactly at the close ignores closing-auction impact. Stress-test with next-day VWAP or open execution.</li>\n<li><strong>Tradability flags.</strong> Derive limit-up and limit-down from the previous close and the board's limit (±10% main board, ±20% ChiNext/STAR, ±5% ST). A close at the limit price is the usual proxy for \"could not trade in that direction\".</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef backtest(signal: pd.DataFrame, close: pd.DataFrame, tradable_buy: pd.DataFrame,\n             tradable_sell: pd.DataFrame, cost_bps: float = 15.0) -> pd.DataFrame:\n    \"\"\"Daily long-only, equal-weight backtest, dates x stocks, no Python loop over assets.\n\n    signal[t]        : True = want to hold, decided with data up to the close of t\n    tradable_buy[t]  : can buy at the close of t   (A-shares: not suspended, not at limit-up)\n    tradable_sell[t] : can sell at the close of t  (not suspended, not at limit-down)\n    Orders for signal[t] execute at the close of t+1; returns are close-to-close.\n    cost_bps is charged on one-way turnover (commission + stamp duty + slippage).\"\"\"\n    want = signal.shift(1).fillna(False).astype(bool)          # no look-ahead\n    held = np.zeros(signal.shape[1], dtype=bool)\n    hold = np.zeros(signal.shape, dtype=bool)\n    tb, ts, w = tradable_buy.to_numpy(bool), tradable_sell.to_numpy(bool), want.to_numpy(bool)\n    for t in range(len(signal)):                                # loop over dates only\n        held = np.where(w[t] & ~held & tb[t], True, held)       # enter if allowed\n        held = np.where(~w[t] & held & ts[t], False, held)      # exit if allowed (else stuck)\n        hold[t] = held\n    n = hold.sum(axis=1, keepdims=True)\n    weight = pd.DataFrame(np.divide(hold, n, out=np.zeros(hold.shape), where=n > 0),\n                          index=signal.index, columns=signal.columns)\n    ret = close.pct_change(fill_method=None).fillna(0.0)\n    gross = (weight.shift(1).fillna(0.0) * ret).sum(axis=1)      # weight set at close t earns t+1\n    turnover = weight.diff().abs().sum(axis=1).fillna(weight.abs().sum(axis=1))\n    net = gross - turnover * cost_bps / 1e4\n    return pd.DataFrame({\"gross\": gross, \"turnover\": turnover, \"net\": net,\n                         \"equity\": (1 + net).cumprod(), \"n_held\": n.ravel()})\n\ndef backtest_polars(signal_long, cost_bps: float = 15.0):\n    \"\"\"Polars version for the simple case (always tradable) on long data with columns\n    date, code, close, signal. Same timing convention as backtest().\"\"\"\n    import polars as pl\n    df = (signal_long.sort(\"code\", \"date\")\n          .with_columns(want=pl.col(\"signal\").shift(1).over(\"code\").fill_null(False),\n                        ret=(pl.col(\"close\") / pl.col(\"close\").shift(1) - 1).over(\"code\").fill_null(0.0))\n          .with_columns(n=pl.col(\"want\").sum().over(\"date\"))\n          .with_columns(weight=pl.when(pl.col(\"n\") > 0).then(pl.col(\"want\").cast(pl.Float64) / pl.col(\"n\")).otherwise(0.0))\n          .with_columns(w_prev=pl.col(\"weight\").shift(1).over(\"code\").fill_null(0.0)))\n    daily = (df.group_by(\"date\").agg(gross=(pl.col(\"w_prev\") * pl.col(\"ret\")).sum(),\n                                     turnover=(pl.col(\"weight\") - pl.col(\"w_prev\")).abs().sum())\n             .sort(\"date\")\n             .with_columns(net=pl.col(\"gross\") - pl.col(\"turnover\") * cost_bps / 1e4))\n    return daily.with_columns(equity=(1 + pl.col(\"net\")).cum_prod())\n",
+    "test": "\nimport numpy as np, pandas as pd, polars as pl\nrng = np.random.default_rng(9); T, N = 120, 15\nd = pd.bdate_range(\"2024-01-01\", periods=T); c = [f\"s{i}\" for i in range(N)]\nclose = pd.DataFrame(np.exp(np.cumsum(rng.standard_normal((T, N)) * 0.02, 0)) * 10, d, c)\nsig = pd.DataFrame(rng.random((T, N)) < 0.3, d, c)\ntb = pd.DataFrame(rng.random((T, N)) > 0.1, d, c); ts = pd.DataFrame(rng.random((T, N)) > 0.1, d, c)\nres = backtest(sig, close, tb, ts, 15)\nheld, prev, rets, net = set(), dict.fromkeys(c, 0.0), close.pct_change(fill_method=None).fillna(0), []\nfor t in range(T):\n    want = sig.iloc[t-1] if t else pd.Series(False, index=c)\n    for k in c:\n        if want[k] and k not in held and tb.iloc[t][k]: held.add(k)\n        if not want[k] and k in held and ts.iloc[t][k]: held.discard(k)\n    w = {k: (1 / len(held) if k in held else 0.0) for k in c}\n    net.append(sum(prev[k] * rets.iloc[t][k] for k in c) - sum(abs(w[k] - prev[k]) for k in c) * 15 / 1e4); prev = w\nassert np.max(np.abs(np.array(net) - res.net.values)) < 1e-12\nallT = pd.DataFrame(True, d, c); r2 = backtest(sig, close, allT, allT, 15)\nlg = close.stack().rename(\"close\").to_frame().join(sig.stack().rename(\"signal\")).reset_index()\nlg.columns = [\"date\", \"code\", \"close\", \"signal\"]\nassert np.max(np.abs(backtest_polars(pl.from_pandas(lg), 15)[\"net\"].to_numpy() - r2.net.values)) < 1e-12\n",
+    "faq": [
+      {
+        "question": "Why is there still a loop over dates?",
+        "answer": "Holdings are path-dependent once trading constraints exist: a stock at limit-down cannot be sold, so whether it is held today depends on yesterday's holdings. The loop runs over dates only, with every operation inside vectorised across the whole universe, so a 20-year daily backtest on 5,000 stocks is about 5,000 vectorised steps."
+      },
+      {
+        "question": "How do I avoid look-ahead bias?",
+        "answer": "Shift every signal by at least one period before it can affect positions, and decide the execution price in advance. In this code a signal formed at the close of t trades at the close of t+1 and first earns the t+1 to t+2 return; the test suite checks that a signal built from the t to t+1 return earns nothing."
+      }
+    ],
+    "related": [
+      "information-coefficient",
+      "var-expected-shortfall",
+      "amihud-illiquidity"
     ]
   }
 ]

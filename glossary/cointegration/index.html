@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cointegration (Engle-Granger &amp; Johansen): Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/cointegration/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Cointegration (Engle-Granger &amp; Johansen): Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/cointegration/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/cointegration/#term",
+      "name": "Cointegration (Engle-Granger & Johansen)",
+      "termCode": "cointegration",
+      "description": "Cointegration means that individually non-stationary series share a common stochastic trend, so a weighted combination of them (the spread) is stationary and mean-reverts. The Engle-Granger two-step method tests one pair through a regression residual. The Johansen method tests several series at once and estimates how many independent cointegrating relationships exist.",
+      "url": "https://quantcore-labs.com/glossary/cointegration/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/cointegration/#article",
+      "headline": "Cointegration (Engle-Granger & Johansen): Definition, Formula and Python",
+      "description": "Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/cointegration/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T22:30:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/cointegration/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/cointegration/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/cointegration/#code",
+      "name": "Cointegration in Python",
+      "description": "Tested Python reference implementation: Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, statsmodels",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/cointegration/",
+      "contentUrl": "https://quantcore-labs.com/glossary/cointegration/cointegration.py",
+      "text": "import warnings\nimport numpy as np\nfrom statsmodels.tsa.stattools import coint\nfrom statsmodels.tsa.vector_ar.vecm import coint_johansen\n\ndef engle_granger(y, x) -> dict:\n    \"\"\"Two-step Engle-Granger test of y ~ a + b*x.\n    Uses residual-based MacKinnon critical values (statsmodels.coint), NOT the\n    ordinary ADF p-value, which is too lenient for an estimated spread.\"\"\"\n    y, x = np.asarray(y, float), np.asarray(x, float)\n    X = np.column_stack([np.ones_like(x), x])\n    (a, b), *_ = np.linalg.lstsq(X, y, rcond=None)\n    stat, p, crit = coint(y, x, trend=\"c\", autolag=\"AIC\")\n    return {\"alpha\": a, \"hedge_ratio\": b, \"spread\": y - a - b * x,\n            \"stat\": stat, \"pvalue\": p, \"crit\": crit}\n\ndef johansen(prices, det_order: int = 0, k_ar_diff: int = 1) -> dict:\n    \"\"\"Johansen trace test for an (T x n) price matrix.\n    det_order: -1 none, 0 constant, 1 trend. Returns the cointegration rank\n    at 95% and the first cointegrating vector (normalised on asset 0).\"\"\"\n    with warnings.catch_warnings():  # recent NumPy: harmless ComplexWarning inside statsmodels\n        warnings.simplefilter(\"ignore\", np.exceptions.ComplexWarning)\n        res = coint_johansen(np.asarray(prices, float), det_order, k_ar_diff)\n    trace, cv95 = res.lr1, res.cvt[:, 1]\n    rank = 0\n    while rank < len(trace) and trace[rank] > cv95[rank]:\n        rank += 1\n    vec = np.real(res.evec[:, 0] / res.evec[0, 0])\n    return {\"rank\": rank, \"trace\": trace, \"cv95\": cv95, \"weights\": vec}\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/cointegration/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Should I use Engle-Granger or Johansen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Engle-Granger is simple and fine for a single pair, but its result depends on which series is the dependent variable and it finds at most one relationship. Johansen handles three or more series, is symmetric and estimates the number of cointegrating vectors, at the cost of sensitivity to lag length and deterministic-term choices."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is cointegration different from correlation?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Correlation measures co-movement of returns over a window; cointegration is about the price levels staying tied together over time. Highly correlated stocks can drift apart permanently, while cointegrated ones are pulled back to an equilibrium spread."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Cointegration",
+          "item": "https://quantcore-labs.com/glossary/cointegration/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">cointegration</span></nav><div class="tag">GLOSSARY · COINTEGRATION</div></div></header>
+<main>
+<article>
+<h1>Cointegration (Engle-Granger &amp; Johansen)</h1>
+<p class="lede">Time Series &amp; Stat-Arb · Term ID: <code>cointegration</code></p>
+<p class="def"><strong>Definition.</strong> Cointegration means that individually non-stationary series share a common stochastic trend, so a weighted combination of them (the spread) is stationary and mean-reverts. The Engle-Granger two-step method tests one pair through a regression residual. The Johansen method tests several series at once and estimates how many independent cointegrating relationships exist.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">Engle-Granger (two steps):
+  1. y_t = α + β·x_t + u_t            (OLS; β = hedge ratio)
+  2. ADF on û_t with residual-based MacKinnon critical values
+     (2 series, constant: 1% −3.90   5% −3.34   10% −3.04)
+
+Johansen (VECM):
+  Δy_t = Π·y_{t−1} + Σ_{i=1..k} Γ_i·Δy_{t−i} + ε_t ,   rank(Π) = r cointegrating vectors
+  Trace statistic for H0: rank ≤ r :  λ_trace(r) = −T · Σ_{i=r+1..n} ln(1 − λ̂_i)</pre></section>
+
+<section><h2>Institutional usage</h2>
+<ul>
+<li><strong>Pairs trading.</strong> Go long the spread when its z-score is low and short when it is high. Size the legs with the hedge ratio β.</li>
+<li><strong>Basket and index arbitrage.</strong> Johansen finds stationary portfolios across three or more assets, for example an ETF against its largest constituents.</li>
+<li><strong>Cross-market spreads.</strong> Examples include A/H dual-listed shares, futures calendar spreads, and commodity crack or crush spreads.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Wrong p-values.</strong> Running a plain ADF on an estimated residual overstates significance, because OLS already minimised the residual variance. In the test for this page, an unrelated pair gets p = 0.11 from plain ADF but p = 0.27 from the correct residual-based test.</li>
+<li><strong>Asymmetry.</strong> Regressing y on x and x on y give different hedge ratios and can give different conclusions. Johansen is symmetric.</li>
+<li><strong>Unstable hedge ratios.</strong> A β estimated once drifts over time. Re-estimate on a rolling window, or let β vary with a Kalman filter.</li>
+<li><strong>Correlation is not cointegration.</strong> Two stocks can have highly correlated returns yet drift apart without bound in price.</li>
+<li><strong>A-share implementation.</strong> Short legs depend on margin-lending availability (融券), which is limited and was further restricted from 2023. Many A-share pair strategies are therefore run as long-only relative-value switches or hedged with index futures.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, statsmodels. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/cointegration/cointegration.py">Download cointegration.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import warnings
+import numpy as np
+from statsmodels.tsa.stattools import coint
+from statsmodels.tsa.vector_ar.vecm import coint_johansen
+
+def engle_granger(y, x) -&gt; dict:
+    &quot;&quot;&quot;Two-step Engle-Granger test of y ~ a + b*x.
+    Uses residual-based MacKinnon critical values (statsmodels.coint), NOT the
+    ordinary ADF p-value, which is too lenient for an estimated spread.&quot;&quot;&quot;
+    y, x = np.asarray(y, float), np.asarray(x, float)
+    X = np.column_stack([np.ones_like(x), x])
+    (a, b), *_ = np.linalg.lstsq(X, y, rcond=None)
+    stat, p, crit = coint(y, x, trend=&quot;c&quot;, autolag=&quot;AIC&quot;)
+    return {&quot;alpha&quot;: a, &quot;hedge_ratio&quot;: b, &quot;spread&quot;: y - a - b * x,
+            &quot;stat&quot;: stat, &quot;pvalue&quot;: p, &quot;crit&quot;: crit}
+
+def johansen(prices, det_order: int = 0, k_ar_diff: int = 1) -&gt; dict:
+    &quot;&quot;&quot;Johansen trace test for an (T x n) price matrix.
+    det_order: -1 none, 0 constant, 1 trend. Returns the cointegration rank
+    at 95% and the first cointegrating vector (normalised on asset 0).&quot;&quot;&quot;
+    with warnings.catch_warnings():  # recent NumPy: harmless ComplexWarning inside statsmodels
+        warnings.simplefilter(&quot;ignore&quot;, np.exceptions.ComplexWarning)
+        res = coint_johansen(np.asarray(prices, float), det_order, k_ar_diff)
+    trace, cv95 = res.lr1, res.cvt[:, 1]
+    rank = 0
+    while rank &lt; len(trace) and trace[rank] &gt; cv95[rank]:
+        rank += 1
+    vec = np.real(res.evec[:, 0] / res.evec[0, 0])
+    return {&quot;rank&quot;: rank, &quot;trace&quot;: trace, &quot;cv95&quot;: cv95, &quot;weights&quot;: vec}
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Should I use Engle-Granger or Johansen?</h3><p>Engle-Granger is simple and fine for a single pair, but its result depends on which series is the dependent variable and it finds at most one relationship. Johansen handles three or more series, is symmetric and estimates the number of cointegrating vectors, at the cost of sensitivity to lag length and deterministic-term choices.</p><h3>How is cointegration different from correlation?</h3><p>Correlation measures co-movement of returns over a window; cointegration is about the price levels staying tied together over time. Highly correlated stocks can drift apart permanently, while cointegrated ones are pulled back to an equilibrium spread.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Cointegration (Engle-Granger &amp; Johansen)</p>
+<p>&gt; Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.</p>
+<p>- Category: Time Series &amp; Stat-Arb</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/cointegration/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/cointegration/cointegration.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/adf-test/">Augmented Dickey-Fuller (ADF) Test</a> <a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a> <a href="/code/rolling-window-numba/">Fast Rolling Mean, Std, Beta and Z-score with Numba</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

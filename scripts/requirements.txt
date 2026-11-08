@@ -1,0 +1,9 @@
+# Needed to run scripts/generate_glossary.py (it executes every published snippet)
+numpy
+pandas
+scipy
+statsmodels
+numba
+duckdb
+pyarrow
+polars

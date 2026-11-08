@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs</title>
-<meta name="description" content="Vectorised, tested Python implementations of VWAP, order flow imbalance, Hurst exponent, information coefficient and more. MIT licensed.">
+<meta name="description" content="Tested Python implementations for quant research: Numba rolling operators, DuckDB tick Parquet queries, vectorised backtests, ADF, cointegration, VaR/ES, Amihud, IC and more. MIT licensed.">
 <link rel="canonical" href="https://quantcore-labs.com/code/">
 <meta name="robots" content="index,follow,max-snippet:-1">
 <meta name="theme-color" content="#020617">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="QuantCore Labs">
 <meta property="og:title" content="Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs">
-<meta property="og:description" content="Vectorised, tested Python implementations of VWAP, order flow imbalance, Hurst exponent, information coefficient and more. MIT licensed.">
+<meta property="og:description" content="Tested Python implementations for quant research: Numba rolling operators, DuckDB tick Parquet queries, vectorised backtests, ADF, cointegration, VaR/ES, Amihud, IC and more. MIT licensed.">
 <meta property="og:url" content="https://quantcore-labs.com/code/">
 <script type="application/ld+json">
 {
@@ -40,32 +40,147 @@
             "@type": "ListItem",
             "position": 1,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/vwap/#code"
+              "@id": "https://quantcore-labs.com/code/rolling-window-numba/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 2,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/ofi/#code"
+              "@id": "https://quantcore-labs.com/code/duckdb-parquet-ticks/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 3,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code"
+              "@id": "https://quantcore-labs.com/code/vectorized-backtest/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 4,
             "item": {
+              "@id": "https://quantcore-labs.com/glossary/vwap/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 5,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/ofi/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 6,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 7,
+            "item": {
               "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 8,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/adf-test/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 9,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/cointegration/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 10,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/var-expected-shortfall/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 11,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/amihud-illiquidity/#code"
             }
           }
         ]
       }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/rolling-window-numba/#code",
+      "name": "Numba Rolling Operators in Python",
+      "description": "Tested Python reference implementation: O(n) rolling mean, standard deviation, OLS beta and 2-D z-score compiled with Numba. In tests here they run 4 to 7 times faster than pandas and are more accurate on large-valued series.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, numba",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/rolling-window-numba/",
+      "contentUrl": "https://quantcore-labs.com/code/rolling-window-numba/rolling-window-numba.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/duckdb-parquet-ticks/#code",
+      "name": "DuckDB + Parquet Ticks in Python",
+      "description": "Tested Python reference implementation: Build 1-minute OHLCV and VWAP bars, and daily turnover, straight from Hive-partitioned tick Parquet files with DuckDB. There is no database server and no loading step, and filters skip unneeded files and row groups.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, duckdb",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/duckdb-parquet-ticks/",
+      "contentUrl": "https://quantcore-labs.com/code/duckdb-parquet-ticks/duckdb-parquet-ticks.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/vectorized-backtest/#code",
+      "name": "Vectorised Backtest in Python",
+      "description": "Tested Python reference implementation: A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas, polars",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/vectorized-backtest/",
+      "contentUrl": "https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
     },
     {
       "@type": "SoftwareSourceCode",
@@ -81,16 +196,16 @@
       "license": "https://opensource.org/license/mit",
       "url": "https://quantcore-labs.com/glossary/vwap/",
       "contentUrl": "https://quantcore-labs.com/glossary/vwap/vwap.py",
-      "about": {
-        "@id": "https://quantcore-labs.com/glossary/vwap/#term"
-      },
       "isPartOf": {
         "@id": "https://quantcore-labs.com/code/#hub"
       },
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "dateModified": "2026-11-07T21:45:00-05:00"
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vwap/#term"
+      }
     },
     {
       "@type": "SoftwareSourceCode",
@@ -106,16 +221,16 @@
       "license": "https://opensource.org/license/mit",
       "url": "https://quantcore-labs.com/glossary/ofi/",
       "contentUrl": "https://quantcore-labs.com/glossary/ofi/ofi.py",
-      "about": {
-        "@id": "https://quantcore-labs.com/glossary/ofi/#term"
-      },
       "isPartOf": {
         "@id": "https://quantcore-labs.com/code/#hub"
       },
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "dateModified": "2026-11-07T21:45:00-05:00"
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/ofi/#term"
+      }
     },
     {
       "@type": "SoftwareSourceCode",
@@ -131,16 +246,16 @@
       "license": "https://opensource.org/license/mit",
       "url": "https://quantcore-labs.com/glossary/hurst-exponent/",
       "contentUrl": "https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py",
-      "about": {
-        "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#term"
-      },
       "isPartOf": {
         "@id": "https://quantcore-labs.com/code/#hub"
       },
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "dateModified": "2026-11-07T21:45:00-05:00"
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#term"
+      }
     },
     {
       "@type": "SoftwareSourceCode",
@@ -156,16 +271,116 @@
       "license": "https://opensource.org/license/mit",
       "url": "https://quantcore-labs.com/glossary/information-coefficient/",
       "contentUrl": "https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py",
-      "about": {
-        "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term"
-      },
       "isPartOf": {
         "@id": "https://quantcore-labs.com/code/#hub"
       },
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "dateModified": "2026-11-07T21:45:00-05:00"
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/adf-test/#code",
+      "name": "ADF Test in Python",
+      "description": "Tested Python reference implementation: A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, statsmodels",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/adf-test/",
+      "contentUrl": "https://quantcore-labs.com/glossary/adf-test/adf-test.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/adf-test/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/cointegration/#code",
+      "name": "Cointegration in Python",
+      "description": "Tested Python reference implementation: Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, statsmodels",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/cointegration/",
+      "contentUrl": "https://quantcore-labs.com/glossary/cointegration/cointegration.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/cointegration/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/var-expected-shortfall/#code",
+      "name": "VaR & ES in Python",
+      "description": "Tested Python reference implementation: VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/var-expected-shortfall/",
+      "contentUrl": "https://quantcore-labs.com/glossary/var-expected-shortfall/var-expected-shortfall.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/var-expected-shortfall/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/amihud-illiquidity/#code",
+      "name": "Amihud Illiquidity in Python",
+      "description": "Tested Python reference implementation: The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/amihud-illiquidity/",
+      "contentUrl": "https://quantcore-labs.com/glossary/amihud-illiquidity/amihud-illiquidity.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/amihud-illiquidity/#term"
+      }
     },
     {
       "@type": "BreadcrumbList",
@@ -228,6 +443,24 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <p class="lede">Vectorised, tested Python reference implementations of quantitative finance measures. Each snippet is tested before publication and re-executed by the generator on every rebuild, is MIT licensed, and links to the definition and formula it implements.</p>
 <section aria-label="Snippets">
 <article class="card">
+<div class="meta"><span class="cat">High-Performance Python</span><span class="id">numpy, numba</span></div>
+<h2><a href="/code/rolling-window-numba/#code">Numba Rolling Operators</a></h2>
+<p>O(n) rolling mean, standard deviation, OLS beta and 2-D z-score compiled with Numba. In tests here they run 4 to 7 times faster than pandas and are more accurate on large-valued series.</p>
+<p><a href="/code/rolling-window-numba/rolling-window-numba.py">rolling-window-numba.py</a> · <a href="/code/rolling-window-numba/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Data Engineering for Quants</span><span class="id">duckdb</span></div>
+<h2><a href="/code/duckdb-parquet-ticks/#code">DuckDB + Parquet Ticks</a></h2>
+<p>Build 1-minute OHLCV and VWAP bars, and daily turnover, straight from Hive-partitioned tick Parquet files with DuckDB. There is no database server and no loading step, and filters skip unneeded files and row groups.</p>
+<p><a href="/code/duckdb-parquet-ticks/duckdb-parquet-ticks.py">duckdb-parquet-ticks.py</a> · <a href="/code/duckdb-parquet-ticks/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Backtesting</span><span class="id">numpy, pandas, polars</span></div>
+<h2><a href="/code/vectorized-backtest/#code">Vectorised Backtest</a></h2>
+<p>A daily long-only backtest core that vectorises over the whole stock universe. It blocks look-ahead by construction and handles suspensions, limit-up and limit-down untradability and turnover costs. A Polars version is included for the unconstrained case.</p>
+<p><a href="/code/vectorized-backtest/vectorized-backtest.py">vectorized-backtest.py</a> · <a href="/code/vectorized-backtest/">explanation and tests</a></p>
+</article>
+<article class="card">
 <div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">numpy, pandas</span></div>
 <h2><a href="/glossary/vwap/#code">VWAP in Python</a></h2>
 <p>The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.</p>
@@ -251,14 +484,45 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <p>The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</p>
 <p><a href="/glossary/information-coefficient/information-coefficient.py">information-coefficient.py</a> · <a href="/glossary/information-coefficient/">definition and formula</a></p>
 </article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">numpy, statsmodels</span></div>
+<h2><a href="/glossary/adf-test/#code">ADF Test in Python</a></h2>
+<p>A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.</p>
+<p><a href="/glossary/adf-test/adf-test.py">adf-test.py</a> · <a href="/glossary/adf-test/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">numpy, statsmodels</span></div>
+<h2><a href="/glossary/cointegration/#code">Cointegration in Python</a></h2>
+<p>Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.</p>
+<p><a href="/glossary/cointegration/cointegration.py">cointegration.py</a> · <a href="/glossary/cointegration/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Risk Management</span><span class="id">numpy, scipy</span></div>
+<h2><a href="/glossary/var-expected-shortfall/#code">VaR &amp; ES in Python</a></h2>
+<p>VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.</p>
+<p><a href="/glossary/var-expected-shortfall/var-expected-shortfall.py">var-expected-shortfall.py</a> · <a href="/glossary/var-expected-shortfall/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">numpy, pandas</span></div>
+<h2><a href="/glossary/amihud-illiquidity/#code">Amihud Illiquidity in Python</a></h2>
+<p>The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</p>
+<p><a href="/glossary/amihud-illiquidity/amihud-illiquidity.py">amihud-illiquidity.py</a> · <a href="/glossary/amihud-illiquidity/">definition and formula</a></p>
+</article>
 </section>
 <section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
 <p># QuantCore Labs Quant Code Snippets</p>
 <p>&gt; Tested Python implementations, MIT licensed. URL: https://quantcore-labs.com/code/</p>
-<ul style="list-style:none;padding:0"><li>- [VWAP](https://quantcore-labs.com/glossary/vwap/vwap.py): numpy, pandas</li>
+<ul style="list-style:none;padding:0"><li>- [Numba Rolling Operators](https://quantcore-labs.com/code/rolling-window-numba/rolling-window-numba.py): numpy, numba</li>
+<li>- [DuckDB + Parquet Ticks](https://quantcore-labs.com/code/duckdb-parquet-ticks/duckdb-parquet-ticks.py): duckdb</li>
+<li>- [Vectorised Backtest](https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py): numpy, pandas, polars</li>
+<li>- [VWAP](https://quantcore-labs.com/glossary/vwap/vwap.py): numpy, pandas</li>
 <li>- [OFI](https://quantcore-labs.com/glossary/ofi/ofi.py): numpy, pandas</li>
 <li>- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py): numpy</li>
-<li>- [Information Coefficient](https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py): numpy, pandas</li></ul>
+<li>- [Information Coefficient](https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py): numpy, pandas</li>
+<li>- [ADF Test](https://quantcore-labs.com/glossary/adf-test/adf-test.py): numpy, statsmodels</li>
+<li>- [Cointegration](https://quantcore-labs.com/glossary/cointegration/cointegration.py): numpy, statsmodels</li>
+<li>- [VaR &amp; ES](https://quantcore-labs.com/glossary/var-expected-shortfall/var-expected-shortfall.py): numpy, scipy</li>
+<li>- [Amihud Illiquidity](https://quantcore-labs.com/glossary/amihud-illiquidity/amihud-illiquidity.py): numpy, pandas</li></ul>
 </section>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>

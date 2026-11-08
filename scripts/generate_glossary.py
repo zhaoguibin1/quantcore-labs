@@ -18,7 +18,7 @@ DB = REPO / "scripts" / "glossary_db.json"
 MODIFIED = "2026-11-07T21:45:00-05:00"
 LICENSE = "MIT"
 LICENSE_URL = "https://opensource.org/license/mit"
-STDLIB = {"math", "re", "os", "sys", "json", "itertools", "functools", "collections", "typing", "dataclasses", "statistics"}
+STDLIB = {"math", "re", "os", "sys", "json", "warnings", "tempfile", "pathlib", "time", "datetime", "itertools", "functools", "collections", "typing", "dataclasses", "statistics"}
 
 def deps(code):
     mods = re.findall(r"^\s*(?:from|import)\s+([A-Za-z_][\w]*)", code, re.M)
@@ -28,24 +28,36 @@ def deps(code):
             out.append(m)
     return out
 
+def snippets_first(terms):
+    return [t for t in terms if t.get("kind") == "snippet"] + [t for t in terms if t.get("kind") != "snippet"]
+
+def is_snippet(t):
+    return t.get("kind") == "snippet"
+
+def path_of(t):
+    return f"/code/{t['term_id']}/" if is_snippet(t) else f"/glossary/{t['term_id']}/"
+
 def raw_py(t):
-    url = f"{BASE}/glossary/{t['term_id']}/"
+    url = BASE + path_of(t)
     head = (f'"""{t["name"]}: reference implementation.\n\n'
             f'Source: {url}\nLicense: MIT (c) 2026 QuantCore Labs\n'
             f'Requires: Python 3.9+, {", ".join(deps(t["code_snippet"])) or "standard library only"}\n"""\n')
     return head + t["code_snippet"]
 
 def code_ld(t):
-    url = f"{BASE}/glossary/{t['term_id']}/"
+    url = BASE + path_of(t)
     d = deps(t["code_snippet"])
-    return {"@type": "SoftwareSourceCode", "@id": f"{url}#code",
+    ld = {"@type": "SoftwareSourceCode", "@id": f"{url}#code",
             "name": f"{t['short']} in Python", "description": f"Tested Python reference implementation: {t['summary']}",
             "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"},
             "runtimePlatform": "Python 3.9+" + (", " + ", ".join(d) if d else ""),
             "codeSampleType": "full solution", "license": LICENSE_URL,
             "url": url, "contentUrl": f"{url}{t['term_id']}.py", "text": t["code_snippet"],
-            "about": {"@id": f"{url}#term"}, "isPartOf": {"@id": f"{BASE}/code/#hub"},
-            "author": {"@id": f"{BASE}/#org"}, "dateModified": MODIFIED}
+            "isPartOf": {"@id": f"{BASE}/code/#hub"},
+            "author": {"@id": f"{BASE}/#org"}, "dateModified": t.get("date_modified", MODIFIED)}
+    if not is_snippet(t):
+        ld["about"] = {"@id": f"{url}#term"}
+    return ld
 
 REQUIRED = ["term_id", "name", "short", "category", "summary", "definition", "formula", "code_snippet", "faq"]
 BASE = "https://quantcore-labs.com"
@@ -129,24 +141,25 @@ def breadcrumb_ld(items):
 
 
 def term_page(t):
-    path = f"/glossary/{t['term_id']}/"
+    path = path_of(t)
+    snip = is_snippet(t)
     url = BASE + path
     code = t["code_snippet"]
     sections = "\n".join(f'<section><h2>{h}</h2>\n{b}\n</section>' for h, b in [(s["heading"],s["html"]) for s in t["sections"]])
     faq_html = "".join(f"<h3>{html.escape(q)}</h3><p>{html.escape(a)}</p>" for q, a in [(f["question"],f["answer"]) for f in t["faq"]])
-    related = " ".join(f'<a href="/glossary/{s}/">{html.escape(BY[s]["name"])}</a>' for s in t["related"])
+    related = " ".join(f'<a href="{path_of(BY[s])}">{html.escape(BY[s]["name"])}</a>' for s in t["related"])
     body = f"""<article>
 <h1>{html.escape(t['name'])}</h1>
-<p class="lede">{html.escape(t['category'])} · Term ID: <code>{t['term_id']}</code></p>
-<p class="def"><strong>Definition.</strong> {html.escape(t['definition'])}</p>
+<p class="lede">{html.escape(t['category'])} · {'Snippet' if snip else 'Term'} ID: <code>{t['term_id']}</code></p>
+<p class="def"><strong>{'What it does' if snip else 'Definition'}.</strong> {html.escape(t['definition'])}</p>
 
-<section><h2>Formula</h2>
+<section><h2>{'Approach' if snip else 'Formula'}</h2>
 <pre class="formula">{html.escape(t['formula'])}</pre></section>
 
 {sections}
 
 <section id="code"><h2>Python reference implementation</h2>
-<p>Requires {html.escape(", ".join(deps(code)) or "standard library only")}. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/{t['term_id']}/{t['term_id']}.py">Download {t['term_id']}.py</a> · <a href="/code/">All snippets</a></p>
+<p>Requires {html.escape(", ".join(deps(code)) or "standard library only")}. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="{path}{t['term_id']}.py">Download {t['term_id']}.py</a> · <a href="/code/">All snippets</a></p>
 <pre><code>{html.escape(code)}</code></pre></section>
 
 <section><h2>FAQ</h2>{faq_html}</section>
@@ -156,37 +169,39 @@ def term_page(t):
 <p>&gt; {html.escape(t['summary'])}</p>
 <p>- Category: {html.escape(t['category'])}</p>
 <p>- Canonical URL: {url}</p>
-<p>- Part of: {BASE}/glossary/</p>
+<p>- Part of: {BASE}{'/code/' if snip else '/glossary/'}</p>
 <p>- Python source: {url}{t['term_id']}.py</p>
 </section>
 
-<section class="related"><h2>Related terms</h2>{related} <a href="/glossary/">← All terms</a></section>
+<section class="related"><h2>Related</h2>{related} <a href="{'/code/' if snip else '/glossary/'}">← All {'snippets' if snip else 'terms'}</a></section>
 </article>"""
-    ld = {"@context": "https://schema.org", "@graph": [
-        ORG,
-        {"@type": "DefinedTerm", "@id": f"{url}#term", "name": t["name"], "termCode": t["term_id"],
-         "description": t["definition"], "url": url, "inDefinedTermSet": {"@id": SET_ID}},
-        {"@type": "TechArticle", "@id": f"{url}#article", "headline": t["name"] + ": Definition, Formula and Python",
-         "description": t["summary"], "about": {"@id": f"{url}#term"}, "inLanguage": "en",
-         "proficiencyLevel": "Expert", "datePublished": t.get("date_published", DATE), "dateModified": MODIFIED,
+    graph = [ORG]
+    if not snip:
+        graph.append({"@type": "DefinedTerm", "@id": f"{url}#term", "name": t["name"], "termCode": t["term_id"],
+                      "description": t["definition"], "url": url, "inDefinedTermSet": {"@id": SET_ID}})
+    ld = {"@context": "https://schema.org", "@graph": graph + [
+        {"@type": "TechArticle", "@id": f"{url}#article", "headline": t["name"] + (": Tested Python Implementation" if snip else ": Definition, Formula and Python"),
+         "description": t["summary"], **({} if snip else {"about": {"@id": f"{url}#term"}}), "inLanguage": "en",
+         "proficiencyLevel": "Expert", "datePublished": t.get("date_published", DATE), "dateModified": t.get("date_modified", MODIFIED),
          "author": {"@id": f"{BASE}/#org"}, "publisher": {"@id": f"{BASE}/#org"},
          "mainEntityOfPage": url, "hasPart": {"@id": f"{url}#code"}},
         code_ld(t),
         {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q,
             "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in [(f["question"],f["answer"]) for f in t["faq"]]]},
-        breadcrumb_ld([("QuantCore Labs", "/"), ("Glossary", "/glossary/"), (t["short"], path)]),
+        breadcrumb_ld([("QuantCore Labs", "/"), ("Code" if snip else "Glossary", "/code/" if snip else "/glossary/"), (t["short"], path)]),
     ]}
-    return page(f"{t['name']}: Definition, Formula & Python | QuantCore Labs", t["summary"], path,
-                [("quantcore-labs", "/"), ("glossary", "/glossary/"), (t["term_id"], None)],
-                "GLOSSARY · " + t["short"].upper(), body, ld)
+    sect = "code" if snip else "glossary"
+    return page(f"{t['name']}: {'Tested Python Code' if snip else 'Definition, Formula & Python'} | QuantCore Labs", t["summary"], path,
+                [("quantcore-labs", "/"), (sect, f"/{sect}/"), (t["term_id"], None)],
+                ("CODE · " if snip else "GLOSSARY · ") + t["short"].upper(), body, ld)
 
 def index_page():
     cards = "\n".join(f"""<article class="card">
 <div class="meta"><span class="cat">{html.escape(t['category'])}</span><span class="id">Term ID: {t['term_id']}</span></div>
 <h2><a href="/glossary/{t['term_id']}/">{html.escape(t['name'])}</a></h2>
 <p>{html.escape(t['summary'])}</p>
-</article>""" for t in TERMS)
-    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}/glossary/{t['term_id']}/): {html.escape(t['summary'])}</li>" for t in TERMS)
+</article>""" for t in GLOSS)
+    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}/glossary/{t['term_id']}/): {html.escape(t['summary'])}</li>" for t in GLOSS)
     body = f"""<h1>Quantitative Finance Glossary</h1>
 <p class="lede">Definitions, formulas and tested Python reference implementations for market microstructure, execution and statistical-arbitrage concepts. Written for quantitative researchers and AI agents.</p>
 <section aria-label="Terms">
@@ -204,7 +219,7 @@ def index_page():
          "publisher": {"@id": f"{BASE}/#org"},
          "hasDefinedTerm": [{"@type": "DefinedTerm", "@id": f"{BASE}/glossary/{t['term_id']}/#term", "name": t["name"],
                              "termCode": t["term_id"], "description": t["definition"], "url": f"{BASE}/glossary/{t['term_id']}/",
-                             "inDefinedTermSet": {"@id": SET_ID}} for t in TERMS]},
+                             "inDefinedTermSet": {"@id": SET_ID}} for t in GLOSS]},
         breadcrumb_ld([("QuantCore Labs", "/"), ("Glossary", "/glossary/")]),
     ]}
     return page("Quantitative Finance Glossary & Terminology | QuantCore Labs",
@@ -214,11 +229,11 @@ def index_page():
 def code_page():
     rows = "\n".join(f"""<article class="card">
 <div class="meta"><span class="cat">{html.escape(t['category'])}</span><span class="id">{html.escape(", ".join(deps(t['code_snippet'])))}</span></div>
-<h2><a href="/glossary/{t['term_id']}/#code">{html.escape(t['short'])} in Python</a></h2>
+<h2><a href="{path_of(t)}#code">{html.escape(t['short'])}{'' if is_snippet(t) else ' in Python'}</a></h2>
 <p>{html.escape(t['summary'])}</p>
-<p><a href="/glossary/{t['term_id']}/{t['term_id']}.py">{t['term_id']}.py</a> · <a href="/glossary/{t['term_id']}/">definition and formula</a></p>
-</article>""" for t in TERMS)
-    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}/glossary/{t['term_id']}/{t['term_id']}.py): {html.escape(', '.join(deps(t['code_snippet'])))}</li>" for t in TERMS)
+<p><a href="{path_of(t)}{t['term_id']}.py">{t['term_id']}.py</a> · <a href="{path_of(t)}">{'explanation and tests' if is_snippet(t) else 'definition and formula'}</a></p>
+</article>""" for t in HUB)
+    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}{path_of(t)}{t['term_id']}.py): {html.escape(', '.join(deps(t['code_snippet'])))}</li>" for t in HUB)
     body = f"""<h1>Quant Code Snippets</h1>
 <p class="lede">Vectorised, tested Python reference implementations of quantitative finance measures. Each snippet is tested before publication and re-executed by the generator on every rebuild, is MIT licensed, and links to the definition and formula it implements.</p>
 <section aria-label="Snippets">
@@ -235,13 +250,13 @@ def code_page():
          "url": f"{BASE}/code/", "description": "Tested Python reference implementations of quantitative finance measures.",
          "publisher": {"@id": f"{BASE}/#org"}, "license": LICENSE_URL,
          "mainEntity": {"@type": "ItemList", "itemListElement": [
-             {"@type": "ListItem", "position": i + 1, "item": {"@id": f"{BASE}/glossary/{t['term_id']}/#code"}}
-             for i, t in enumerate(TERMS)]}},
-        *[{k: v for k, v in code_ld(t).items() if k != "text"} for t in TERMS],
+             {"@type": "ListItem", "position": i + 1, "item": {"@id": f"{BASE}{path_of(t)}#code"}}
+             for i, t in enumerate(HUB)]}},
+        *[{k: v for k, v in code_ld(t).items() if k != "text"} for t in HUB],
         breadcrumb_ld([("QuantCore Labs", "/"), ("Code", "/code/")]),
     ]}
     return page("Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs",
-                "Vectorised, tested Python implementations of VWAP, order flow imbalance, Hurst exponent, information coefficient and more. MIT licensed.",
+                "Tested Python implementations for quant research: Numba rolling operators, DuckDB tick Parquet queries, vectorised backtests, ADF, cointegration, VaR/ES, Amihud, IC and more. MIT licensed.",
                 "/code/", [("quantcore-labs", "/"), ("code", None)], "KNOWLEDGE BASE · CODE", body, ld)
 
 
@@ -268,12 +283,21 @@ def load_and_validate():
     return terms
 
 def test_snippets(terms):
-    for t in terms:
-        try:
-            exec(compile(raw_py(t), f"<{t['term_id']}.py>", "exec"), {"__name__": "snippet"})
-        except Exception as e:
-            sys.exit(f"code_snippet for '{t['term_id']}' failed: {e!r}")
-        print(f"  snippet ok: {t['term_id']}")
+    """Run each published .py file plus its assertions in a fresh interpreter."""
+    import subprocess, tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        for t in terms:
+            f = pathlib.Path(tmp) / (t["term_id"].replace("-", "_") + ".py")
+            f.write_text(raw_py(t) + "\n\n# ---- tests ----\n" + t.get("test", ""), encoding="utf-8")
+            r = subprocess.run([sys.executable, str(f)], cwd=tmp, capture_output=True, text=True, timeout=600)
+            if r.returncode != 0:
+                err = r.stderr.strip().splitlines()[-1] if r.stderr.strip() else "unknown error"
+                hint = ""
+                m = re.search(r"No module named '([\w.]+)'", r.stderr)
+                if m:
+                    hint = f"  (pip install -r scripts/requirements.txt; missing {m.group(1)})"
+                sys.exit(f"snippet '{t['term_id']}' failed: {err}{hint}")
+            print(f"  snippet ok: {t['term_id']}" + (" (+tests)" if t.get("test") else ""))
 
 def _set_section(s, title, lines):
     block = "\n".join([f"## {title}", ""] + lines) + "\n\n"
@@ -285,9 +309,9 @@ def update_llms(terms):
     p = REPO / "llms.txt"
     s = p.read_text(encoding="utf-8")
     s = _set_section(s, "Glossary", [f"- [Glossary index]({BASE}/glossary/): all terms"] +
-                     [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']}" for t in terms])
+                     [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']}" for t in terms if not is_snippet(t)])
     s = _set_section(s, "Code", [f"- [Code snippets index]({BASE}/code/): tested Python implementations, MIT licensed"] +
-                     [f"- [{t['term_id']}.py]({BASE}/glossary/{t['term_id']}/{t['term_id']}.py): {t['short']} in Python ({', '.join(deps(t['code_snippet']))})" for t in terms])
+                     [f"- [{t['term_id']}.py]({BASE}{path_of(t)}{t['term_id']}.py): {t['short']}{'' if is_snippet(t) else ' in Python'} ({', '.join(deps(t['code_snippet']))})" for t in snippets_first(terms)])
     p.write_text(s, encoding="utf-8")
 
 def check_jsonld(text, where):
@@ -300,6 +324,8 @@ def check_jsonld(text, where):
 if __name__ == "__main__":
     TERMS = load_and_validate()
     BY = {t["term_id"]: t for t in TERMS}
+    GLOSS = [t for t in TERMS if not is_snippet(t)]
+    HUB = snippets_first(TERMS)
     if "--no-test" not in sys.argv:
         test_snippets(TERMS)
     out = REPO / "glossary"
@@ -307,14 +333,14 @@ if __name__ == "__main__":
     pages = {out / "index.html": index_page()}
     pages[REPO / "code" / "index.html"] = code_page()
     for t in TERMS:
-        pages[out / t["term_id"] / "index.html"] = term_page(t)
+        pages[REPO / path_of(t).strip("/") / "index.html"] = term_page(t)
     for path, text in pages.items():
         check_jsonld(text, path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
         print("Generated:", path.relative_to(REPO))
     for t in TERMS:
-        f = out / t["term_id"] / f"{t['term_id']}.py"
+        f = REPO / path_of(t).strip("/") / f"{t['term_id']}.py"
         f.write_text(raw_py(t), encoding="utf-8")
         print("Generated:", f.relative_to(REPO))
     update_llms(TERMS)
