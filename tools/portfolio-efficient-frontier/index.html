@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markowitz Portfolio Optimization & Efficient Frontier | QuantCore Labs</title>
+  <meta name="description" content="Compute optimal asset weights, maximum Sharpe ratio portfolios, and plot the Markowitz efficient frontier using multi-asset expected returns and covariance matrices in your browser.">
+  <link rel="canonical" href="https://quantcore-labs.com/tools/portfolio-efficient-frontier/">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Schema.org JSON-LD Structured Data for GEO / RAG Indexing -->
+  <script type="application/ld+json">
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Markowitz Portfolio Optimization Calculator",
+      "url": "https://quantcore-labs.com/tools/portfolio-efficient-frontier/",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript",
+      "description": "Interactive mean-variance portfolio optimization tool modeling the Markowitz efficient frontier and max Sharpe ratio allocation.",
+      "author": {
+        "@type": "Organization",
+        "name": "QuantCore Labs",
+        "url": "https://quantcore-labs.com"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Mean-Variance Optimization and the Markowitz Efficient Frontier",
+      "description": "Mathematical formulation of portfolio risk-return trade-offs, covariance matrices, and Sharpe ratio maximization.",
+      "author": {
+        "@type": "Organization",
+        "name": "QuantCore Labs"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How is the Sharpe Ratio defined in portfolio optimization?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The Sharpe Ratio is calculated as (R_p - R_f) / σ_p, where R_p is the expected portfolio return, R_f is the risk-free rate, and σ_p is the portfolio standard deviation (volatility)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does the Efficient Frontier represent?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The efficient frontier represents the set of optimal portfolios that offer the highest expected return for a defined level of risk, or the lowest risk for a given level of expected return."
+          }
+        }
+      ]
+    }
+  ]
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-mono antialiased min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- Header & Navigation -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <nav aria-label="Breadcrumb" class="text-xs text-slate-400">
+        <a href="/" class="hover:text-cyan-400 transition-colors">quantcore-labs</a> / <span class="text-slate-200">portfolio-efficient-frontier</span>
+      </nav>
+      <div class="text-xs font-semibold text-cyan-400 tracking-wider">MARKOWITZ · MEAN-VARIANCE OPTIMIZATION</div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full space-y-8">
+    <div class="space-y-2">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Markowitz Portfolio Optimization & Efficient Frontier</h1>
+      <p class="text-sm text-slate-400 max-w-3xl">
+        Compute optimal asset allocations, locate the Maximum Sharpe Ratio portfolio, and visualize the efficient frontier using simulated multi-asset return distributions. All computations run locally in your browser.
+      </p>
+    </div>
+
+    <!-- Interactive Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Input Controls Panel -->
+      <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4 shadow-xl">
+        <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 flex items-center justify-between">
+          <span>Parameters</span>
+          <span class="text-xs text-slate-500 font-normal">Real-Time Solver</span>
+        </h2>
+
+        <div class="space-y-4 text-xs">
+          <div>
+            <label for="riskFreeRate" class="block font-medium text-slate-300 mb-1">Risk-Free Rate R_f (%)</label>
+            <input type="number" id="riskFreeRate" value="3.0" step="0.25" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="numPortfolios" class="block font-medium text-slate-300 mb-1">Monte Carlo Portfolios</label>
+            <input type="number" id="numPortfolios" value="2000" step="500" min="500" max="10000" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-slate-800">
+            <span class="block font-medium text-slate-300">Asset Universe (Expected Return μ & Volatility σ)</span>
+            
+            <!-- Asset 1 -->
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800 space-y-2">
+              <div class="font-bold text-cyan-400">Asset 1 (Equities)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-slate-500 block">Return (%)</label><input type="number" id="ret1" value="12.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+                <div><label class="text-[10px] text-slate-500 block">Vol (%)</label><input type="number" id="vol1" value="18.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+              </div>
+            </div>
+
+            <!-- Asset 2 -->
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800 space-y-2">
+              <div class="font-bold text-cyan-400">Asset 2 (Bonds)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-slate-500 block">Return (%)</label><input type="number" id="ret2" value="5.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+                <div><label class="text-[10px] text-slate-500 block">Vol (%)</label><input type="number" id="vol2" value="7.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+              </div>
+            </div>
+
+            <!-- Asset 3 -->
+            <div class="bg-slate-950 p-2.5 rounded border border-slate-800 space-y-2">
+              <div class="font-bold text-cyan-400">Asset 3 (Alternatives)</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div><label class="text-[10px] text-slate-500 block">Return (%)</label><input type="number" id="ret3" value="15.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+                <div><label class="text-[10px] text-slate-500 block">Vol (%)</label><input type="number" id="vol3" value="25.0" step="0.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visualization & Optimal Portfolio Output -->
+      <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-lg p-5 flex flex-col justify-between shadow-xl space-y-4">
+        <div>
+          <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 mb-4 flex items-center justify-between">
+            <span>Efficient Frontier Canvas</span>
+            <span class="text-xs text-slate-400 font-normal" id="simStatus">Ready</span>
+          </h2>
+          <div class="relative w-full h-64 md:h-80 bg-slate-950 rounded border border-slate-800 overflow-hidden">
+            <canvas id="frontierCanvas" class="w-full h-full block"></canvas>
+          </div>
+        </div>
+
+        <!-- Optimal Allocation Card -->
+        <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs space-y-3">
+          <div class="font-bold text-slate-200 flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <span>Optimal Portfolio (Max Sharpe Ratio)</span>
+            <span id="optSharpe" class="text-cyan-400">Sharpe: –</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <span class="text-slate-500 block">Expected Return (R_p)</span>
+              <span id="optReturn" class="font-bold text-emerald-400 text-sm">–</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Volatility (σ_p)</span>
+              <span id="optVol" class="font-bold text-amber-400 text-sm">–</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Asset 1 / Asset 2</span>
+              <span id="optWeights12" class="font-bold text-slate-300 text-xs">–</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Asset 3 Weight</span>
+              <span id="optWeights3" class="font-bold text-slate-300 text-xs">–</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Analytical Formulas Section -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3 shadow-xl">
+      <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Formulas & Conventions</h2>
+      <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
+Expected Return: R_p = ∑ (w_i * R_i)
+Portfolio Risk:  σ_p = √( w^T * Σ * w )
+Sharpe Ratio:    S = (R_p - R_f) / σ_p
+      </div>
+      <p class="text-xs text-slate-400">
+        $\Sigma$ represents the covariance matrix constructed using asset standard deviations and an assumed correlation coefficient ($\rho = 0.3$). Weights satisfy $\sum w_i = 1$ and $w_i \ge 0$ (no short-selling).
+      </p>
+    </section>
+
+    <!-- AI Mirror Block (Markdown Mirror) -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3 shadow-xl">
+      <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Summary for AI Agents (Markdown Mirror)</h2>
+      <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs text-slate-300 space-y-2">
+        <p class="font-bold text-cyan-400"># Markowitz Portfolio Optimization</p>
+        <p>&gt; Client-side mean-variance optimization calculator for asset allocation and efficient frontier visualization. URL: https://quantcore-labs.com/tools/portfolio-efficient-frontier/</p>
+        <p class="font-bold">## Optimization Objectives</p>
+        <ul class="list-disc list-inside text-slate-400 space-y-1">
+          <li>Maximization of the Sharpe ratio subject to fully invested budget constraints ($\sum w_i = 1$).</li>
+          <li>Monte Carlo random weight generation over simplex distribution.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4 shadow-xl">
+      <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Frequently Asked Questions</h2>
+      <dl class="space-y-4 text-xs">
+        <div>
+          <dt class="font-bold text-cyan-400">Why does diversification reduce portfolio risk?</dt>
+          <dd class="text-slate-400 mt-1">When assets are not perfectly correlated ($\rho &lt; 1$), combining them smooths out independent return fluctuations, reducing overall portfolio variance below the weighted average of individual variances.</dd>
+        </div>
+        <div>
+          <dt class="font-bold text-cyan-400">How is the covariance matrix determined in this calculator?</dt>
+          <dd class="text-slate-400 mt-1">Covariances are computed as $\Sigma_{ij} = \sigma_i \sigma_j \rho_{ij}$, assuming a moderate cross-asset correlation coefficient ($\rho = 0.3$) for illustrative multi-asset diversification.</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <p>For educational and quantitative research use only. Model outputs depend on specified parameters. © QuantCore Labs.</p>
+  </footer>
+
+  <!-- Optimization Logic & Canvas Script -->
+  <script>
+    function runOptimization() {
+      const rf = (parseFloat(document.getElementById('riskFreeRate').value) || 0) / 100;
+      const numSims = parseInt(document.getElementById('numPortfolios').value) || 2000;
+
+      const r1 = (parseFloat(document.getElementById('ret1').value) || 0) / 100;
+      const v1 = (parseFloat(document.getElementById('vol1').value) || 0) / 100;
+      const r2 = (parseFloat(document.getElementById('ret2').value) || 0) / 100;
+      const v2 = (parseFloat(document.getElementById('vol2').value) || 0) / 100;
+      const r3 = (parseFloat(document.getElementById('ret3').value) || 0) / 100;
+      const v3 = (parseFloat(document.getElementById('vol3').value) || 0) / 100;
+
+      const returns = [r1, r2, r3];
+      const vols = [v1, v2, v3];
+      const rho = 0.3; // Assumption for cross-asset correlation
+
+      // Build Covariance Matrix Sigma (3x3)
+      const cov = [
+        [v1*v1, v1*v2*rho, v1*v3*rho],
+        [v2*v1*rho, v2*v2, v2*v3*rho],
+        [v3*v1*rho, v3*v2*rho, v3*v3]
+      ];
+
+      const portfolios = [];
+      let bestSharpe = -Infinity;
+      let bestPortfolio = null;
+
+      // Monte Carlo Simulation over Simplex
+      for (let s = 0; s < numSims; s++) {
+        let u1 = Math.random(), u2 = Math.random(), u3 = Math.random();
+        let sum = u1 + u2 + u3;
+        let w1 = u1 / sum, w2 = u2 / sum, w3 = u3 / sum;
+        let w = [w1, w2, w3];
+
+        // Expected Return R_p
+        let rp = w1 * r1 + w2 * r2 + w3 * r3;
+
+        // Portfolio Variance = w^T * Sigma * w
+        let varP = 0;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            varP += w[i] * w[j] * cov[i][j];
+          }
+        }
+        let volP = Math.sqrt(Math.max(0, varP));
+        let sharpe = volP > 0 ? (rp - rf) / volP : 0;
+
+        portfolios.push({ w, rp, volP, sharpe });
+
+        if (sharpe > bestSharpe) {
+          bestSharpe = sharpe;
+          bestPortfolio = { w, rp, volP, sharpe };
+        }
+      }
+
+      // Update UI Readouts
+      if (bestPortfolio) {
+        document.getElementById('optSharpe').textContent = `Sharpe: ${bestPortfolio.sharpe.toFixed(3)}`;
+        document.getElementById('optReturn').textContent = `${(bestPortfolio.rp * 100).toFixed(2)}%`;
+        document.getElementById('optVol').textContent = `${(bestPortfolio.volP * 100).toFixed(2)}%`;
+        document.getElementById('optWeights12').textContent = `${(bestPortfolio.w[0]*100).toFixed(1)}% / ${(bestPortfolio.w[1]*100).toFixed(1)}%`;
+        document.getElementById('optWeights3').textContent = `${(bestPortfolio.w[2]*100).toFixed(1)}%`;
+        document.getElementById('simStatus').textContent = `${numSims} Portfolios Simulated`;
+      }
+
+      drawCanvas(portfolios, bestPortfolio);
+    }
+
+    // Render Canvas
+    function drawCanvas(portfolios, best) {
+      const canvas = document.getElementById('frontierCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      let minVol = Infinity, maxVol = -Infinity;
+      let minRet = Infinity, maxRet = -Infinity;
+
+      for (const p of portfolios) {
+        if (p.volP < minVol) minVol = p.volP;
+        if (p.volP > maxVol) maxVol = p.volP;
+        if (p.rp < minRet) minRet = p.rp;
+        if (p.rp > maxRet) maxRet = p.rp;
+      }
+
+      const padding = 30;
+      const usableWidth = width - padding * 2;
+      const usableHeight = height - padding * 2;
+
+      // Draw Grid Lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+
+      // Plot Monte Carlo Scatter Points
+      for (const p of portfolios) {
+        const x = padding + ((p.volP - minVol) / (maxVol - minVol || 1)) * usableWidth;
+        const y = height - padding - ((p.rp - minRet) / (maxRet - minRet || 1)) * usableHeight;
+
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+        ctx.fillRect(x, y, 2, 2);
+      }
+
+      // Plot Optimal Portfolio Point
+      if (best) {
+        const bx = padding + ((best.volP - minVol) / (maxVol - minVol || 1)) * usableWidth;
+        const by = height - padding - ((best.rp - minRet) / (maxRet - minRet || 1)) * usableHeight;
+
+        ctx.fillStyle = '#34d399';
+        ctx.beginPath();
+        ctx.arc(bx, by, 6, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    // Attach Event Listeners
+    const inputs = ['riskFreeRate', 'numPortfolios', 'ret1', 'vol1', 'ret2', 'vol2', 'ret3', 'vol3'];
+    inputs.forEach(id => {
+      document.getElementById(id).addEventListener('input', runOptimization);
+    });
+
+    window.addEventListener('load', runOptimization);
+    window.addEventListener('resize', runOptimization);
+  </script>
+</body>
+</html>
