@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Load Hive-Partitioned Parquet Ticks with Bound Parameters: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.">
+<link rel="canonical" href="https://quantcore-labs.com/code/duckdb-parquet-loader/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Load Hive-Partitioned Parquet Ticks with Bound Parameters: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.">
+<meta property="og:url" content="https://quantcore-labs.com/code/duckdb-parquet-loader/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/duckdb-parquet-loader/#article",
+      "headline": "Load Hive-Partitioned Parquet Ticks with Bound Parameters: Tested Python Implementation",
+      "description": "Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/duckdb-parquet-loader/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/duckdb-parquet-loader/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/duckdb-parquet-loader/#code",
+      "name": "DuckDB Parquet Loader in Python",
+      "description": "Tested Python reference implementation: Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, duckdb",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/duckdb-parquet-loader/",
+      "contentUrl": "https://quantcore-labs.com/code/duckdb-parquet-loader/duckdb-parquet-loader.py",
+      "text": "import duckdb\n\ndef query_ticks_by_date(parquet_glob: str, target_date: str):\n    \"\"\"Ticks for one Hive date partition.\n\n    parquet_glob and target_date are bound parameters. They are never\n    interpolated into the SQL text.\n    \"\"\"\n    if not isinstance(parquet_glob, str) or not isinstance(target_date, str):\n        raise TypeError(\"parquet_glob and target_date must be strings\")\n    if parquet_glob == \"\" or target_date == \"\":\n        raise ValueError(\"parquet_glob and target_date must be non-empty\")\n    con = duckdb.connect()\n    return con.execute(\n        \"\"\"\n        SELECT symbol, timestamp, price, volume\n        FROM read_parquet(?, hive_partitioning = true)\n        WHERE date = ?\n          AND volume > 0\n        ORDER BY timestamp\n        \"\"\",\n        [parquet_glob, target_date],\n    ).df()\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why not use an f-string for the path?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "read_parquet needs a path, and an f-string is the obvious way to supply it, but the path then becomes SQL syntax. A directory name containing a quote breaks the query or changes it. A bound parameter keeps the path as a value. The same applies to the date."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this load the whole dataset into memory?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DuckDB reads the Parquet row groups required by the query. A selective date predicate on a Hive partition avoids opening other days. The result of this particular query is still a pandas DataFrame of every matching tick, so aggregate in SQL when the day is large. See the minute-bar query on the DuckDB ticks page."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "DuckDB Parquet Loader",
+          "item": "https://quantcore-labs.com/code/duckdb-parquet-loader/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">duckdb-parquet-loader</span></nav><div class="tag">CODE · DUCKDB PARQUET LOADER</div></div></header>
+<main>
+<article>
+<h1>Load Hive-Partitioned Parquet Ticks with Bound Parameters</h1>
+<p class="lede">Data Engineering for Quants · Snippet ID: <code>duckdb-parquet-loader</code></p>
+<p class="def"><strong>What it does.</strong> DuckDB queries Parquet in place. With Hive layout (one folder per day), a predicate on the partition column skips other days. The glob passed to read_parquet and the date in the WHERE clause are both placeholders. Building either value into the SQL text with an f-string would let a quote in a path, or a crafted date, close the string and append another statement. Binding them does not.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">Layout:  ticks/date=YYYY-MM-DD/part-*.parquet
+Columns: timestamp, symbol, price, volume
+
+SELECT symbol, timestamp, price, volume
+FROM read_parquet(?, hive_partitioning = true)   -- ? = glob, not an interpolated path
+WHERE date = ?                                   -- ? = the date
+  AND volume &gt; 0
+ORDER BY timestamp</pre></section>
+
+<section><h2>Why bind every value</h2>
+<ul>
+<li>The date filter is what makes a Hive layout useful: folders outside the day are not opened. It only stays a filter if it is a value, not a piece of SQL text.</li>
+<li>Paths from a config file, a request, or a folder name with a quote are data. <code>read_parquet(?)</code> passes them through DuckDB's parameter API.</li>
+<li>For minute bars, VWAP and code filters on the same layout, see <a href="/code/duckdb-parquet-ticks/">duckdb-parquet-ticks</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Partition type.</strong> Hive values are parsed from folder names. <code>date=2024-03-01</code> usually arrives as a date. Compare it to a date or an ISO date string, and check with <code>DESCRIBE</code> if a filter suddenly matches nothing.</li>
+<li><strong>Zero-size prints.</strong> The query drops <code>volume &lt;= 0</code>. Those rows are not trades. Decide separately whether auction prints belong in the extract.</li>
+<li><strong>Glob, not a Python path join inside SQL.</strong> Pass the glob from Python (<code>dir/**/*.parquet</code>). Do not concatenate it into the query string.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires duckdb. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/duckdb-parquet-loader/duckdb-parquet-loader.py">Download duckdb-parquet-loader.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import duckdb
+
+def query_ticks_by_date(parquet_glob: str, target_date: str):
+    &quot;&quot;&quot;Ticks for one Hive date partition.
+
+    parquet_glob and target_date are bound parameters. They are never
+    interpolated into the SQL text.
+    &quot;&quot;&quot;
+    if not isinstance(parquet_glob, str) or not isinstance(target_date, str):
+        raise TypeError(&quot;parquet_glob and target_date must be strings&quot;)
+    if parquet_glob == &quot;&quot; or target_date == &quot;&quot;:
+        raise ValueError(&quot;parquet_glob and target_date must be non-empty&quot;)
+    con = duckdb.connect()
+    return con.execute(
+        &quot;&quot;&quot;
+        SELECT symbol, timestamp, price, volume
+        FROM read_parquet(?, hive_partitioning = true)
+        WHERE date = ?
+          AND volume &gt; 0
+        ORDER BY timestamp
+        &quot;&quot;&quot;,
+        [parquet_glob, target_date],
+    ).df()
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why not use an f-string for the path?</h3><p>read_parquet needs a path, and an f-string is the obvious way to supply it, but the path then becomes SQL syntax. A directory name containing a quote breaks the query or changes it. A bound parameter keeps the path as a value. The same applies to the date.</p><h3>Does this load the whole dataset into memory?</h3><p>DuckDB reads the Parquet row groups required by the query. A selective date predicate on a Hive partition avoids opening other days. The result of this particular query is still a pandas DataFrame of every matching tick, so aggregate in SQL when the day is large. See the minute-bar query on the DuckDB ticks page.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Load Hive-Partitioned Parquet Ticks with Bound Parameters</p>
+<p>&gt; Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.</p>
+<p>- Category: Data Engineering for Quants</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/duckdb-parquet-loader/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/duckdb-parquet-loader/duckdb-parquet-loader.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/code/duckdb-parquet-ticks/">Query Tick Data in Parquet with DuckDB</a> <a href="/code/duckdb-asof-vwap/">Per-Symbol Minute VWAP in DuckDB</a> <a href="/code/pandas-tick-to-ohlcv/">Resample Trade Ticks to OHLCV and VWAP Bars</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

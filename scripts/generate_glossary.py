@@ -28,6 +28,10 @@ def deps(code):
             out.append(m)
     return out
 
+def dep_label(code):
+    found = deps(code)
+    return ", ".join(found) if found else "standard library"
+
 def snippets_first(terms):
     return [t for t in terms if t.get("kind") == "snippet"] + [t for t in terms if t.get("kind") != "snippet"]
 
@@ -203,7 +207,7 @@ def index_page():
 </article>""" for t in GLOSS)
     md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}/glossary/{t['term_id']}/): {html.escape(t['summary'])}</li>" for t in GLOSS)
     body = f"""<h1>Quantitative Finance Glossary</h1>
-<p class="lede">Definitions, formulas and tested Python reference implementations for market microstructure, execution and statistical-arbitrage concepts. Written for quantitative researchers and AI agents.</p>
+<p class="lede">Definitions, formulas and tested Python reference implementations for execution, microstructure, risk, volatility, options and statistical arbitrage. Written for quantitative researchers and AI agents.</p>
 <section aria-label="Terms">
 {cards}
 </section>
@@ -215,7 +219,7 @@ def index_page():
     ld = {"@context": "https://schema.org", "@graph": [
         ORG,
         {"@type": "DefinedTermSet", "@id": SET_ID, "name": "QuantCore Labs Quantitative Finance Glossary",
-         "url": f"{BASE}/glossary/", "description": "Definitions, formulas and Python implementations for quantitative finance, market microstructure and algorithmic trading terms.",
+         "url": f"{BASE}/glossary/", "description": "Definitions, formulas and Python implementations for quantitative finance: execution, microstructure, risk, volatility, options and statistical arbitrage.",
          "publisher": {"@id": f"{BASE}/#org"},
          "hasDefinedTerm": [{"@type": "DefinedTerm", "@id": f"{BASE}/glossary/{t['term_id']}/#term", "name": t["name"],
                              "termCode": t["term_id"], "description": t["definition"], "url": f"{BASE}/glossary/{t['term_id']}/",
@@ -223,17 +227,17 @@ def index_page():
         breadcrumb_ld([("QuantCore Labs", "/"), ("Glossary", "/glossary/")]),
     ]}
     return page("Quantitative Finance Glossary & Terminology | QuantCore Labs",
-                "Definitions, formulas and tested Python implementations for quantitative finance, market microstructure and algorithmic trading terms.",
+                "Definitions, formulas and tested Python implementations for quantitative finance: execution, microstructure, risk, volatility, options and statistical arbitrage.",
                 "/glossary/", [("quantcore-labs", "/"), ("glossary", None)], "KNOWLEDGE BASE · GLOSSARY", body, ld)
 
 def code_page():
     rows = "\n".join(f"""<article class="card">
-<div class="meta"><span class="cat">{html.escape(t['category'])}</span><span class="id">{html.escape(", ".join(deps(t['code_snippet'])))}</span></div>
+<div class="meta"><span class="cat">{html.escape(t['category'])}</span><span class="id">{html.escape(dep_label(t['code_snippet']))}</span></div>
 <h2><a href="{path_of(t)}#code">{html.escape(t['short'])}{'' if is_snippet(t) else ' in Python'}</a></h2>
 <p>{html.escape(t['summary'])}</p>
 <p><a href="{path_of(t)}{t['term_id']}.py">{t['term_id']}.py</a> · <a href="{path_of(t)}">{'explanation and tests' if is_snippet(t) else 'definition and formula'}</a></p>
 </article>""" for t in HUB)
-    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}{path_of(t)}{t['term_id']}.py): {html.escape(', '.join(deps(t['code_snippet'])))}</li>" for t in HUB)
+    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}{path_of(t)}{t['term_id']}.py): {html.escape(dep_label(t['code_snippet']))}</li>" for t in HUB)
     body = f"""<h1>Quant Code Snippets</h1>
 <p class="lede">Vectorised, tested Python reference implementations of quantitative finance measures. Each snippet is tested before publication and re-executed by the generator on every rebuild, is MIT licensed, and links to the definition and formula it implements.</p>
 <section aria-label="Snippets">
@@ -256,7 +260,7 @@ def code_page():
         breadcrumb_ld([("QuantCore Labs", "/"), ("Code", "/code/")]),
     ]}
     return page("Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs",
-                "Tested Python implementations for quant research: Numba rolling operators, DuckDB tick Parquet queries, vectorised backtests, ADF, cointegration, VaR/ES, Amihud, IC and more. MIT licensed.",
+                "Tested Python implementations for quant research: Numba and NumPy rolling operators, DuckDB and Polars data tools, vectorised backtests, and the glossary measures. MIT licensed.",
                 "/code/", [("quantcore-labs", "/"), ("code", None)], "KNOWLEDGE BASE · CODE", body, ld)
 
 
@@ -311,7 +315,7 @@ def update_llms(terms):
     s = _set_section(s, "Glossary", [f"- [Glossary index]({BASE}/glossary/): all terms"] +
                      [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']}" for t in terms if not is_snippet(t)])
     s = _set_section(s, "Code", [f"- [Code snippets index]({BASE}/code/): tested Python implementations, MIT licensed"] +
-                     [f"- [{t['term_id']}.py]({BASE}{path_of(t)}{t['term_id']}.py): {t['short']}{'' if is_snippet(t) else ' in Python'} ({', '.join(deps(t['code_snippet']))})" for t in snippets_first(terms)])
+                     [f"- [{t['term_id']}.py]({BASE}{path_of(t)}{t['term_id']}.py): {t['short']}{'' if is_snippet(t) else ' in Python'} ({dep_label(t['code_snippet'])})" for t in snippets_first(terms)])
     p.write_text(s, encoding="utf-8")
 
 def check_jsonld(text, where):

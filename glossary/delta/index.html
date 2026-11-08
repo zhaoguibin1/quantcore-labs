@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delta: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The derivative of a European option&#x27;s Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/delta/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Delta: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The derivative of a European option&#x27;s Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/delta/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/delta/#term",
+      "name": "Delta",
+      "termCode": "delta",
+      "description": "Delta is how much the model value changes for a small move in the underlying, holding the other inputs fixed. In Black-Scholes-Merton it is a closed form. For a call it lies between 0 and e^{−qT}; for a put it lies between −e^{−qT} and 0. With no dividend yield those bounds are 0 and 1, and −1 and 0. The figure is a model sensitivity. Hedging with it leaves everything the model left out, including jumps and the fact that volatility is not a constant.",
+      "url": "https://quantcore-labs.com/glossary/delta/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/delta/#article",
+      "headline": "Delta: Definition, Formula and Python",
+      "description": "The derivative of a European option's Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/delta/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/delta/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/delta/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/delta/#code",
+      "name": "Delta in Python",
+      "description": "Tested Python reference implementation: The derivative of a European option's Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/delta/",
+      "contentUrl": "https://quantcore-labs.com/glossary/delta/delta.py",
+      "text": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_delta(S, K, T, r, sigma, call=True, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton spot delta. call=False returns the put delta.\n\n    Requires positive S, K, T and sigma. q is a continuous dividend yield.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    disc = exp(-q * T)\n    return float(disc * norm.cdf(d1) if call else disc * (norm.cdf(d1) - 1.0))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/delta/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is call delta not exactly N(d1)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "N(d1) is the no-dividend formula. With a continuous yield q the spot delta of a European call is e^{−qT} N(d1). The two agree when q is 0, which is the default of this function."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does delta tell me the probability the option finishes in the money?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Under the stock-numeraire measure, N(d1) is a probability related to the share, and N(d2) is the risk-neutral probability that a European call finishes in the money, in this model, with no dividends changing that statement. Neither one is a real-world probability, and neither one is a trading instruction."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Delta",
+          "item": "https://quantcore-labs.com/glossary/delta/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">delta</span></nav><div class="tag">GLOSSARY · DELTA</div></div></header>
+<main>
+<article>
+<h1>Delta</h1>
+<p class="lede">Options &amp; Derivatives · Term ID: <code>delta</code></p>
+<p class="def"><strong>Definition.</strong> Delta is how much the model value changes for a small move in the underlying, holding the other inputs fixed. In Black-Scholes-Merton it is a closed form. For a call it lies between 0 and e^{−qT}; for a put it lies between −e^{−qT} and 0. With no dividend yield those bounds are 0 and 1, and −1 and 0. The figure is a model sensitivity. Hedging with it leaves everything the model left out, including jumps and the fact that volatility is not a constant.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">d1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T)
+
+Δ_call = e^{−qT} N(d1)
+Δ_put  = e^{−qT} (N(d1) − 1) = −e^{−qT} N(−d1)
+
+Δ_call − Δ_put = e^{−qT}
+
+q = 0 is the no-dividend textbook case: Δ_call = N(d1), Δ_put = N(d1) − 1.
+The on-site calculator uses the same expressions, including q.</pre></section>
+
+<section><h2>How to read the number</h2>
+<ul>
+<li>A call delta of 0.50 is not automatically at-the-money once rates or dividends are nonzero. It is the model slope at those inputs. N(d1) equals a half when d1 is zero, which is not the same as S = K.</li>
+<li>Delta of a position is the sum of signed deltas times the multiplier. The function returns the per-unit derivative, not a share count for a book.</li>
+<li>The slope changes as spot moves. That second derivative is <a href="/glossary/gamma/">gamma</a>. The slope also depends on the volatility you typed in, which is where <a href="/glossary/implied-volatility/">implied volatility</a> enters.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>European Black-Scholes-Merton only.</strong> American puts, barriers and anything path dependent do not have this delta. At expiry the slope becomes a step. The <a href="/option-greeks-calc/">Greeks calculator</a> spells out that limit; this function requires T &gt; 0 and σ &gt; 0 so the formula stays the smooth one.</li>
+<li><strong>Spot delta versus forward delta.</strong> The derivative here is with respect to spot, and it includes the dividend discount e^{−qT}. A forward delta omits that discount. Mixing them mis-hedges by that factor.</li>
+<li><strong>A hedge ratio is not a hedge result.</strong> Replacing the option with −Δ shares cancels the first-order spot term in this model, at this instant. Gamma, vega and discrete rebalancing remain.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires scipy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/delta/delta.py">Download delta.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>from math import exp, log, sqrt
+from scipy.stats import norm
+
+def bs_delta(S, K, T, r, sigma, call=True, q=0.0) -&gt; float:
+    &quot;&quot;&quot;Black-Scholes-Merton spot delta. call=False returns the put delta.
+
+    Requires positive S, K, T and sigma. q is a continuous dividend yield.
+    &quot;&quot;&quot;
+    if S &lt;= 0 or K &lt;= 0 or T &lt;= 0 or sigma &lt;= 0:
+        raise ValueError(&quot;S, K, T and sigma must be positive&quot;)
+    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))
+    disc = exp(-q * T)
+    return float(disc * norm.cdf(d1) if call else disc * (norm.cdf(d1) - 1.0))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is call delta not exactly N(d1)?</h3><p>N(d1) is the no-dividend formula. With a continuous yield q the spot delta of a European call is e^{−qT} N(d1). The two agree when q is 0, which is the default of this function.</p><h3>Does delta tell me the probability the option finishes in the money?</h3><p>No. Under the stock-numeraire measure, N(d1) is a probability related to the share, and N(d2) is the risk-neutral probability that a European call finishes in the money, in this model, with no dividends changing that statement. Neither one is a real-world probability, and neither one is a trading instruction.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Delta</p>
+<p>&gt; The derivative of a European option&#x27;s Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.</p>
+<p>- Category: Options &amp; Derivatives</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/delta/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/delta/delta.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/gamma/">Gamma</a> <a href="/glossary/vega/">Vega</a> <a href="/glossary/implied-volatility/">Implied Volatility</a> <a href="/glossary/put-call-parity/">Put-Call Parity</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

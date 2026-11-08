@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rolling Z-Score from a Zero-Copy Sliding Window: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.">
+<link rel="canonical" href="https://quantcore-labs.com/code/numpy-strided-rolling/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Rolling Z-Score from a Zero-Copy Sliding Window: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.">
+<meta property="og:url" content="https://quantcore-labs.com/code/numpy-strided-rolling/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/numpy-strided-rolling/#article",
+      "headline": "Rolling Z-Score from a Zero-Copy Sliding Window: Tested Python Implementation",
+      "description": "Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/numpy-strided-rolling/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/numpy-strided-rolling/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/numpy-strided-rolling/#code",
+      "name": "NumPy Strided Rolling in Python",
+      "description": "Tested Python reference implementation: Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/numpy-strided-rolling/",
+      "contentUrl": "https://quantcore-labs.com/code/numpy-strided-rolling/numpy-strided-rolling.py",
+      "text": "import numpy as np\nfrom numpy.lib.stride_tricks import sliding_window_view\n\ndef rolling_zscore(x, window: int) -> np.ndarray:\n    \"\"\"Rolling z-score using a zero-copy sliding window.\n\n    Sample standard deviation (ddof=1). Warm-up and zero-std windows are NaN.\n    The window view is not writable from the caller's point of view: this\n    function only reads it.\n    \"\"\"\n    x = np.asarray(x, dtype=np.float64).reshape(-1)\n    window = int(window)\n    if window < 2:\n        raise ValueError(\"window must be at least 2\")\n    out = np.full(x.shape, np.nan)\n    if x.size < window:\n        return out\n    view = sliding_window_view(x, window)\n    mu = view.mean(axis=1)\n    sd = view.std(axis=1, ddof=1)\n    z = np.full(mu.shape, np.nan)\n    np.divide(x[window - 1:] - mu, sd, out=z, where=sd > 0)\n    out[window - 1:] = z\n    return out\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does sliding_window_view copy the data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It returns a view with modified strides. The extra memory is a small array header, not n times w floats. The subsequent mean and std do read each window, so the compute is not free."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why not use this for every rolling statistic?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Reductions that have an O(1) update, such as a sum, are faster and kinder to the cache as a single pass. The strided view is the right tool when the statistic is awkward to update, for example a rolling median or quantile."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "NumPy Strided Rolling",
+          "item": "https://quantcore-labs.com/code/numpy-strided-rolling/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">numpy-strided-rolling</span></nav><div class="tag">CODE · NUMPY STRIDED ROLLING</div></div></header>
+<main>
+<article>
+<h1>Rolling Z-Score from a Zero-Copy Sliding Window</h1>
+<p class="lede">High-Performance Python · Snippet ID: <code>numpy-strided-rolling</code></p>
+<p class="def"><strong>What it does.</strong> sliding_window_view reshapes a 1-D array into overlapping windows of length w without copying the values. The row means and sample standard deviations are then ordinary NumPy reductions along the window axis. The z-score at the right edge of each window is (x − mean) / std. Positions before the first full window are missing. This is a convenient form when the reduction is a NumPy ufunc. It is not always faster than a single running-sum pass, because each overlapping row still reads w elements.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">W = sliding_window_view(x, w)          shape (n − w + 1, w), a view
+μ = mean(W, axis=1)                    population mean of the window
+s = std(W, axis=1, ddof=1)             sample standard deviation
+z_{w−1+i} = (x_{w−1+i} − μ_i) / s_i     if s_i &gt; 0, else missing
+
+Memory: W.base is x. Changing W would change x.</pre></section>
+
+<section><h2>When to use it</h2>
+<ul>
+<li>A one-off rolling reduction that NumPy already implements (mean, quantile, median), where writing a running-sum update is not worth it.</li>
+<li>Teaching or testing a window statistic against an obvious definition. The view makes the window explicit.</li>
+<li>For mean, variance and beta on long series, a running sum does one pass and less memory traffic. See <a href="/code/rolling-window-numba/">rolling-window-numba</a> and <a href="/code/cython-rolling-mean/">cython-rolling-mean</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>It is a view.</strong> Do not write into the window array. The write lands in the original series.</li>
+<li><strong>The view is O(n·w) to reduce</strong> even though it is O(1) extra memory to build. A rolling mean this way is slower than a prefix sum for large w.</li>
+<li><strong>ddof.</strong> Sample standard deviation (divide by w−1) matches pandas <code>rolling.std</code>. Population standard deviation does not. w must be at least 2.</li>
+<li><strong>Zero variation.</strong> A window of identical values has sample std 0. Division is skipped and the z-score is missing.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/numpy-strided-rolling/numpy-strided-rolling.py">Download numpy-strided-rolling.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
+
+def rolling_zscore(x, window: int) -&gt; np.ndarray:
+    &quot;&quot;&quot;Rolling z-score using a zero-copy sliding window.
+
+    Sample standard deviation (ddof=1). Warm-up and zero-std windows are NaN.
+    The window view is not writable from the caller&#x27;s point of view: this
+    function only reads it.
+    &quot;&quot;&quot;
+    x = np.asarray(x, dtype=np.float64).reshape(-1)
+    window = int(window)
+    if window &lt; 2:
+        raise ValueError(&quot;window must be at least 2&quot;)
+    out = np.full(x.shape, np.nan)
+    if x.size &lt; window:
+        return out
+    view = sliding_window_view(x, window)
+    mu = view.mean(axis=1)
+    sd = view.std(axis=1, ddof=1)
+    z = np.full(mu.shape, np.nan)
+    np.divide(x[window - 1:] - mu, sd, out=z, where=sd &gt; 0)
+    out[window - 1:] = z
+    return out
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Does sliding_window_view copy the data?</h3><p>No. It returns a view with modified strides. The extra memory is a small array header, not n times w floats. The subsequent mean and std do read each window, so the compute is not free.</p><h3>Why not use this for every rolling statistic?</h3><p>Reductions that have an O(1) update, such as a sum, are faster and kinder to the cache as a single pass. The strided view is the right tool when the statistic is awkward to update, for example a rolling median or quantile.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Rolling Z-Score from a Zero-Copy Sliding Window</p>
+<p>&gt; Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.</p>
+<p>- Category: High-Performance Python</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/numpy-strided-rolling/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/numpy-strided-rolling/numpy-strided-rolling.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/code/rolling-window-numba/">Fast Rolling Mean, Std, Beta and Z-score with Numba</a> <a href="/code/cython-rolling-mean/">O(n) Rolling Mean (Cython Memoryview Recurrence)</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

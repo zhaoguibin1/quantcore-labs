@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volume-Synchronized Probability of Informed Trading (VPIN): Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/vpin/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Volume-Synchronized Probability of Informed Trading (VPIN): Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/vpin/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/vpin/#term",
+      "name": "Volume-Synchronized Probability of Informed Trading (VPIN)",
+      "termCode": "vpin",
+      "description": "VPIN averages the absolute difference between buy volume and sell volume across the last n equal-volume buckets, and divides by the volume those buckets represent. Easley, López de Prado and O'Hara designed it as a high-frequency cousin of the probability of informed trading: a bucket is toxic when one side dominates. The measure does not classify trades by itself. Buy and sell volume are inputs, usually from a bulk-volume split or from an aggressor flag.",
+      "url": "https://quantcore-labs.com/glossary/vpin/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/vpin/#article",
+      "headline": "Volume-Synchronized Probability of Informed Trading (VPIN): Definition, Formula and Python",
+      "description": "An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vpin/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/vpin/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/vpin/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/vpin/#code",
+      "name": "VPIN in Python",
+      "description": "Tested Python reference implementation: An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/vpin/",
+      "contentUrl": "https://quantcore-labs.com/glossary/vpin/vpin.py",
+      "text": "import numpy as np\nimport pandas as pd\n\ndef compute_vpin(volume_buckets: pd.DataFrame, bucket_size: float) -> float:\n    \"\"\"VPIN from equal-volume buckets with buy_vol and sell_vol columns.\n\n    Each row must sum to bucket_size. The function does not classify trades.\n    \"\"\"\n    if bucket_size <= 0:\n        raise ValueError(\"bucket_size must be positive\")\n    buy = np.asarray(volume_buckets[\"buy_vol\"], dtype=float)\n    sell = np.asarray(volume_buckets[\"sell_vol\"], dtype=float)\n    if buy.shape != sell.shape or buy.size == 0:\n        raise ValueError(\"need at least one buy/sell bucket\")\n    if np.any(buy < 0) or np.any(sell < 0):\n        raise ValueError(\"volumes must be non-negative\")\n    total = buy + sell\n    if np.max(np.abs(total - bucket_size)) > 1e-6 * bucket_size:\n        raise ValueError(\"each bucket must sum to bucket_size; drop a partial tail\")\n    return float(np.abs(buy - sell).sum() / (buy.size * bucket_size))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vpin/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is VPIN the same as PIN?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. PIN is a daily mixture model estimated by maximum likelihood from buy and sell counts. VPIN is a rolling volume-bucket imbalance that can be updated through the day. They share an author and an interpretation, not a formula."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is a high VPIN?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The ratio is between 0 and 1 when buckets are well formed. How high is unusual depends on the symbol, the bucket size and the classification rule. Compare a name with its own history before comparing it with another name."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "VPIN",
+          "item": "https://quantcore-labs.com/glossary/vpin/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">vpin</span></nav><div class="tag">GLOSSARY · VPIN</div></div></header>
+<main>
+<article>
+<h1>Volume-Synchronized Probability of Informed Trading (VPIN)</h1>
+<p class="lede">Market Microstructure &amp; Order Flow · Term ID: <code>vpin</code></p>
+<p class="def"><strong>Definition.</strong> VPIN averages the absolute difference between buy volume and sell volume across the last n equal-volume buckets, and divides by the volume those buckets represent. Easley, López de Prado and O&#x27;Hara designed it as a high-frequency cousin of the probability of informed trading: a bucket is toxic when one side dominates. The measure does not classify trades by itself. Buy and sell volume are inputs, usually from a bulk-volume split or from an aggressor flag.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">V = target volume of each bucket
+VPIN = Σ_{τ=1..n} |V^B_τ − V^S_τ| / (n · V)
+
+If every bucket is exactly volume V and V^B + V^S = V, then 0 ≤ VPIN ≤ 1.
+VPIN = 0: buy and sell volume match in every bucket
+VPIN = 1: each bucket is entirely one side</pre></section>
+
+<section><h2>How desks use the number</h2>
+<ul>
+<li>As a state variable for quoting: a higher reading means recent volume was more one-sided, so a market maker may widen or cut size. It is a description of the recent tape, not a forecast with a promised hit rate.</li>
+<li>The buckets are equal volume, not equal time. Build them with something like <a href="/code/pandas-volume-bars/">volume bars</a>, then split each bar's volume into buy and sell.</li>
+<li>The daily structural model behind the same idea is <a href="/glossary/pin-informed-trading/">PIN</a>. A price-impact slope on signed volume is <a href="/glossary/kyles-lambda/">Kyle's lambda</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Classification is the measurement.</strong> Bulk-volume classification assigns a fraction of each bar to buy or sell from the price change. A different rule produces a different VPIN. Report the rule.</li>
+<li><strong>The denominator assumes equal buckets.</strong> The code below rejects a row whose buy plus sell volume is not the stated bucket size. A partial last bucket should be dropped, not squeezed into the formula.</li>
+<li><strong>It is not a probability you can take to a risk limit without a model.</strong> The name says probability. The calculation is a normalised imbalance. Mapping it onto the structural PIN parameters requires the model, not just the ratio.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, pandas. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/vpin/vpin.py">Download vpin.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+import pandas as pd
+
+def compute_vpin(volume_buckets: pd.DataFrame, bucket_size: float) -&gt; float:
+    &quot;&quot;&quot;VPIN from equal-volume buckets with buy_vol and sell_vol columns.
+
+    Each row must sum to bucket_size. The function does not classify trades.
+    &quot;&quot;&quot;
+    if bucket_size &lt;= 0:
+        raise ValueError(&quot;bucket_size must be positive&quot;)
+    buy = np.asarray(volume_buckets[&quot;buy_vol&quot;], dtype=float)
+    sell = np.asarray(volume_buckets[&quot;sell_vol&quot;], dtype=float)
+    if buy.shape != sell.shape or buy.size == 0:
+        raise ValueError(&quot;need at least one buy/sell bucket&quot;)
+    if np.any(buy &lt; 0) or np.any(sell &lt; 0):
+        raise ValueError(&quot;volumes must be non-negative&quot;)
+    total = buy + sell
+    if np.max(np.abs(total - bucket_size)) &gt; 1e-6 * bucket_size:
+        raise ValueError(&quot;each bucket must sum to bucket_size; drop a partial tail&quot;)
+    return float(np.abs(buy - sell).sum() / (buy.size * bucket_size))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Is VPIN the same as PIN?</h3><p>No. PIN is a daily mixture model estimated by maximum likelihood from buy and sell counts. VPIN is a rolling volume-bucket imbalance that can be updated through the day. They share an author and an interpretation, not a formula.</p><h3>What is a high VPIN?</h3><p>The ratio is between 0 and 1 when buckets are well formed. How high is unusual depends on the symbol, the bucket size and the classification rule. Compare a name with its own history before comparing it with another name.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Volume-Synchronized Probability of Informed Trading (VPIN)</p>
+<p>&gt; An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.</p>
+<p>- Category: Market Microstructure &amp; Order Flow</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/vpin/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/vpin/vpin.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/pin-informed-trading/">Probability of Informed Trading (PIN)</a> <a href="/glossary/kyles-lambda/">Kyle&#x27;s Lambda</a> <a href="/code/pandas-volume-bars/">Equal-Volume Bars from a Trade Tape</a> <a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

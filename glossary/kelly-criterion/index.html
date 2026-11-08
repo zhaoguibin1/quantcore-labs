@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelly Criterion: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/kelly-criterion/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Kelly Criterion: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/kelly-criterion/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#term",
+      "name": "Kelly Criterion",
+      "termCode": "kelly-criterion",
+      "description": "A log-utility investor who can repeat the same bet wants the fraction of wealth that maximises the expected log of wealth after the bet. For a binary outcome that pays net odds b with probability p, that fraction is p − (1 − p) / b. For a continuous excess return with mean μ and variance σ², the corresponding unconstrained fraction is approximately μ / σ² when the higher moments are ignored. Estimated μ and σ² are noisy, and the full fraction is aggressive when the estimate is wrong, so practitioners who use the idea often scale it down. Nothing on this page says that an investor should.",
+      "url": "https://quantcore-labs.com/glossary/kelly-criterion/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#article",
+      "headline": "Kelly Criterion: Definition, Formula and Python",
+      "description": "The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/kelly-criterion/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#code",
+      "name": "Kelly Criterion in Python",
+      "description": "Tested Python reference implementation: The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/kelly-criterion/",
+      "contentUrl": "https://quantcore-labs.com/glossary/kelly-criterion/kelly-criterion.py",
+      "text": "def kelly_fraction(p, b) -> float:\n    \"\"\"Fraction of wealth for a binary bet. p = win probability, b = net odds.\n\n    f* = p - (1 - p) / b. Does not cap at 0 or 1. Not a recommendation to bet.\n    \"\"\"\n    p, b = float(p), float(b)\n    if not 0.0 <= p <= 1.0:\n        raise ValueError(\"p must be in [0, 1]\")\n    if b <= 0:\n        raise ValueError(\"b, the net odds, must be positive\")\n    return p - (1.0 - p) / b\n\ndef kelly_continuous(mu, variance) -> float:\n    \"\"\"Approximate Kelly fraction mu / variance for a continuous excess return.\n\n    Ignores higher moments. Not a position-sizing recommendation.\n    \"\"\"\n    mu, variance = float(mu), float(variance)\n    if variance <= 0:\n        raise ValueError(\"variance must be positive\")\n    return mu / variance\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why do people use half Kelly?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Because p, b, μ and σ² plugged into the formula are estimates, and the expected log growth falls off slowly just below the optimum and steeply above it. Betting less than the estimated full fraction gives up a little growth on the estimated edge and hurts less when the edge was overstated. Half is a convention, not a theorem, and this page does not apply it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does a negative fraction mean?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For the binary bet, the probability and the odds do not compensate each other: expected log wealth is higher at a stake of zero than at a long stake. It is not an instruction to take the other side unless that side is a bet you can actually price with its own p and b."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kelly Criterion",
+          "item": "https://quantcore-labs.com/glossary/kelly-criterion/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">kelly-criterion</span></nav><div class="tag">GLOSSARY · KELLY CRITERION</div></div></header>
+<main>
+<article>
+<h1>Kelly Criterion</h1>
+<p class="lede">Position Sizing · Term ID: <code>kelly-criterion</code></p>
+<p class="def"><strong>Definition.</strong> A log-utility investor who can repeat the same bet wants the fraction of wealth that maximises the expected log of wealth after the bet. For a binary outcome that pays net odds b with probability p, that fraction is p − (1 − p) / b. For a continuous excess return with mean μ and variance σ², the corresponding unconstrained fraction is approximately μ / σ² when the higher moments are ignored. Estimated μ and σ² are noisy, and the full fraction is aggressive when the estimate is wrong, so practitioners who use the idea often scale it down. Nothing on this page says that an investor should.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">Binary bet, win probability p, net odds b (win b for each 1 staked):
+  f* = p − (1 − p) / b = (b p − (1 − p)) / b
+
+Continuous approximation, excess mean μ and variance σ² over the same horizon:
+  f* ≈ μ / σ²
+
+f* &lt; 0 means the edge is negative: the formula says stake nothing on that side.
+f* &gt; 1 means the approximation wants leverage. The binary formula assumes you cannot stake more than wealth if you cap it; this function does not cap.</pre></section>
+
+<section><h2>What the two formulas assume</h2>
+<ul>
+<li>The binary formula is exact for one repeated i.i.d. bet with known p and b, and for an objective that only cares about expected log wealth. Change the objective and the fraction changes.</li>
+<li>The continuous formula is a small-bet or diffusion approximation. It ignores skew and the chance of a loss large enough to make the log argument non-positive. A return distribution with a fat left tail is exactly where that matters.</li>
+<li>Volatility in the denominator is the same object as in the <a href="/glossary/sharpe-ratio/">Sharpe ratio</a>, but the Kelly fraction is not a Sharpe ratio. Sharpe divides by standard deviation and annualises. Kelly divides by variance and is a weight.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>The inputs are estimates.</strong> Full Kelly computed from a sample mean is famous for suggesting large weights that were an artefact of the sample. A fraction of the estimate (half Kelly, quarter Kelly) is a common ad-hoc shrink. This code does not apply one.</li>
+<li><strong>No drawdown constraint.</strong> Log growth can coexist with deep <a href="/glossary/max-drawdown/">drawdowns</a>. The formula does not know your limit.</li>
+<li><strong>Odds b are net odds.</strong> Even money is b = 1, not 2. Passing the decimal payout instead of the net profit doubles-counts the stake and shrinks f*.</li>
+<li><strong>Not a recommendation.</strong> The function returns a number from an objective. It does not say the bet is worth making.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires standard library only. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/kelly-criterion/kelly-criterion.py">Download kelly-criterion.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>def kelly_fraction(p, b) -&gt; float:
+    &quot;&quot;&quot;Fraction of wealth for a binary bet. p = win probability, b = net odds.
+
+    f* = p - (1 - p) / b. Does not cap at 0 or 1. Not a recommendation to bet.
+    &quot;&quot;&quot;
+    p, b = float(p), float(b)
+    if not 0.0 &lt;= p &lt;= 1.0:
+        raise ValueError(&quot;p must be in [0, 1]&quot;)
+    if b &lt;= 0:
+        raise ValueError(&quot;b, the net odds, must be positive&quot;)
+    return p - (1.0 - p) / b
+
+def kelly_continuous(mu, variance) -&gt; float:
+    &quot;&quot;&quot;Approximate Kelly fraction mu / variance for a continuous excess return.
+
+    Ignores higher moments. Not a position-sizing recommendation.
+    &quot;&quot;&quot;
+    mu, variance = float(mu), float(variance)
+    if variance &lt;= 0:
+        raise ValueError(&quot;variance must be positive&quot;)
+    return mu / variance
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why do people use half Kelly?</h3><p>Because p, b, μ and σ² plugged into the formula are estimates, and the expected log growth falls off slowly just below the optimum and steeply above it. Betting less than the estimated full fraction gives up a little growth on the estimated edge and hurts less when the edge was overstated. Half is a convention, not a theorem, and this page does not apply it.</p><h3>What does a negative fraction mean?</h3><p>For the binary bet, the probability and the odds do not compensate each other: expected log wealth is higher at a stake of zero than at a long stake. It is not an instruction to take the other side unless that side is a bet you can actually price with its own p and b.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Kelly Criterion</p>
+<p>&gt; The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.</p>
+<p>- Category: Position Sizing</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/kelly-criterion/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/kelly-criterion/kelly-criterion.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> <a href="/glossary/max-drawdown/">Maximum Drawdown</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rho: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/rho/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Rho: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/rho/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/rho/#term",
+      "name": "Rho",
+      "termCode": "rho",
+      "description": "Rho is the derivative of the model price with respect to the interest rate, holding spot, strike, time, volatility and dividend yield fixed. Dividing by 100 quotes it per one percentage point (from 5 percent to 6 percent, for example), matching the Greeks calculator on this site. A European call's rho is positive: a higher rate lowers the present value of the strike you might pay. A European put's rho is negative. Dividend yield q is a different input and is not what this derivative moves.",
+      "url": "https://quantcore-labs.com/glossary/rho/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/rho/#article",
+      "headline": "Rho: Definition, Formula and Python",
+      "description": "The sensitivity of a European option's Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/rho/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/rho/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/rho/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/rho/#code",
+      "name": "Rho in Python",
+      "description": "Tested Python reference implementation: The sensitivity of a European option's Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/rho/",
+      "contentUrl": "https://quantcore-labs.com/glossary/rho/rho.py",
+      "text": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_rho(S, K, T, r, sigma, call=True, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton rho per 1 percentage point of the risk-free rate.\n\n    call=False returns the put rho, which is negative or zero.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    d2 = (log(S / K) + (r - q - 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    if call:\n        return float(K * T * exp(-r * T) * norm.cdf(d2) / 100.0)\n    return float(-K * T * exp(-r * T) * norm.cdf(-d2) / 100.0)\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/rho/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is put rho negative?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A higher risk-free rate reduces the present value of the strike the put might receive, and it raises the forward. Both hurt the model value of a European put, so the derivative is negative. A European call is helped by the same two facts."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does rho include dividend sensitivity?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. q is held fixed. Rho moves only r. The dividend yield changes d2, so a different q produces a different rho, but the derivative itself is with respect to the interest rate."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Rho",
+          "item": "https://quantcore-labs.com/glossary/rho/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">rho</span></nav><div class="tag">GLOSSARY · RHO</div></div></header>
+<main>
+<article>
+<h1>Rho</h1>
+<p class="lede">Options &amp; Derivatives · Term ID: <code>rho</code></p>
+<p class="def"><strong>Definition.</strong> Rho is the derivative of the model price with respect to the interest rate, holding spot, strike, time, volatility and dividend yield fixed. Dividing by 100 quotes it per one percentage point (from 5 percent to 6 percent, for example), matching the Greeks calculator on this site. A European call&#x27;s rho is positive: a higher rate lowers the present value of the strike you might pay. A European put&#x27;s rho is negative. Dividend yield q is a different input and is not what this derivative moves.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">ρ_call = K T e^{−rT} N(d2) / 100
+ρ_put  = −K T e^{−rT} N(−d2) / 100
+
+d2 = [ln(S/K) + (r − q − σ²/2) T] / (σ √T)
+
+Per 1 percentage point of r. The raw derivative ∂V/∂r is 100 times larger.
+q enters d2. It does not appear as its own discount in the rho formula;
+∂V/∂q is a different Greek.</pre></section>
+
+<section><h2>Sign</h2>
+<ul>
+<li>Call rho is greater than or equal to zero in this model. Put rho is less than or equal to zero. A book that is long calls and short puts of the same strike picks up both.</li>
+<li>The rate inside Black-Scholes is the continuous risk-free rate used to discount the strike, not a credit spread and not the dividend. Changing q instead is not rho.</li>
+<li>The <a href="/option-greeks-calc/">Greeks calculator</a> reports rho per 1 percent with the formulas above. <a href="/glossary/put-call-parity/">Put-call parity</a> is where that discount shows up as K e^{−rT}.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>One point of rate, not one point of volatility.</strong> The /100 here is the same kind of unit choice as <a href="/glossary/vega/">vega</a>, applied to r rather than to σ.</li>
+<li><strong>Short-dated options have small rho</strong> because of the factor T. A one-week option barely changes when the rate moves by a point. A five-year option moves much more, in the model.</li>
+<li><strong>The rate is flat and constant.</strong> A real curve has many rates. One rho cannot describe a shift of a single tenor, a slope change, and a parallel move as three different risks.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires scipy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/rho/rho.py">Download rho.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>from math import exp, log, sqrt
+from scipy.stats import norm
+
+def bs_rho(S, K, T, r, sigma, call=True, q=0.0) -&gt; float:
+    &quot;&quot;&quot;Black-Scholes-Merton rho per 1 percentage point of the risk-free rate.
+
+    call=False returns the put rho, which is negative or zero.
+    &quot;&quot;&quot;
+    if S &lt;= 0 or K &lt;= 0 or T &lt;= 0 or sigma &lt;= 0:
+        raise ValueError(&quot;S, K, T and sigma must be positive&quot;)
+    d2 = (log(S / K) + (r - q - 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))
+    if call:
+        return float(K * T * exp(-r * T) * norm.cdf(d2) / 100.0)
+    return float(-K * T * exp(-r * T) * norm.cdf(-d2) / 100.0)
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is put rho negative?</h3><p>A higher risk-free rate reduces the present value of the strike the put might receive, and it raises the forward. Both hurt the model value of a European put, so the derivative is negative. A European call is helped by the same two facts.</p><h3>Does rho include dividend sensitivity?</h3><p>No. q is held fixed. Rho moves only r. The dividend yield changes d2, so a different q produces a different rho, but the derivative itself is with respect to the interest rate.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Rho</p>
+<p>&gt; The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.</p>
+<p>- Category: Options &amp; Derivatives</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/rho/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/rho/rho.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/delta/">Delta</a> <a href="/glossary/put-call-parity/">Put-Call Parity</a> <a href="/glossary/theta/">Theta</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

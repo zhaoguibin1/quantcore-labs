@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equal-Volume Bars from a Trade Tape: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.">
+<link rel="canonical" href="https://quantcore-labs.com/code/pandas-volume-bars/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Equal-Volume Bars from a Trade Tape: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.">
+<meta property="og:url" content="https://quantcore-labs.com/code/pandas-volume-bars/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/pandas-volume-bars/#article",
+      "headline": "Equal-Volume Bars from a Trade Tape: Tested Python Implementation",
+      "description": "Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/pandas-volume-bars/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/pandas-volume-bars/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/pandas-volume-bars/#code",
+      "name": "Volume Bars in Python",
+      "description": "Tested Python reference implementation: Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/pandas-volume-bars/",
+      "contentUrl": "https://quantcore-labs.com/code/pandas-volume-bars/pandas-volume-bars.py",
+      "text": "import numpy as np\nimport pandas as pd\n\ndef volume_bars(ticks: pd.DataFrame, bar_volume: float) -> pd.DataFrame:\n    \"\"\"OHLCV bars of about `bar_volume` traded units.\n\n    The trade that crosses each multiple of bar_volume stays in the bar it\n    completes. Trades are not split. The final, possibly short, bar is kept.\n    \"\"\"\n    if bar_volume <= 0:\n        raise ValueError(\"bar_volume must be positive\")\n    if not {\"price\", \"volume\"}.issubset(ticks.columns):\n        raise ValueError(\"ticks need price and volume columns\")\n    if isinstance(ticks.index, pd.DatetimeIndex):\n        ticks = ticks.sort_index()\n    vol = ticks[\"volume\"].to_numpy(dtype=np.float64)\n    if vol.size and np.any(vol < 0):\n        raise ValueError(\"volume must be non-negative\")\n    if vol.size == 0:\n        return pd.DataFrame(columns=[\"end_time\", \"open\", \"high\", \"low\", \"close\", \"volume\"])\n    bar_id = np.floor(np.cumsum(vol) - vol) // bar_volume\n    bar_id = pd.Series(bar_id.astype(np.int64), index=ticks.index)\n    grouped = ticks.groupby(bar_id, sort=True)\n    out = grouped.agg(\n        open=(\"price\", \"first\"),\n        high=(\"price\", \"max\"),\n        low=(\"price\", \"min\"),\n        close=(\"price\", \"last\"),\n        volume=(\"volume\", \"sum\"),\n    )\n    out.insert(0, \"end_time\", grouped.tail(1).index.to_numpy())\n    out.index.name = \"bar_id\"\n    return out\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why not use cumsum(volume) // bar_volume as the bar id?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "That assigns the trade which crosses the threshold to the next bar, so the bar you just closed is systematically short of the threshold. Using the cumulative volume before the trade keeps the crossing trade in the bar that fills."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How should I pick the threshold?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A common research choice is a fraction of average daily volume, so a typical day produces a similar number of bars across names. The threshold is a sampling parameter. It is not an execution instruction."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Volume Bars",
+          "item": "https://quantcore-labs.com/code/pandas-volume-bars/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">pandas-volume-bars</span></nav><div class="tag">CODE · VOLUME BARS</div></div></header>
+<main>
+<article>
+<h1>Equal-Volume Bars from a Trade Tape</h1>
+<p class="lede">Data Engineering for Quants · Snippet ID: <code>pandas-volume-bars</code></p>
+<p class="def"><strong>What it does.</strong> Volume bars sample the tape by quantity instead of by clock time. Walking the trades in order, a bar closes on the trade that makes cumulative volume reach the next multiple of the threshold. Bars therefore hold roughly constant information in the sense of traded size, and the time between bars shrinks when the market is active. The last bar is returned even if it has not reached the threshold.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">Threshold V &gt; 0. Trades in time order, volumes v_i ≥ 0.
+Let C_i = Σ_{k≤i} v_k and C_0-side = 0 before trade i (C_{i−1}).
+  bar(i) = floor( C_{i−1} / V )
+
+The trade that pushes C_i across a multiple of V stays in the bar that was open.
+A trade with v_i &gt; V is kept whole, so that bar&#x27;s volume can exceed V.
+OHLC and the bar&#x27;s end timestamp come from the trades in the group.</pre></section>
+
+<section><h2>Why sample by volume</h2>
+<ul>
+<li>Clock bars mix quiet minutes, which are almost empty, with auction and news minutes that contain a large share of the day's volume. Volume bars put a similar amount of trading in each row.</li>
+<li>López de Prado argues that sampling by volume (or by information) produces return series closer to i.i.d. than sampling by the clock. That is a modelling convenience, not a source of returns by itself.</li>
+<li>Bars like these are the input to bucket measures such as <a href="/glossary/vpin/">VPIN</a>, which wants equal-volume buckets rather than equal-time buckets.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Do not split prints.</strong> A block trade larger than V becomes one oversized bar. Splitting it would invent prices.</li>
+<li><strong>The closing print is included.</strong> Floor of the cumulative volume <em>before</em> the trade is what keeps the crossing trade in the bar that fills. Floor of the cumulative volume <em>after</em> the trade pushes that trade into the next bar and leaves the earlier bar short of V.</li>
+<li><strong>Incomplete tail.</strong> The last bar is whatever remains. Drop it before estimating a statistic that assumes every bar has volume near V.</li>
+<li><strong>Sort order is the sampling order.</strong> A DatetimeIndex is sorted. Any other index is used as given, which is wrong if the frame is not already in exchange order.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, pandas. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/pandas-volume-bars/pandas-volume-bars.py">Download pandas-volume-bars.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+import pandas as pd
+
+def volume_bars(ticks: pd.DataFrame, bar_volume: float) -&gt; pd.DataFrame:
+    &quot;&quot;&quot;OHLCV bars of about `bar_volume` traded units.
+
+    The trade that crosses each multiple of bar_volume stays in the bar it
+    completes. Trades are not split. The final, possibly short, bar is kept.
+    &quot;&quot;&quot;
+    if bar_volume &lt;= 0:
+        raise ValueError(&quot;bar_volume must be positive&quot;)
+    if not {&quot;price&quot;, &quot;volume&quot;}.issubset(ticks.columns):
+        raise ValueError(&quot;ticks need price and volume columns&quot;)
+    if isinstance(ticks.index, pd.DatetimeIndex):
+        ticks = ticks.sort_index()
+    vol = ticks[&quot;volume&quot;].to_numpy(dtype=np.float64)
+    if vol.size and np.any(vol &lt; 0):
+        raise ValueError(&quot;volume must be non-negative&quot;)
+    if vol.size == 0:
+        return pd.DataFrame(columns=[&quot;end_time&quot;, &quot;open&quot;, &quot;high&quot;, &quot;low&quot;, &quot;close&quot;, &quot;volume&quot;])
+    bar_id = np.floor(np.cumsum(vol) - vol) // bar_volume
+    bar_id = pd.Series(bar_id.astype(np.int64), index=ticks.index)
+    grouped = ticks.groupby(bar_id, sort=True)
+    out = grouped.agg(
+        open=(&quot;price&quot;, &quot;first&quot;),
+        high=(&quot;price&quot;, &quot;max&quot;),
+        low=(&quot;price&quot;, &quot;min&quot;),
+        close=(&quot;price&quot;, &quot;last&quot;),
+        volume=(&quot;volume&quot;, &quot;sum&quot;),
+    )
+    out.insert(0, &quot;end_time&quot;, grouped.tail(1).index.to_numpy())
+    out.index.name = &quot;bar_id&quot;
+    return out
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why not use cumsum(volume) // bar_volume as the bar id?</h3><p>That assigns the trade which crosses the threshold to the next bar, so the bar you just closed is systematically short of the threshold. Using the cumulative volume before the trade keeps the crossing trade in the bar that fills.</p><h3>How should I pick the threshold?</h3><p>A common research choice is a fraction of average daily volume, so a typical day produces a similar number of bars across names. The threshold is a sampling parameter. It is not an execution instruction.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Equal-Volume Bars from a Trade Tape</p>
+<p>&gt; Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.</p>
+<p>- Category: Data Engineering for Quants</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/pandas-volume-bars/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/pandas-volume-bars/pandas-volume-bars.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/code/pandas-tick-to-ohlcv/">Resample Trade Ticks to OHLCV and VWAP Bars</a> <a href="/glossary/vpin/">Volume-Synchronized Probability of Informed Trading (VPIN)</a> <a href="/glossary/realized-volatility/">Realized Volatility</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O(n) Rolling Mean (Cython Memoryview Recurrence): Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.">
+<link rel="canonical" href="https://quantcore-labs.com/code/cython-rolling-mean/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="O(n) Rolling Mean (Cython Memoryview Recurrence): Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.">
+<meta property="og:url" content="https://quantcore-labs.com/code/cython-rolling-mean/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/cython-rolling-mean/#article",
+      "headline": "O(n) Rolling Mean (Cython Memoryview Recurrence): Tested Python Implementation",
+      "description": "The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/cython-rolling-mean/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/cython-rolling-mean/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/cython-rolling-mean/#code",
+      "name": "Cython Rolling Mean in Python",
+      "description": "Tested Python reference implementation: The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/cython-rolling-mean/",
+      "contentUrl": "https://quantcore-labs.com/code/cython-rolling-mean/cython-rolling-mean.py",
+      "text": "import numpy as np\n\n# Same recurrence as a Cython loop over a double memoryview. Compile CYTHON_SOURCE\n# with Cython (boundscheck and wraparound off) when a C compiler is available.\n# The function below is the tested reference: CPython cannot execute cimport.\nCYTHON_SOURCE = \"\"\"\ncimport cython\nimport numpy as np\n\n@cython.boundscheck(False)\n@cython.wraparound(False)\ndef fast_rolling_mean(double[:] arr, int window):\n    cdef int n = arr.shape[0]\n    cdef double[:] res = np.empty(n)\n    cdef double s = 0.0\n    cdef int i\n    for i in range(n):\n        s += arr[i]\n        if i >= window:\n            s -= arr[i - window]\n            res[i] = s / window\n        else:\n            res[i] = s / (i + 1)\n    return np.asarray(res)\n\"\"\"\n\ndef fast_rolling_mean(arr, window: int) -> np.ndarray:\n    \"\"\"Rolling mean. Partial windows divide by the number of points seen so far.\n\n    For i >= window the result is the mean of x[i-window+1 : i+1].\n    Equivalent to the memoryview loop in CYTHON_SOURCE.\n    \"\"\"\n    x = np.ascontiguousarray(arr, dtype=np.float64).reshape(-1)\n    window = int(window)\n    if window < 1:\n        raise ValueError(\"window must be a positive integer\")\n    n = x.size\n    out = np.empty(n, dtype=np.float64)\n    if n == 0:\n        return out\n    csum = np.cumsum(x)\n    np.divide(csum, np.arange(1, n + 1, dtype=np.float64), out=out)\n    if n > window:\n        out[window:] = (csum[window:] - csum[:-window]) / window\n    return out\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is the published function NumPy rather than Cython?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The site rebuilds by executing every snippet with Python. Cython syntax such as cimport and cdef does not run there, and a C compiler is not part of the rebuild. The NumPy prefix sum matches the memoryview loop value for value; the Cython source is in the same file for when you compile it locally."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is this different from the Numba rolling operators?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "This recurrence is a single mean, including a defined value on the warm-up samples. The Numba snippet computes mean, sample standard deviation, rolling beta and a 2-D z-score, re-centres to protect precision, and leaves the warm-up as NaN."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Cython Rolling Mean",
+          "item": "https://quantcore-labs.com/code/cython-rolling-mean/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">cython-rolling-mean</span></nav><div class="tag">CODE · CYTHON ROLLING MEAN</div></div></header>
+<main>
+<article>
+<h1>O(n) Rolling Mean (Cython Memoryview Recurrence)</h1>
+<p class="lede">High-Performance Python · Snippet ID: <code>cython-rolling-mean</code></p>
+<p class="def"><strong>What it does.</strong> A rolling mean can be updated by adding the new observation and subtracting the one that left the window, which is a single pass. Before the window is full the same sum is divided by the number of observations seen so far. The Cython form types the buffer as a double memoryview and turns bounds checks off. This page publishes that recurrence as a tested NumPy function, plus the Cython source as a string, because this site&#x27;s generator executes every snippet with CPython and cannot compile cimport.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">Let s_−1 = 0. For i = 0..n−1:
+  s_i = s_{i−1} + x_i − x_{i−w} · 1{i ≥ w}
+  m_i = s_i / w            if i ≥ w
+      = s_i / (i+1)        if i &lt; w
+
+Prefix-sum form (same values):
+  m_i = (c_i − c_{i−w}) / w    for i ≥ w,   c_i = Σ_{k=0..i} x_k,  c_{&lt;0} = 0
+  m_i = c_i / (i+1)            for i &lt; w
+
+Cython sketch (compile with cythonize; not executed by the generator):
+  @cython.boundscheck(False)
+  @cython.wraparound(False)
+  def fast_rolling_mean(double[:] arr, int window): ...</pre></section>
+
+<section><h2>When to use it</h2>
+<ul>
+<li>One rolling mean over a long tick or bar array, where a Python per-window loop is the cost and a C compiler is available for the memoryview version.</li>
+<li>As a readable specification of the partial-window convention (divide by <code>i+1</code> until the window is full, then by <code>w</code>). The NumPy function is what the tests lock in.</li>
+<li>For several rolling statistics at once, or for prices with a large level, the centred running sums in <a href="/code/rolling-window-numba/">rolling-window-numba</a> are a better fit. They need no compiler and lose less precision.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>This page does not compile Cython.</strong> <code>cimport</code> is not valid Python, so shipping only the memoryview function would fail the rebuild test. <code>CYTHON_SOURCE</code> is the compiled form; <code>fast_rolling_mean</code> is the reference.</li>
+<li><strong>Cancellation.</strong> A raw running sum of prices near 10,000 loses digits in the variance, and even the mean drifts once the sum is huge. Re-centre, or use the Numba operators, if the level is large relative to the variation inside the window.</li>
+<li><strong>NaNs.</strong> One NaN stays inside the prefix sum from that index onward. Drop or fill gaps first.</li>
+<li><strong>Window edges.</strong> Index <code>i = w−1</code> is still the mean of the first <code>w</code> points. Index <code>i = w</code> drops <code>x_0</code>. Callers who want NaN during the warm-up should mask <code>i &lt; w−1</code> themselves.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/cython-rolling-mean/cython-rolling-mean.py">Download cython-rolling-mean.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+# Same recurrence as a Cython loop over a double memoryview. Compile CYTHON_SOURCE
+# with Cython (boundscheck and wraparound off) when a C compiler is available.
+# The function below is the tested reference: CPython cannot execute cimport.
+CYTHON_SOURCE = &quot;&quot;&quot;
+cimport cython
+import numpy as np
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def fast_rolling_mean(double[:] arr, int window):
+    cdef int n = arr.shape[0]
+    cdef double[:] res = np.empty(n)
+    cdef double s = 0.0
+    cdef int i
+    for i in range(n):
+        s += arr[i]
+        if i &gt;= window:
+            s -= arr[i - window]
+            res[i] = s / window
+        else:
+            res[i] = s / (i + 1)
+    return np.asarray(res)
+&quot;&quot;&quot;
+
+def fast_rolling_mean(arr, window: int) -&gt; np.ndarray:
+    &quot;&quot;&quot;Rolling mean. Partial windows divide by the number of points seen so far.
+
+    For i &gt;= window the result is the mean of x[i-window+1 : i+1].
+    Equivalent to the memoryview loop in CYTHON_SOURCE.
+    &quot;&quot;&quot;
+    x = np.ascontiguousarray(arr, dtype=np.float64).reshape(-1)
+    window = int(window)
+    if window &lt; 1:
+        raise ValueError(&quot;window must be a positive integer&quot;)
+    n = x.size
+    out = np.empty(n, dtype=np.float64)
+    if n == 0:
+        return out
+    csum = np.cumsum(x)
+    np.divide(csum, np.arange(1, n + 1, dtype=np.float64), out=out)
+    if n &gt; window:
+        out[window:] = (csum[window:] - csum[:-window]) / window
+    return out
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is the published function NumPy rather than Cython?</h3><p>The site rebuilds by executing every snippet with Python. Cython syntax such as cimport and cdef does not run there, and a C compiler is not part of the rebuild. The NumPy prefix sum matches the memoryview loop value for value; the Cython source is in the same file for when you compile it locally.</p><h3>How is this different from the Numba rolling operators?</h3><p>This recurrence is a single mean, including a defined value on the warm-up samples. The Numba snippet computes mean, sample standard deviation, rolling beta and a 2-D z-score, re-centres to protect precision, and leaves the warm-up as NaN.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># O(n) Rolling Mean (Cython Memoryview Recurrence)</p>
+<p>&gt; The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.</p>
+<p>- Category: High-Performance Python</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/cython-rolling-mean/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/cython-rolling-mean/cython-rolling-mean.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/code/rolling-window-numba/">Fast Rolling Mean, Std, Beta and Z-score with Numba</a> <a href="/code/numpy-strided-rolling/">Rolling Z-Score from a Zero-Copy Sliding Window</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

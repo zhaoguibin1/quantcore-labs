@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Information Ratio: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/information-ratio/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Information Ratio: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/information-ratio/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/information-ratio/#term",
+      "name": "Information Ratio",
+      "termCode": "information-ratio",
+      "description": "Active return is the portfolio's periodic return minus the benchmark's periodic return over the same periods. The information ratio is the mean of that difference divided by its sample standard deviation, multiplied by sqrt(P). It is the Sharpe ratio of the active returns, with the benchmark playing the role of the risk-free asset and no extra cash rate. A positive ratio means the portfolio's sample average was above the benchmark. It does not say the average will stay there.",
+      "url": "https://quantcore-labs.com/glossary/information-ratio/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/information-ratio/#article",
+      "headline": "Information Ratio: Definition, Formula and Python",
+      "description": "Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-ratio/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/information-ratio/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/information-ratio/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/information-ratio/#code",
+      "name": "Information Ratio in Python",
+      "description": "Tested Python reference implementation: Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/information-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/information-ratio/information-ratio.py",
+      "text": "import numpy as np\n\ndef information_ratio(port, bench, periods=252) -> float:\n    \"\"\"Annualised information ratio of port minus bench.\n\n    Sample standard deviation. Identical series return NaN.\n    \"\"\"\n    active = np.asarray(port, dtype=float) - np.asarray(bench, dtype=float)\n    if active.ndim != 1 or active.size < 2 or not np.all(np.isfinite(active)):\n        raise ValueError(\"need at least two finite paired returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    sd = float(active.std(ddof=1))\n    if sd == 0.0:\n        return float(\"nan\")\n    return float(active.mean() / sd * np.sqrt(periods))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-ratio/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How is this different from the information coefficient?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The information coefficient correlates a cross-section of forecasts with a cross-section of outcomes on one date. The information ratio divides a time series of active returns by their standard deviation. Similar names, different objects."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Should the active return include fees?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If the question is what the investor kept versus the benchmark, yes. If the question is whether the holdings differed from the benchmark before costs, no. The function uses the two return series you pass in, so the choice of fees happens before the call."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Information Ratio",
+          "item": "https://quantcore-labs.com/glossary/information-ratio/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">information-ratio</span></nav><div class="tag">GLOSSARY · INFORMATION RATIO</div></div></header>
+<main>
+<article>
+<h1>Information Ratio</h1>
+<p class="lede">Performance &amp; Risk Metrics · Term ID: <code>information-ratio</code></p>
+<p class="def"><strong>Definition.</strong> Active return is the portfolio&#x27;s periodic return minus the benchmark&#x27;s periodic return over the same periods. The information ratio is the mean of that difference divided by its sample standard deviation, multiplied by sqrt(P). It is the Sharpe ratio of the active returns, with the benchmark playing the role of the risk-free asset and no extra cash rate. A positive ratio means the portfolio&#x27;s sample average was above the benchmark. It does not say the average will stay there.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">a_t = R_port,t − R_bench,t
+IR  = mean(a) / std(a, ddof=1) · sqrt(P)
+
+Tracking error is the denominator before dividing into the mean: TE = std(a) · sqrt(P).
+IR = mean(a) · sqrt(P) / TE, with TE in annualised units.
+std(a) = 0 → NaN (the portfolio matched the benchmark exactly in-sample).</pre></section>
+
+<section><h2>Relation to other ratios</h2>
+<ul>
+<li><a href="/glossary/tracking-error/">Tracking error</a> is the annualised standard deviation alone. The information ratio puts the mean active return on top of it.</li>
+<li>The <a href="/glossary/information-coefficient/">information coefficient</a> is a cross-sectional correlation between a signal and later returns, not this time-series ratio. Grinold's approximation IR ≈ IC · sqrt(breadth) is a model that links them, not an identity in the data.</li>
+<li>A <a href="/glossary/sharpe-ratio/">Sharpe ratio</a> uses excess return over cash. An information ratio uses excess return over the benchmark you were hired to beat, or chose to compare with.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>The benchmark has to be the one that was investable on that timing.</strong> Comparing a close-to-close portfolio with a benchmark that includes a return the portfolio could not have earned inflates the ratio.</li>
+<li><strong>Alignment.</strong> Missing dates, dividends in one series only, or a different currency, all land in the active return. The function subtracts the two arrays as given.</li>
+<li><strong>A high IR on a tiny active risk</strong> can be a few basis points of average difference and a tracking error that is mostly noise. Report the tracking error beside the ratio.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/information-ratio/information-ratio.py">Download information-ratio.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def information_ratio(port, bench, periods=252) -&gt; float:
+    &quot;&quot;&quot;Annualised information ratio of port minus bench.
+
+    Sample standard deviation. Identical series return NaN.
+    &quot;&quot;&quot;
+    active = np.asarray(port, dtype=float) - np.asarray(bench, dtype=float)
+    if active.ndim != 1 or active.size &lt; 2 or not np.all(np.isfinite(active)):
+        raise ValueError(&quot;need at least two finite paired returns&quot;)
+    if periods &lt;= 0:
+        raise ValueError(&quot;periods must be positive&quot;)
+    sd = float(active.std(ddof=1))
+    if sd == 0.0:
+        return float(&quot;nan&quot;)
+    return float(active.mean() / sd * np.sqrt(periods))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>How is this different from the information coefficient?</h3><p>The information coefficient correlates a cross-section of forecasts with a cross-section of outcomes on one date. The information ratio divides a time series of active returns by their standard deviation. Similar names, different objects.</p><h3>Should the active return include fees?</h3><p>If the question is what the investor kept versus the benchmark, yes. If the question is whether the holdings differed from the benchmark before costs, no. The function uses the two return series you pass in, so the choice of fees happens before the call.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Information Ratio</p>
+<p>&gt; Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.</p>
+<p>- Category: Performance &amp; Risk Metrics</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/information-ratio/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/information-ratio/information-ratio.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/tracking-error/">Tracking Error</a> <a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> <a href="/glossary/information-coefficient/">Information Coefficient (IC)</a> <a href="/glossary/beta/">Beta</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

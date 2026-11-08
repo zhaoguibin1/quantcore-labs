@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Shortfall: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/implementation-shortfall/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Implementation Shortfall: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/implementation-shortfall/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#term",
+      "name": "Implementation Shortfall",
+      "termCode": "implementation-shortfall",
+      "description": "Perold's implementation shortfall compares two portfolios. The paper portfolio trades the full target at the price that was current when the decision was made. The real portfolio trades what was filled, at the prices that were filled, and pays fees. The difference is the shortfall. It splits into an execution component on the shares that traded and an opportunity component on the shares that did not. A positive number is a cost relative to the paper portfolio.",
+      "url": "https://quantcore-labs.com/glossary/implementation-shortfall/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#article",
+      "headline": "Implementation Shortfall: Definition, Formula and Python",
+      "description": "The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/implementation-shortfall/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#code",
+      "name": "Implementation Shortfall in Python",
+      "description": "Tested Python reference implementation: The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/implementation-shortfall/",
+      "contentUrl": "https://quantcore-labs.com/glossary/implementation-shortfall/implementation-shortfall.py",
+      "text": "def implementation_shortfall(fills, decision_px, end_px, target_qty, side=1, fees=0.0) -> float:\n    \"\"\"Implementation shortfall in price-times-quantity units. Positive = cost.\n\n    fills: iterable of (qty, price). side = +1 buy, -1 sell.\n    Unfilled size is marked at end_px. qty is unsigned.\n    \"\"\"\n    if side not in (1, -1):\n        raise ValueError(\"side must be +1 (buy) or -1 (sell)\")\n    if target_qty < 0:\n        raise ValueError(\"target_qty must be non-negative\")\n    filled = 0.0\n    execution = 0.0\n    for qty, price in fills:\n        if qty < 0:\n            raise ValueError(\"fill quantities must be non-negative\")\n        filled += qty\n        execution += side * qty * (price - decision_px)\n    if filled > target_qty + 1e-8:\n        raise ValueError(\"filled quantity exceeds target\")\n    opportunity = side * (target_qty - filled) * (end_px - decision_px)\n    return float(execution + opportunity + fees)\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why charge a cost for shares that did not trade?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The decision was to hold the target. Shares that never filled are still a difference between the paper portfolio and the real one. If the price then moves in the direction of the decision, that missed move is an opportunity cost; if it moves the other way, the unfilled part reduces the shortfall."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is a negative shortfall good?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It means the real fills, leftovers and fees beat trading the full size at the decision price. It is a cost accounting identity, not a statement that the decision itself was a good one."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Implementation Shortfall",
+          "item": "https://quantcore-labs.com/glossary/implementation-shortfall/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">implementation-shortfall</span></nav><div class="tag">GLOSSARY · IMPLEMENTATION SHORTFALL</div></div></header>
+<main>
+<article>
+<h1>Implementation Shortfall</h1>
+<p class="lede">Execution &amp; Transaction Cost Analysis · Term ID: <code>implementation-shortfall</code></p>
+<p class="def"><strong>Definition.</strong> Perold&#x27;s implementation shortfall compares two portfolios. The paper portfolio trades the full target at the price that was current when the decision was made. The real portfolio trades what was filled, at the prices that were filled, and pays fees. The difference is the shortfall. It splits into an execution component on the shares that traded and an opportunity component on the shares that did not. A positive number is a cost relative to the paper portfolio.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">side = +1 buy, −1 sell
+filled = Σ q_i
+
+execution  = side · Σ q_i (P_i − P_decision)
+opportunity = side · (Q − filled) · (P_end − P_decision)
+IS = execution + opportunity + fees
+
+P_end is the price used to mark the unfilled remainder (often the close, or the price when the order was cancelled).
+IS is in currency of the prices times quantities, not in basis points.</pre></section>
+
+<section><h2>Reading the two pieces</h2>
+<ul>
+<li><strong>Execution cost</strong> is what you paid, relative to the decision price, on shares that did trade. Buying above the decision price is a positive cost.</li>
+<li><strong>Opportunity cost</strong> is the paper profit on shares you wanted and did not get. If the price runs away after a buy decision and you do not finish, that move is part of the shortfall even though no fill occurred.</li>
+<li>Arrival-price slippage ignores the unfilled part. It is the execution piece only, in basis points: <a href="/glossary/arrival-price/">arrival price</a>. A schedule that balances the two pieces is the point of <a href="/glossary/almgren-chriss/">Almgren-Chriss</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>The decision price has to be fixed before the order does anything.</strong> Using the first fill, or the arrival mid after the child orders have already moved the book, understates the shortfall.</li>
+<li><strong>P_end is a choice.</strong> Marking leftovers at the close and marking them at the cancel time are different costs. Write down which one.</li>
+<li><strong>Sign.</strong> The formula returns a cost. A negative shortfall means the real portfolio beat the paper one. Do not flip the sign between buys and sells; <code>side</code> does that.</li>
+<li><strong>Fees sit outside the price.</strong> Commission, stamp and financing belong in <code>fees</code>. Burying them in the fill price double-counts once someone also subtracts them from PnL.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires standard library only. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/implementation-shortfall/implementation-shortfall.py">Download implementation-shortfall.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>def implementation_shortfall(fills, decision_px, end_px, target_qty, side=1, fees=0.0) -&gt; float:
+    &quot;&quot;&quot;Implementation shortfall in price-times-quantity units. Positive = cost.
+
+    fills: iterable of (qty, price). side = +1 buy, -1 sell.
+    Unfilled size is marked at end_px. qty is unsigned.
+    &quot;&quot;&quot;
+    if side not in (1, -1):
+        raise ValueError(&quot;side must be +1 (buy) or -1 (sell)&quot;)
+    if target_qty &lt; 0:
+        raise ValueError(&quot;target_qty must be non-negative&quot;)
+    filled = 0.0
+    execution = 0.0
+    for qty, price in fills:
+        if qty &lt; 0:
+            raise ValueError(&quot;fill quantities must be non-negative&quot;)
+        filled += qty
+        execution += side * qty * (price - decision_px)
+    if filled &gt; target_qty + 1e-8:
+        raise ValueError(&quot;filled quantity exceeds target&quot;)
+    opportunity = side * (target_qty - filled) * (end_px - decision_px)
+    return float(execution + opportunity + fees)
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why charge a cost for shares that did not trade?</h3><p>The decision was to hold the target. Shares that never filled are still a difference between the paper portfolio and the real one. If the price then moves in the direction of the decision, that missed move is an opportunity cost; if it moves the other way, the unfilled part reduces the shortfall.</p><h3>Is a negative shortfall good?</h3><p>It means the real fills, leftovers and fees beat trading the full size at the decision price. It is a cost accounting identity, not a statement that the decision itself was a good one.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Implementation Shortfall</p>
+<p>&gt; The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.</p>
+<p>- Category: Execution &amp; Transaction Cost Analysis</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/implementation-shortfall/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/implementation-shortfall/implementation-shortfall.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/arrival-price/">Arrival-Price Slippage</a> <a href="/glossary/vwap/">Volume-Weighted Average Price (VWAP)</a> <a href="/glossary/almgren-chriss/">Almgren-Chriss Optimal Execution Trajectory</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

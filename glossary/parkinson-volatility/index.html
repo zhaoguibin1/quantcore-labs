@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parkinson Volatility: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="A volatility estimator that uses each period&#x27;s high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/parkinson-volatility/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Parkinson Volatility: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="A volatility estimator that uses each period&#x27;s high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/parkinson-volatility/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#term",
+      "name": "Parkinson Volatility",
+      "termCode": "parkinson-volatility",
+      "description": "Parkinson (1980) replaces the squared close-to-close return with the squared log range. The scaling 1 / (4 ln 2) makes the average of those squared ranges an estimate of the variance per period, for a Brownian motion with no drift. Multiplying by the number of periods in a year and taking the square root annualises it. The estimator never sees the open or the close. A day that gaps and then trades in a narrow range looks quiet.",
+      "url": "https://quantcore-labs.com/glossary/parkinson-volatility/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#article",
+      "headline": "Parkinson Volatility: Definition, Formula and Python",
+      "description": "A volatility estimator that uses each period's high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/parkinson-volatility/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#code",
+      "name": "Parkinson Volatility in Python",
+      "description": "Tested Python reference implementation: A volatility estimator that uses each period's high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/parkinson-volatility/",
+      "contentUrl": "https://quantcore-labs.com/glossary/parkinson-volatility/parkinson-volatility.py",
+      "text": "import numpy as np\n\ndef parkinson_vol(high, low, periods=252) -> float:\n    \"\"\"Annualised Parkinson volatility from high and low arrays.\n\n    Each pair is one period. `periods` is how many such periods make a year.\n    Requires 0 < low <= high.\n    \"\"\"\n    h = np.asarray(high, dtype=float)\n    lo = np.asarray(low, dtype=float)\n    if h.shape != lo.shape or h.ndim != 1 or h.size == 0:\n        raise ValueError(\"high and low must be non-empty and aligned\")\n    if not np.all(np.isfinite(h)) or not np.all(np.isfinite(lo)):\n        raise ValueError(\"high and low must be finite\")\n    if np.any(lo <= 0) or np.any(h < lo):\n        raise ValueError(\"require 0 < low <= high\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    x = np.log(h / lo)\n    return float(np.sqrt(np.mean(x * x) / (4.0 * np.log(2.0)) * periods))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is the divisor 4 ln 2?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It is the expected value of the squared log range of a standard Brownian motion over one unit of time. Dividing by it converts an average squared range into a variance estimate. The derivation assumes no drift and no jumps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Parkinson always better than close-to-close?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It is more efficient in the zero-drift diffusion it was derived for. A large overnight gap, a trading halt, or a bad high print can make it worse than a close-to-close estimator that at least uses the official closes."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Parkinson Volatility",
+          "item": "https://quantcore-labs.com/glossary/parkinson-volatility/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">parkinson-volatility</span></nav><div class="tag">GLOSSARY · PARKINSON VOLATILITY</div></div></header>
+<main>
+<article>
+<h1>Parkinson Volatility</h1>
+<p class="lede">Volatility Modeling · Term ID: <code>parkinson-volatility</code></p>
+<p class="def"><strong>Definition.</strong> Parkinson (1980) replaces the squared close-to-close return with the squared log range. The scaling 1 / (4 ln 2) makes the average of those squared ranges an estimate of the variance per period, for a Brownian motion with no drift. Multiplying by the number of periods in a year and taking the square root annualises it. The estimator never sees the open or the close. A day that gaps and then trades in a narrow range looks quiet.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">σ²_period = (1 / (4 N ln 2)) · Σ_{t=1..N} (ln(H_t / L_t))²
+σ_annual  = σ_period · sqrt(P)
+
+H_t ≥ L_t &gt; 0.  N is the number of ranges you pass.
+4 ln 2 ≈ 2.7726, so a day whose high is about 1.7% above its low
+(ln(H/L) ≈ 0.0166, squared ≈ 2.77e-4) contributes about 1e-4 of daily variance
+before annualisation, i.e. 1 percent daily, before the average.
+
+P defaults to 252 and scales the mean daily variance, which is the right
+shape when each row is one session.</pre></section>
+
+<section><h2>Why a range</h2>
+<ul>
+<li>The high and the low summarise the whole path, not only the two endpoints. For a driftless Brownian motion the range estimator has a lower variance than the close-to-close estimator on the same number of days.</li>
+<li>It is a natural check on <a href="/glossary/realized-volatility/">realized volatility</a> when you have bars but not a full trade tape: daily high and low are enough.</li>
+<li>It is still a historical number. An option-implied number is <a href="/glossary/implied-volatility/">implied volatility</a>, and a recursive filter is <a href="/glossary/garch/">GARCH</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Drift.</strong> A strong trend widens the range for a reason other than diffusion variance. Parkinson is derived at zero drift. Rogers-Satchell and Yang-Zhang exist because of that; this page does not implement them.</li>
+<li><strong>Overnight gaps.</strong> If high and low are the cash-session extrema, the gap from yesterday's close is invisible. The estimator then misses a piece of the day's variance that a close-to-close number includes.</li>
+<li><strong>Bad prints.</strong> One erroneous high dominates a squared range. The average does not trim it.</li>
+<li><strong>Do not feed intraday bars and also multiply by 252</strong> unless each row is one session. The function annualises the mean of the rows you pass.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/parkinson-volatility/parkinson-volatility.py">Download parkinson-volatility.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def parkinson_vol(high, low, periods=252) -&gt; float:
+    &quot;&quot;&quot;Annualised Parkinson volatility from high and low arrays.
+
+    Each pair is one period. `periods` is how many such periods make a year.
+    Requires 0 &lt; low &lt;= high.
+    &quot;&quot;&quot;
+    h = np.asarray(high, dtype=float)
+    lo = np.asarray(low, dtype=float)
+    if h.shape != lo.shape or h.ndim != 1 or h.size == 0:
+        raise ValueError(&quot;high and low must be non-empty and aligned&quot;)
+    if not np.all(np.isfinite(h)) or not np.all(np.isfinite(lo)):
+        raise ValueError(&quot;high and low must be finite&quot;)
+    if np.any(lo &lt;= 0) or np.any(h &lt; lo):
+        raise ValueError(&quot;require 0 &lt; low &lt;= high&quot;)
+    if periods &lt;= 0:
+        raise ValueError(&quot;periods must be positive&quot;)
+    x = np.log(h / lo)
+    return float(np.sqrt(np.mean(x * x) / (4.0 * np.log(2.0)) * periods))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is the divisor 4 ln 2?</h3><p>It is the expected value of the squared log range of a standard Brownian motion over one unit of time. Dividing by it converts an average squared range into a variance estimate. The derivation assumes no drift and no jumps.</p><h3>Is Parkinson always better than close-to-close?</h3><p>No. It is more efficient in the zero-drift diffusion it was derived for. A large overnight gap, a trading halt, or a bad high print can make it worse than a close-to-close estimator that at least uses the official closes.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Parkinson Volatility</p>
+<p>&gt; A volatility estimator that uses each period&#x27;s high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.</p>
+<p>- Category: Volatility Modeling</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/parkinson-volatility/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/parkinson-volatility/parkinson-volatility.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/realized-volatility/">Realized Volatility</a> <a href="/glossary/garch/">GARCH(1,1)</a> <a href="/glossary/implied-volatility/">Implied Volatility</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

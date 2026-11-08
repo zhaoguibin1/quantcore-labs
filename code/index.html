@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs</title>
-<meta name="description" content="Tested Python implementations for quant research: Numba rolling operators, DuckDB tick Parquet queries, vectorised backtests, ADF, cointegration, VaR/ES, Amihud, IC and more. MIT licensed.">
+<meta name="description" content="Tested Python implementations for quant research: Numba and NumPy rolling operators, DuckDB and Polars data tools, vectorised backtests, and the glossary measures. MIT licensed.">
 <link rel="canonical" href="https://quantcore-labs.com/code/">
 <meta name="robots" content="index,follow,max-snippet:-1">
 <meta name="theme-color" content="#020617">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="QuantCore Labs">
 <meta property="og:title" content="Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs">
-<meta property="og:description" content="Tested Python implementations for quant research: Numba rolling operators, DuckDB tick Parquet queries, vectorised backtests, ADF, cointegration, VaR/ES, Amihud, IC and more. MIT licensed.">
+<meta property="og:description" content="Tested Python implementations for quant research: Numba and NumPy rolling operators, DuckDB and Polars data tools, vectorised backtests, and the glossary measures. MIT licensed.">
 <meta property="og:url" content="https://quantcore-labs.com/code/">
 <script type="application/ld+json">
 {
@@ -61,56 +61,322 @@
             "@type": "ListItem",
             "position": 4,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/vwap/#code"
+              "@id": "https://quantcore-labs.com/code/cython-rolling-mean/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 5,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/ofi/#code"
+              "@id": "https://quantcore-labs.com/code/duckdb-parquet-loader/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 6,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code"
+              "@id": "https://quantcore-labs.com/code/polars-vectorized-backtest/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 7,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code"
+              "@id": "https://quantcore-labs.com/code/numba-ewma-volatility/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 8,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/adf-test/#code"
+              "@id": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 9,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/cointegration/#code"
+              "@id": "https://quantcore-labs.com/code/pandas-volume-bars/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 10,
             "item": {
-              "@id": "https://quantcore-labs.com/glossary/var-expected-shortfall/#code"
+              "@id": "https://quantcore-labs.com/code/pairs-zscore-signal/#code"
             }
           },
           {
             "@type": "ListItem",
             "position": 11,
             "item": {
+              "@id": "https://quantcore-labs.com/code/numpy-strided-rolling/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 12,
+            "item": {
+              "@id": "https://quantcore-labs.com/code/numba-order-book-replay/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 13,
+            "item": {
+              "@id": "https://quantcore-labs.com/code/polars-asof-join-quotes/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 14,
+            "item": {
+              "@id": "https://quantcore-labs.com/code/duckdb-asof-vwap/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 15,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/vwap/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 16,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/ofi/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 17,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 18,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 19,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/adf-test/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 20,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/cointegration/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 21,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/var-expected-shortfall/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 22,
+            "item": {
               "@id": "https://quantcore-labs.com/glossary/amihud-illiquidity/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 23,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/vpin/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 24,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/twap/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 25,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 26,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/arrival-price/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 27,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/participation-rate/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 28,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/almgren-chriss/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 29,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 30,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/pin-informed-trading/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 31,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 32,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 33,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/information-ratio/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 34,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/tracking-error/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 35,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/max-drawdown/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 36,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/calmar-ratio/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 37,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 38,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/beta/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 39,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/realized-volatility/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 40,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 41,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/garch/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 42,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/implied-volatility/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 43,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/delta/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 44,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/gamma/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 45,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/vega/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 46,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/theta/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 47,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/rho/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 48,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/put-call-parity/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 49,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#code"
             }
           }
         ]
@@ -181,6 +447,248 @@
         "@id": "https://quantcore-labs.com/#org"
       },
       "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/cython-rolling-mean/#code",
+      "name": "Cython Rolling Mean in Python",
+      "description": "Tested Python reference implementation: The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/cython-rolling-mean/",
+      "contentUrl": "https://quantcore-labs.com/code/cython-rolling-mean/cython-rolling-mean.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/duckdb-parquet-loader/#code",
+      "name": "DuckDB Parquet Loader in Python",
+      "description": "Tested Python reference implementation: Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, duckdb",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/duckdb-parquet-loader/",
+      "contentUrl": "https://quantcore-labs.com/code/duckdb-parquet-loader/duckdb-parquet-loader.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/polars-vectorized-backtest/#code",
+      "name": "Polars MA Backtest in Python",
+      "description": "Tested Python reference implementation: A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, polars",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/polars-vectorized-backtest/",
+      "contentUrl": "https://quantcore-labs.com/code/polars-vectorized-backtest/polars-vectorized-backtest.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/numba-ewma-volatility/#code",
+      "name": "Numba EWMA Vol in Python",
+      "description": "Tested Python reference implementation: Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, numba",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/numba-ewma-volatility/",
+      "contentUrl": "https://quantcore-labs.com/code/numba-ewma-volatility/numba-ewma-volatility.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/#code",
+      "name": "Tick to OHLCV in Python",
+      "description": "Tested Python reference implementation: Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/",
+      "contentUrl": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/pandas-volume-bars/#code",
+      "name": "Volume Bars in Python",
+      "description": "Tested Python reference implementation: Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/pandas-volume-bars/",
+      "contentUrl": "https://quantcore-labs.com/code/pandas-volume-bars/pandas-volume-bars.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/pairs-zscore-signal/#code",
+      "name": "Pair Z-Score in Python",
+      "description": "Tested Python reference implementation: A rolling OLS hedge ratio between two price series, the spread y − βx, and a rolling z-score of that spread. The z-score uses a second window on an already rolling spread, so it is defined later than β. Illustrative only; not a trading signal.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/pairs-zscore-signal/",
+      "contentUrl": "https://quantcore-labs.com/code/pairs-zscore-signal/pairs-zscore-signal.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/numpy-strided-rolling/#code",
+      "name": "NumPy Strided Rolling in Python",
+      "description": "Tested Python reference implementation: Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/numpy-strided-rolling/",
+      "contentUrl": "https://quantcore-labs.com/code/numpy-strided-rolling/numpy-strided-rolling.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/numba-order-book-replay/#code",
+      "name": "Numba Book Imbalance in Python",
+      "description": "Tested Python reference implementation: Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, numba",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/numba-order-book-replay/",
+      "contentUrl": "https://quantcore-labs.com/code/numba-order-book-replay/numba-order-book-replay.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/polars-asof-join-quotes/#code",
+      "name": "Polars As-Of Quotes in Python",
+      "description": "Tested Python reference implementation: Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, polars",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/polars-asof-join-quotes/",
+      "contentUrl": "https://quantcore-labs.com/code/polars-asof-join-quotes/polars-asof-join-quotes.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/duckdb-asof-vwap/#code",
+      "name": "DuckDB Minute VWAP in Python",
+      "description": "Tested Python reference implementation: Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, duckdb",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/duckdb-asof-vwap/",
+      "contentUrl": "https://quantcore-labs.com/code/duckdb-asof-vwap/duckdb-asof-vwap.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
     },
     {
       "@type": "SoftwareSourceCode",
@@ -383,6 +891,681 @@
       }
     },
     {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/vpin/#code",
+      "name": "VPIN in Python",
+      "description": "Tested Python reference implementation: An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/vpin/",
+      "contentUrl": "https://quantcore-labs.com/glossary/vpin/vpin.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vpin/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/twap/#code",
+      "name": "TWAP in Python",
+      "description": "Tested Python reference implementation: The arithmetic average of prices sampled on a regular clock. As a benchmark every interval counts once; as a schedule, a parent order is sliced evenly in time.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/twap/",
+      "contentUrl": "https://quantcore-labs.com/glossary/twap/twap.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/twap/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#code",
+      "name": "Implementation Shortfall in Python",
+      "description": "Tested Python reference implementation: The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/implementation-shortfall/",
+      "contentUrl": "https://quantcore-labs.com/glossary/implementation-shortfall/implementation-shortfall.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/arrival-price/#code",
+      "name": "Arrival Price in Python",
+      "description": "Tested Python reference implementation: Execution cost against the mid-price at the moment the order arrived, in basis points. Positive means the fills were worse than that mid.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/arrival-price/",
+      "contentUrl": "https://quantcore-labs.com/glossary/arrival-price/arrival-price.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/arrival-price/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/participation-rate/#code",
+      "name": "Participation Rate in Python",
+      "description": "Tested Python reference implementation: The fraction of market volume an order takes over an interval. A percent-of-volume schedule sets each child order to that fraction of the volume just observed, capped by what is left.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/participation-rate/",
+      "contentUrl": "https://quantcore-labs.com/glossary/participation-rate/participation-rate.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/participation-rate/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/almgren-chriss/#code",
+      "name": "Almgren-Chriss in Python",
+      "description": "Tested Python reference implementation: A deterministic schedule that liquidates a position by a fixed horizon, trading off temporary market impact against the variance of the remaining inventory. This page uses the continuous-time trajectory with permanent impact set to zero.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/almgren-chriss/",
+      "contentUrl": "https://quantcore-labs.com/glossary/almgren-chriss/almgren-chriss.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/almgren-chriss/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#code",
+      "name": "Kyle's Lambda in Python",
+      "description": "Tested Python reference implementation: The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/kyles-lambda/",
+      "contentUrl": "https://quantcore-labs.com/glossary/kyles-lambda/kyles-lambda.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/pin-informed-trading/#code",
+      "name": "PIN in Python",
+      "description": "Tested Python reference implementation: The share of trading that the Easley-Kiefer-O'Hara-Paperman model attributes to informed traders, given the chance of an information event and the arrival rates of informed and uninformed orders.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/pin-informed-trading/",
+      "contentUrl": "https://quantcore-labs.com/glossary/pin-informed-trading/pin-informed-trading.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/pin-informed-trading/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#code",
+      "name": "Sharpe Ratio in Python",
+      "description": "Tested Python reference implementation: Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/sharpe-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/sharpe-ratio/sharpe-ratio.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#code",
+      "name": "Sortino Ratio in Python",
+      "description": "Tested Python reference implementation: Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/sortino-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/sortino-ratio/sortino-ratio.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/information-ratio/#code",
+      "name": "Information Ratio in Python",
+      "description": "Tested Python reference implementation: Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/information-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/information-ratio/information-ratio.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-ratio/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/tracking-error/#code",
+      "name": "Tracking Error in Python",
+      "description": "Tested Python reference implementation: The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/tracking-error/",
+      "contentUrl": "https://quantcore-labs.com/glossary/tracking-error/tracking-error.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/tracking-error/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/max-drawdown/#code",
+      "name": "Max Drawdown in Python",
+      "description": "Tested Python reference implementation: The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/max-drawdown/",
+      "contentUrl": "https://quantcore-labs.com/glossary/max-drawdown/max-drawdown.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/max-drawdown/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/calmar-ratio/#code",
+      "name": "Calmar Ratio in Python",
+      "description": "Tested Python reference implementation: Compound annual growth of an equity curve divided by the absolute value of its maximum drawdown. This implementation uses the whole sample, not a trailing 36-month window.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/calmar-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/calmar-ratio/calmar-ratio.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/calmar-ratio/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#code",
+      "name": "Kelly Criterion in Python",
+      "description": "Tested Python reference implementation: The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/kelly-criterion/",
+      "contentUrl": "https://quantcore-labs.com/glossary/kelly-criterion/kelly-criterion.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/beta/#code",
+      "name": "Beta in Python",
+      "description": "Tested Python reference implementation: The OLS slope of an asset's returns on a market's returns: covariance divided by the market's variance. It is the CAPM coefficient on the sample you pass in, not a forecast.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/beta/",
+      "contentUrl": "https://quantcore-labs.com/glossary/beta/beta.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/beta/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/realized-volatility/#code",
+      "name": "Realized Volatility in Python",
+      "description": "Tested Python reference implementation: The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day's realized variance. Do not do that to a stack of many days.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/realized-volatility/",
+      "contentUrl": "https://quantcore-labs.com/glossary/realized-volatility/realized-volatility.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/realized-volatility/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#code",
+      "name": "Parkinson Volatility in Python",
+      "description": "Tested Python reference implementation: A volatility estimator that uses each period's high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/parkinson-volatility/",
+      "contentUrl": "https://quantcore-labs.com/glossary/parkinson-volatility/parkinson-volatility.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/garch/#code",
+      "name": "GARCH(1,1) in Python",
+      "description": "Tested Python reference implementation: A conditional variance that is a constant plus a weight on yesterday's squared shock plus a weight on yesterday's variance. This page filters a series with given parameters. It does not estimate them.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/garch/",
+      "contentUrl": "https://quantcore-labs.com/glossary/garch/garch.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/garch/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/implied-volatility/#code",
+      "name": "Implied Volatility in Python",
+      "description": "Tested Python reference implementation: The volatility that makes a Black-Scholes-Merton price match an observed option premium. It is solved numerically. There is no closed form for the call price inverted in volatility.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/implied-volatility/",
+      "contentUrl": "https://quantcore-labs.com/glossary/implied-volatility/implied-volatility.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/implied-volatility/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/delta/#code",
+      "name": "Delta in Python",
+      "description": "Tested Python reference implementation: The derivative of a European option's Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/delta/",
+      "contentUrl": "https://quantcore-labs.com/glossary/delta/delta.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/delta/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/gamma/#code",
+      "name": "Gamma in Python",
+      "description": "Tested Python reference implementation: The second derivative of a European option's value with respect to the spot, and the derivative of delta. In Black-Scholes-Merton the call and the put of the same strike and expiry have the same gamma.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/gamma/",
+      "contentUrl": "https://quantcore-labs.com/glossary/gamma/gamma.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/gamma/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/vega/#code",
+      "name": "Vega in Python",
+      "description": "Tested Python reference implementation: The sensitivity of a European option's Black-Scholes-Merton value to volatility, quoted per volatility point (one percentage point of σ). Call and put vegas of the same contract are equal.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/vega/",
+      "contentUrl": "https://quantcore-labs.com/glossary/vega/vega.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vega/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/theta/#code",
+      "name": "Theta in Python",
+      "description": "Tested Python reference implementation: The sensitivity of a European option's Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/theta/",
+      "contentUrl": "https://quantcore-labs.com/glossary/theta/theta.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/theta/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/rho/#code",
+      "name": "Rho in Python",
+      "description": "Tested Python reference implementation: The sensitivity of a European option's Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/rho/",
+      "contentUrl": "https://quantcore-labs.com/glossary/rho/rho.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/rho/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/put-call-parity/#code",
+      "name": "Put-Call Parity in Python",
+      "description": "Tested Python reference implementation: A model-free relation between European call and put prices that share a strike and an expiry. With a continuous dividend yield, the call minus the put equals the prepaid forward minus the discounted strike.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/put-call-parity/",
+      "contentUrl": "https://quantcore-labs.com/glossary/put-call-parity/put-call-parity.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/put-call-parity/#term"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#code",
+      "name": "Half-Life in Python",
+      "description": "Tested Python reference implementation: How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/half-life-mean-reversion/",
+      "contentUrl": "https://quantcore-labs.com/glossary/half-life-mean-reversion/half-life-mean-reversion.py",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#term"
+      }
+    },
+    {
       "@type": "BreadcrumbList",
       "itemListElement": [
         {
@@ -461,6 +1644,72 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <p><a href="/code/vectorized-backtest/vectorized-backtest.py">vectorized-backtest.py</a> · <a href="/code/vectorized-backtest/">explanation and tests</a></p>
 </article>
 <article class="card">
+<div class="meta"><span class="cat">High-Performance Python</span><span class="id">numpy</span></div>
+<h2><a href="/code/cython-rolling-mean/#code">Cython Rolling Mean</a></h2>
+<p>The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.</p>
+<p><a href="/code/cython-rolling-mean/cython-rolling-mean.py">cython-rolling-mean.py</a> · <a href="/code/cython-rolling-mean/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Data Engineering for Quants</span><span class="id">duckdb</span></div>
+<h2><a href="/code/duckdb-parquet-loader/#code">DuckDB Parquet Loader</a></h2>
+<p>Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.</p>
+<p><a href="/code/duckdb-parquet-loader/duckdb-parquet-loader.py">duckdb-parquet-loader.py</a> · <a href="/code/duckdb-parquet-loader/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Backtesting</span><span class="id">polars</span></div>
+<h2><a href="/code/polars-vectorized-backtest/#code">Polars MA Backtest</a></h2>
+<p>A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.</p>
+<p><a href="/code/polars-vectorized-backtest/polars-vectorized-backtest.py">polars-vectorized-backtest.py</a> · <a href="/code/polars-vectorized-backtest/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">High-Performance Python</span><span class="id">numpy, numba</span></div>
+<h2><a href="/code/numba-ewma-volatility/#code">Numba EWMA Vol</a></h2>
+<p>Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.</p>
+<p><a href="/code/numba-ewma-volatility/numba-ewma-volatility.py">numba-ewma-volatility.py</a> · <a href="/code/numba-ewma-volatility/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Data Engineering for Quants</span><span class="id">pandas</span></div>
+<h2><a href="/code/pandas-tick-to-ohlcv/#code">Tick to OHLCV</a></h2>
+<p>Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.</p>
+<p><a href="/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py">pandas-tick-to-ohlcv.py</a> · <a href="/code/pandas-tick-to-ohlcv/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Data Engineering for Quants</span><span class="id">numpy, pandas</span></div>
+<h2><a href="/code/pandas-volume-bars/#code">Volume Bars</a></h2>
+<p>Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.</p>
+<p><a href="/code/pandas-volume-bars/pandas-volume-bars.py">pandas-volume-bars.py</a> · <a href="/code/pandas-volume-bars/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">pandas</span></div>
+<h2><a href="/code/pairs-zscore-signal/#code">Pair Z-Score</a></h2>
+<p>A rolling OLS hedge ratio between two price series, the spread y − βx, and a rolling z-score of that spread. The z-score uses a second window on an already rolling spread, so it is defined later than β. Illustrative only; not a trading signal.</p>
+<p><a href="/code/pairs-zscore-signal/pairs-zscore-signal.py">pairs-zscore-signal.py</a> · <a href="/code/pairs-zscore-signal/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">High-Performance Python</span><span class="id">numpy</span></div>
+<h2><a href="/code/numpy-strided-rolling/#code">NumPy Strided Rolling</a></h2>
+<p>Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.</p>
+<p><a href="/code/numpy-strided-rolling/numpy-strided-rolling.py">numpy-strided-rolling.py</a> · <a href="/code/numpy-strided-rolling/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">High-Performance Python</span><span class="id">numpy, numba</span></div>
+<h2><a href="/code/numba-order-book-replay/#code">Numba Book Imbalance</a></h2>
+<p>Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.</p>
+<p><a href="/code/numba-order-book-replay/numba-order-book-replay.py">numba-order-book-replay.py</a> · <a href="/code/numba-order-book-replay/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Data Engineering for Quants</span><span class="id">polars</span></div>
+<h2><a href="/code/polars-asof-join-quotes/#code">Polars As-Of Quotes</a></h2>
+<p>Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.</p>
+<p><a href="/code/polars-asof-join-quotes/polars-asof-join-quotes.py">polars-asof-join-quotes.py</a> · <a href="/code/polars-asof-join-quotes/">explanation and tests</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Data Engineering for Quants</span><span class="id">duckdb</span></div>
+<h2><a href="/code/duckdb-asof-vwap/#code">DuckDB Minute VWAP</a></h2>
+<p>Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.</p>
+<p><a href="/code/duckdb-asof-vwap/duckdb-asof-vwap.py">duckdb-asof-vwap.py</a> · <a href="/code/duckdb-asof-vwap/">explanation and tests</a></p>
+</article>
+<article class="card">
 <div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">numpy, pandas</span></div>
 <h2><a href="/glossary/vwap/#code">VWAP in Python</a></h2>
 <p>The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.</p>
@@ -508,6 +1757,168 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <p>The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</p>
 <p><a href="/glossary/amihud-illiquidity/amihud-illiquidity.py">amihud-illiquidity.py</a> · <a href="/glossary/amihud-illiquidity/">definition and formula</a></p>
 </article>
+<article class="card">
+<div class="meta"><span class="cat">Market Microstructure &amp; Order Flow</span><span class="id">numpy, pandas</span></div>
+<h2><a href="/glossary/vpin/#code">VPIN in Python</a></h2>
+<p>An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.</p>
+<p><a href="/glossary/vpin/vpin.py">vpin.py</a> · <a href="/glossary/vpin/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">pandas</span></div>
+<h2><a href="/glossary/twap/#code">TWAP in Python</a></h2>
+<p>The arithmetic average of prices sampled on a regular clock. As a benchmark every interval counts once; as a schedule, a parent order is sliced evenly in time.</p>
+<p><a href="/glossary/twap/twap.py">twap.py</a> · <a href="/glossary/twap/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Transaction Cost Analysis</span><span class="id">standard library</span></div>
+<h2><a href="/glossary/implementation-shortfall/#code">Implementation Shortfall in Python</a></h2>
+<p>The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.</p>
+<p><a href="/glossary/implementation-shortfall/implementation-shortfall.py">implementation-shortfall.py</a> · <a href="/glossary/implementation-shortfall/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Transaction Cost Analysis</span><span class="id">standard library</span></div>
+<h2><a href="/glossary/arrival-price/#code">Arrival Price in Python</a></h2>
+<p>Execution cost against the mid-price at the moment the order arrived, in basis points. Positive means the fills were worse than that mid.</p>
+<p><a href="/glossary/arrival-price/arrival-price.py">arrival-price.py</a> · <a href="/glossary/arrival-price/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">standard library</span></div>
+<h2><a href="/glossary/participation-rate/#code">Participation Rate in Python</a></h2>
+<p>The fraction of market volume an order takes over an interval. A percent-of-volume schedule sets each child order to that fraction of the volume just observed, capped by what is left.</p>
+<p><a href="/glossary/participation-rate/participation-rate.py">participation-rate.py</a> · <a href="/glossary/participation-rate/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Impact</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/almgren-chriss/#code">Almgren-Chriss in Python</a></h2>
+<p>A deterministic schedule that liquidates a position by a fixed horizon, trading off temporary market impact against the variance of the remaining inventory. This page uses the continuous-time trajectory with permanent impact set to zero.</p>
+<p><a href="/glossary/almgren-chriss/almgren-chriss.py">almgren-chriss.py</a> · <a href="/glossary/almgren-chriss/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Market Microstructure &amp; Order Flow</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/kyles-lambda/#code">Kyle&#x27;s Lambda in Python</a></h2>
+<p>The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.</p>
+<p><a href="/glossary/kyles-lambda/kyles-lambda.py">kyles-lambda.py</a> · <a href="/glossary/kyles-lambda/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Market Microstructure &amp; Order Flow</span><span class="id">standard library</span></div>
+<h2><a href="/glossary/pin-informed-trading/#code">PIN in Python</a></h2>
+<p>The share of trading that the Easley-Kiefer-O&#x27;Hara-Paperman model attributes to informed traders, given the chance of an information event and the arrival rates of informed and uninformed orders.</p>
+<p><a href="/glossary/pin-informed-trading/pin-informed-trading.py">pin-informed-trading.py</a> · <a href="/glossary/pin-informed-trading/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/sharpe-ratio/#code">Sharpe Ratio in Python</a></h2>
+<p>Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.</p>
+<p><a href="/glossary/sharpe-ratio/sharpe-ratio.py">sharpe-ratio.py</a> · <a href="/glossary/sharpe-ratio/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/sortino-ratio/#code">Sortino Ratio in Python</a></h2>
+<p>Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.</p>
+<p><a href="/glossary/sortino-ratio/sortino-ratio.py">sortino-ratio.py</a> · <a href="/glossary/sortino-ratio/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/information-ratio/#code">Information Ratio in Python</a></h2>
+<p>Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.</p>
+<p><a href="/glossary/information-ratio/information-ratio.py">information-ratio.py</a> · <a href="/glossary/information-ratio/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/tracking-error/#code">Tracking Error in Python</a></h2>
+<p>The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.</p>
+<p><a href="/glossary/tracking-error/tracking-error.py">tracking-error.py</a> · <a href="/glossary/tracking-error/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/max-drawdown/#code">Max Drawdown in Python</a></h2>
+<p>The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.</p>
+<p><a href="/glossary/max-drawdown/max-drawdown.py">max-drawdown.py</a> · <a href="/glossary/max-drawdown/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/calmar-ratio/#code">Calmar Ratio in Python</a></h2>
+<p>Compound annual growth of an equity curve divided by the absolute value of its maximum drawdown. This implementation uses the whole sample, not a trailing 36-month window.</p>
+<p><a href="/glossary/calmar-ratio/calmar-ratio.py">calmar-ratio.py</a> · <a href="/glossary/calmar-ratio/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Position Sizing</span><span class="id">standard library</span></div>
+<h2><a href="/glossary/kelly-criterion/#code">Kelly Criterion in Python</a></h2>
+<p>The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.</p>
+<p><a href="/glossary/kelly-criterion/kelly-criterion.py">kelly-criterion.py</a> · <a href="/glossary/kelly-criterion/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Portfolio &amp; Factor Models</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/beta/#code">Beta in Python</a></h2>
+<p>The OLS slope of an asset&#x27;s returns on a market&#x27;s returns: covariance divided by the market&#x27;s variance. It is the CAPM coefficient on the sample you pass in, not a forecast.</p>
+<p><a href="/glossary/beta/beta.py">beta.py</a> · <a href="/glossary/beta/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Volatility Modeling</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/realized-volatility/#code">Realized Volatility in Python</a></h2>
+<p>The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day&#x27;s realized variance. Do not do that to a stack of many days.</p>
+<p><a href="/glossary/realized-volatility/realized-volatility.py">realized-volatility.py</a> · <a href="/glossary/realized-volatility/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Volatility Modeling</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/parkinson-volatility/#code">Parkinson Volatility in Python</a></h2>
+<p>A volatility estimator that uses each period&#x27;s high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.</p>
+<p><a href="/glossary/parkinson-volatility/parkinson-volatility.py">parkinson-volatility.py</a> · <a href="/glossary/parkinson-volatility/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Volatility Modeling</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/garch/#code">GARCH(1,1) in Python</a></h2>
+<p>A conditional variance that is a constant plus a weight on yesterday&#x27;s squared shock plus a weight on yesterday&#x27;s variance. This page filters a series with given parameters. It does not estimate them.</p>
+<p><a href="/glossary/garch/garch.py">garch.py</a> · <a href="/glossary/garch/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">scipy</span></div>
+<h2><a href="/glossary/implied-volatility/#code">Implied Volatility in Python</a></h2>
+<p>The volatility that makes a Black-Scholes-Merton price match an observed option premium. It is solved numerically. There is no closed form for the call price inverted in volatility.</p>
+<p><a href="/glossary/implied-volatility/implied-volatility.py">implied-volatility.py</a> · <a href="/glossary/implied-volatility/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">scipy</span></div>
+<h2><a href="/glossary/delta/#code">Delta in Python</a></h2>
+<p>The derivative of a European option&#x27;s Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.</p>
+<p><a href="/glossary/delta/delta.py">delta.py</a> · <a href="/glossary/delta/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">scipy</span></div>
+<h2><a href="/glossary/gamma/#code">Gamma in Python</a></h2>
+<p>The second derivative of a European option&#x27;s value with respect to the spot, and the derivative of delta. In Black-Scholes-Merton the call and the put of the same strike and expiry have the same gamma.</p>
+<p><a href="/glossary/gamma/gamma.py">gamma.py</a> · <a href="/glossary/gamma/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">scipy</span></div>
+<h2><a href="/glossary/vega/#code">Vega in Python</a></h2>
+<p>The sensitivity of a European option&#x27;s Black-Scholes-Merton value to volatility, quoted per volatility point (one percentage point of σ). Call and put vegas of the same contract are equal.</p>
+<p><a href="/glossary/vega/vega.py">vega.py</a> · <a href="/glossary/vega/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">scipy</span></div>
+<h2><a href="/glossary/theta/#code">Theta in Python</a></h2>
+<p>The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.</p>
+<p><a href="/glossary/theta/theta.py">theta.py</a> · <a href="/glossary/theta/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">scipy</span></div>
+<h2><a href="/glossary/rho/#code">Rho in Python</a></h2>
+<p>The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.</p>
+<p><a href="/glossary/rho/rho.py">rho.py</a> · <a href="/glossary/rho/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">standard library</span></div>
+<h2><a href="/glossary/put-call-parity/#code">Put-Call Parity in Python</a></h2>
+<p>A model-free relation between European call and put prices that share a strike and an expiry. With a continuous dividend yield, the call minus the put equals the prepaid forward minus the discounted strike.</p>
+<p><a href="/glossary/put-call-parity/put-call-parity.py">put-call-parity.py</a> · <a href="/glossary/put-call-parity/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/half-life-mean-reversion/#code">Half-Life in Python</a></h2>
+<p>How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.</p>
+<p><a href="/glossary/half-life-mean-reversion/half-life-mean-reversion.py">half-life-mean-reversion.py</a> · <a href="/glossary/half-life-mean-reversion/">definition and formula</a></p>
+</article>
 </section>
 <section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
 <p># QuantCore Labs Quant Code Snippets</p>
@@ -515,6 +1926,17 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <ul style="list-style:none;padding:0"><li>- [Numba Rolling Operators](https://quantcore-labs.com/code/rolling-window-numba/rolling-window-numba.py): numpy, numba</li>
 <li>- [DuckDB + Parquet Ticks](https://quantcore-labs.com/code/duckdb-parquet-ticks/duckdb-parquet-ticks.py): duckdb</li>
 <li>- [Vectorised Backtest](https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py): numpy, pandas, polars</li>
+<li>- [Cython Rolling Mean](https://quantcore-labs.com/code/cython-rolling-mean/cython-rolling-mean.py): numpy</li>
+<li>- [DuckDB Parquet Loader](https://quantcore-labs.com/code/duckdb-parquet-loader/duckdb-parquet-loader.py): duckdb</li>
+<li>- [Polars MA Backtest](https://quantcore-labs.com/code/polars-vectorized-backtest/polars-vectorized-backtest.py): polars</li>
+<li>- [Numba EWMA Vol](https://quantcore-labs.com/code/numba-ewma-volatility/numba-ewma-volatility.py): numpy, numba</li>
+<li>- [Tick to OHLCV](https://quantcore-labs.com/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py): pandas</li>
+<li>- [Volume Bars](https://quantcore-labs.com/code/pandas-volume-bars/pandas-volume-bars.py): numpy, pandas</li>
+<li>- [Pair Z-Score](https://quantcore-labs.com/code/pairs-zscore-signal/pairs-zscore-signal.py): pandas</li>
+<li>- [NumPy Strided Rolling](https://quantcore-labs.com/code/numpy-strided-rolling/numpy-strided-rolling.py): numpy</li>
+<li>- [Numba Book Imbalance](https://quantcore-labs.com/code/numba-order-book-replay/numba-order-book-replay.py): numpy, numba</li>
+<li>- [Polars As-Of Quotes](https://quantcore-labs.com/code/polars-asof-join-quotes/polars-asof-join-quotes.py): polars</li>
+<li>- [DuckDB Minute VWAP](https://quantcore-labs.com/code/duckdb-asof-vwap/duckdb-asof-vwap.py): duckdb</li>
 <li>- [VWAP](https://quantcore-labs.com/glossary/vwap/vwap.py): numpy, pandas</li>
 <li>- [OFI](https://quantcore-labs.com/glossary/ofi/ofi.py): numpy, pandas</li>
 <li>- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py): numpy</li>
@@ -522,7 +1944,34 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <li>- [ADF Test](https://quantcore-labs.com/glossary/adf-test/adf-test.py): numpy, statsmodels</li>
 <li>- [Cointegration](https://quantcore-labs.com/glossary/cointegration/cointegration.py): numpy, statsmodels</li>
 <li>- [VaR &amp; ES](https://quantcore-labs.com/glossary/var-expected-shortfall/var-expected-shortfall.py): numpy, scipy</li>
-<li>- [Amihud Illiquidity](https://quantcore-labs.com/glossary/amihud-illiquidity/amihud-illiquidity.py): numpy, pandas</li></ul>
+<li>- [Amihud Illiquidity](https://quantcore-labs.com/glossary/amihud-illiquidity/amihud-illiquidity.py): numpy, pandas</li>
+<li>- [VPIN](https://quantcore-labs.com/glossary/vpin/vpin.py): numpy, pandas</li>
+<li>- [TWAP](https://quantcore-labs.com/glossary/twap/twap.py): pandas</li>
+<li>- [Implementation Shortfall](https://quantcore-labs.com/glossary/implementation-shortfall/implementation-shortfall.py): standard library</li>
+<li>- [Arrival Price](https://quantcore-labs.com/glossary/arrival-price/arrival-price.py): standard library</li>
+<li>- [Participation Rate](https://quantcore-labs.com/glossary/participation-rate/participation-rate.py): standard library</li>
+<li>- [Almgren-Chriss](https://quantcore-labs.com/glossary/almgren-chriss/almgren-chriss.py): numpy</li>
+<li>- [Kyle&#x27;s Lambda](https://quantcore-labs.com/glossary/kyles-lambda/kyles-lambda.py): numpy</li>
+<li>- [PIN](https://quantcore-labs.com/glossary/pin-informed-trading/pin-informed-trading.py): standard library</li>
+<li>- [Sharpe Ratio](https://quantcore-labs.com/glossary/sharpe-ratio/sharpe-ratio.py): numpy</li>
+<li>- [Sortino Ratio](https://quantcore-labs.com/glossary/sortino-ratio/sortino-ratio.py): numpy</li>
+<li>- [Information Ratio](https://quantcore-labs.com/glossary/information-ratio/information-ratio.py): numpy</li>
+<li>- [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/tracking-error.py): numpy</li>
+<li>- [Max Drawdown](https://quantcore-labs.com/glossary/max-drawdown/max-drawdown.py): numpy</li>
+<li>- [Calmar Ratio](https://quantcore-labs.com/glossary/calmar-ratio/calmar-ratio.py): numpy</li>
+<li>- [Kelly Criterion](https://quantcore-labs.com/glossary/kelly-criterion/kelly-criterion.py): standard library</li>
+<li>- [Beta](https://quantcore-labs.com/glossary/beta/beta.py): numpy</li>
+<li>- [Realized Volatility](https://quantcore-labs.com/glossary/realized-volatility/realized-volatility.py): numpy</li>
+<li>- [Parkinson Volatility](https://quantcore-labs.com/glossary/parkinson-volatility/parkinson-volatility.py): numpy</li>
+<li>- [GARCH(1,1)](https://quantcore-labs.com/glossary/garch/garch.py): numpy</li>
+<li>- [Implied Volatility](https://quantcore-labs.com/glossary/implied-volatility/implied-volatility.py): scipy</li>
+<li>- [Delta](https://quantcore-labs.com/glossary/delta/delta.py): scipy</li>
+<li>- [Gamma](https://quantcore-labs.com/glossary/gamma/gamma.py): scipy</li>
+<li>- [Vega](https://quantcore-labs.com/glossary/vega/vega.py): scipy</li>
+<li>- [Theta](https://quantcore-labs.com/glossary/theta/theta.py): scipy</li>
+<li>- [Rho](https://quantcore-labs.com/glossary/rho/rho.py): scipy</li>
+<li>- [Put-Call Parity](https://quantcore-labs.com/glossary/put-call-parity/put-call-parity.py): standard library</li>
+<li>- [Half-Life](https://quantcore-labs.com/glossary/half-life-mean-reversion/half-life-mean-reversion.py): numpy</li></ul>
 </section>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>

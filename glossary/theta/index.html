@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theta: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/theta/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Theta: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/theta/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/theta/#term",
+      "name": "Theta",
+      "termCode": "theta",
+      "description": "Theta is the derivative of the model value with respect to calendar time, holding spot, volatility, rates and yield fixed. Time to expiry shrinks as calendar time advances, so the formula is minus the derivative with respect to T, then divided by 365 to quote a per-day number. Long options usually have negative theta: the premium decays as expiry approaches, all else equal. That \"all else equal\" is the catch. Spot and implied volatility do not stay still so that theta can be observed on its own.",
+      "url": "https://quantcore-labs.com/glossary/theta/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/theta/#article",
+      "headline": "Theta: Definition, Formula and Python",
+      "description": "The sensitivity of a European option's Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/theta/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/theta/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/theta/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/theta/#code",
+      "name": "Theta in Python",
+      "description": "Tested Python reference implementation: The sensitivity of a European option's Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, scipy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/theta/",
+      "contentUrl": "https://quantcore-labs.com/glossary/theta/theta.py",
+      "text": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_theta(S, K, T, r, sigma, call=True, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton theta per calendar day (annual derivative / 365).\n\n    call=False returns the put. Multiply by 365/252 for a trading-day theta.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    sT = sigma * sqrt(T)\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / sT\n    d2 = d1 - sT\n    decay = -S * exp(-q * T) * norm.pdf(d1) * sigma / (2.0 * sqrt(T))\n    if call:\n        annual = decay - r * K * exp(-r * T) * norm.cdf(d2) + q * S * exp(-q * T) * norm.cdf(d1)\n    else:\n        annual = decay + r * K * exp(-r * T) * norm.cdf(-d2) - q * S * exp(-q * T) * norm.cdf(-d1)\n    return float(annual / 365.0)\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/theta/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is theta usually negative for a long option?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "With the other inputs held fixed, less time means less chance of a large move and, for a call, less time for the prepaid forward to earn its rates. The model premium of a long option therefore usually falls as expiry gets closer. A short option has the opposite sign. This is a partial derivative, not a prediction of tomorrow's premium."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the function use trading days or calendar days?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Calendar days. The annual Black-Scholes derivative is divided by 365, which is what the Greeks calculator on this site displays. Multiply by 365/252 if you want a per-trading-day figure."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Theta",
+          "item": "https://quantcore-labs.com/glossary/theta/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">theta</span></nav><div class="tag">GLOSSARY · THETA</div></div></header>
+<main>
+<article>
+<h1>Theta</h1>
+<p class="lede">Options &amp; Derivatives · Term ID: <code>theta</code></p>
+<p class="def"><strong>Definition.</strong> Theta is the derivative of the model value with respect to calendar time, holding spot, volatility, rates and yield fixed. Time to expiry shrinks as calendar time advances, so the formula is minus the derivative with respect to T, then divided by 365 to quote a per-day number. Long options usually have negative theta: the premium decays as expiry approaches, all else equal. That &quot;all else equal&quot; is the catch. Spot and implied volatility do not stay still so that theta can be observed on its own.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">Let φ(d1) be the standard normal density, and
+d1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T),   d2 = d1 − σ √T.
+
+Θ_call = [ −S e^{−qT} φ(d1) σ / (2√T) − r K e^{−rT} N(d2) + q S e^{−qT} N(d1) ] / 365
+Θ_put  = [ −S e^{−qT} φ(d1) σ / (2√T) + r K e^{−rT} N(−d2) − q S e^{−qT} N(−d1) ] / 365
+
+Both are per calendar day. A trading-day theta divides the annual derivative by 252 instead;
+multiply the value here by 365/252 to convert. q = 0 drops the last term in each bracket.
+The Greeks calculator on this site uses these expressions.</pre></section>
+
+<section><h2>What the sign means</h2>
+<ul>
+<li>Negative theta means the model value falls as the clock runs, with every other input frozen. That is the usual case for a long option away from unusual rate and dividend combinations.</li>
+<li>The decay term −S e^{−qT} φ(d1) σ / (2√T) is shared. The rate and dividend terms differ for calls and puts, which is why a call theta and a put theta are not equal, unlike <a href="/glossary/gamma/">gamma</a> and <a href="/glossary/vega/">vega</a>.</li>
+<li>See <a href="/glossary/delta/">delta</a> for the d1 that enters, and the <a href="/option-greeks-calc/">Greeks calculator</a> for the same per-day convention.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>365 versus 252.</strong> This function divides by 365, calendar days, matching the calculator. A desk that marks theta per trading day wants the other divisor. The two numbers differ by 365/252.</li>
+<li><strong>One day is not infinitesimal.</strong> The derivative times 1/365 approximates the change from losing one calendar day of expiry. Very short-dated options have a theta that changes a lot over that same day, so the approximation is rougher.</li>
+<li><strong>Frozen volatility.</strong> The derivative does not include a change in implied volatility as expiry approaches. Real premiums move for that reason too.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires scipy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/theta/theta.py">Download theta.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>from math import exp, log, sqrt
+from scipy.stats import norm
+
+def bs_theta(S, K, T, r, sigma, call=True, q=0.0) -&gt; float:
+    &quot;&quot;&quot;Black-Scholes-Merton theta per calendar day (annual derivative / 365).
+
+    call=False returns the put. Multiply by 365/252 for a trading-day theta.
+    &quot;&quot;&quot;
+    if S &lt;= 0 or K &lt;= 0 or T &lt;= 0 or sigma &lt;= 0:
+        raise ValueError(&quot;S, K, T and sigma must be positive&quot;)
+    sT = sigma * sqrt(T)
+    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / sT
+    d2 = d1 - sT
+    decay = -S * exp(-q * T) * norm.pdf(d1) * sigma / (2.0 * sqrt(T))
+    if call:
+        annual = decay - r * K * exp(-r * T) * norm.cdf(d2) + q * S * exp(-q * T) * norm.cdf(d1)
+    else:
+        annual = decay + r * K * exp(-r * T) * norm.cdf(-d2) - q * S * exp(-q * T) * norm.cdf(-d1)
+    return float(annual / 365.0)
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is theta usually negative for a long option?</h3><p>With the other inputs held fixed, less time means less chance of a large move and, for a call, less time for the prepaid forward to earn its rates. The model premium of a long option therefore usually falls as expiry gets closer. A short option has the opposite sign. This is a partial derivative, not a prediction of tomorrow&#x27;s premium.</p><h3>Does the function use trading days or calendar days?</h3><p>Calendar days. The annual Black-Scholes derivative is divided by 365, which is what the Greeks calculator on this site displays. Multiply by 365/252 if you want a per-trading-day figure.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Theta</p>
+<p>&gt; The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.</p>
+<p>- Category: Options &amp; Derivatives</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/theta/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/theta/theta.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/delta/">Delta</a> <a href="/glossary/gamma/">Gamma</a> <a href="/glossary/vega/">Vega</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>
