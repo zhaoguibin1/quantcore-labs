@@ -14,7 +14,12 @@
 <meta property="og:title" content="Black-Scholes Option Greeks Calculator">
 <meta property="og:description" content="Real-time BSM pricing and Greeks (Δ, Γ, ν, Θ, ρ) with dividend yield. Client-side, no sign-up.">
 <meta property="og:url" content="https://quantcore-labs.com/option-greeks-calc/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://quantcore-labs.com/option-greeks-calc/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="QuantCore Labs — Black-Scholes Option Greeks Calculator">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://quantcore-labs.com/option-greeks-calc/og-image.png">
 
 <script type="application/ld+json">
 {
@@ -55,8 +60,14 @@
       "about": ["Black-Scholes model", "Option Greeks", "Derivatives pricing"],
       "proficiencyLevel": "Expert",
       "inLanguage": "en",
-      "datePublished": "2026-11-08",
-      "dateModified": "2026-11-08",
+      "datePublished": "2026-11-08T00:00:00-05:00",
+      "dateModified": "2026-11-08T00:00:00-05:00",
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://quantcore-labs.com/option-greeks-calc/og-image.png",
+        "width": 1200,
+        "height": 630
+      },
       "author": { "@id": "https://quantcore-labs.com/#org" },
       "publisher": { "@id": "https://quantcore-labs.com/#org" },
       "articleBody": "Under Black-Scholes-Merton with continuous dividend yield q: d1 = [ln(S/K) + (r - q + sigma^2/2)T] / (sigma sqrt(T)), d2 = d1 - sigma sqrt(T). Call = S e^(-qT) N(d1) - K e^(-rT) N(d2). Put = K e^(-rT) N(-d2) - S e^(-qT) N(-d1). Delta(call) = e^(-qT) N(d1); Delta(put) = -e^(-qT) N(-d1). Gamma = e^(-qT) phi(d1) / (S sigma sqrt(T)). Vega = S e^(-qT) phi(d1) sqrt(T), reported per 1 volatility point (divided by 100). Theta is reported per calendar day (annual theta divided by 365). Rho = K T e^(-rT) N(d2) for calls and -K T e^(-rT) N(-d2) for puts, reported per 1% change in r. N(x) is computed with the Hart (1968) double-precision rational approximation as given by West (2005), absolute error below 1e-14. Desks use these Greeks for delta hedging, gamma/vega risk limits, scenario P&L attribution, and quoting European-style index and ETF options."
