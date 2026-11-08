@@ -1,0 +1,13 @@
+# QuantCore-Labs
+
+> Free, client-side quantitative finance micro-tools. Each tool is a single static page that computes in the browser; no sign-up, no data upload.
+
+All tools document their formulas, units and conventions on-page. Each tool has a Markdown mirror at /<slug>.md.
+
+## Tools
+
+- [Black-Scholes Option Greeks Calculator](https://quantcore-labs.com/option-greeks-calc/): European call/put price, Delta, Gamma, Vega (per vol pt), Theta (per day), Rho (per 1%) under Black-Scholes-Merton with continuous dividend yield. Markdown: https://quantcore-labs.com/option-greeks-calc.md
+
+## Optional
+
+- [About QuantCore-Labs](https://quantcore-labs.com/): site overview

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Black-Scholes Option Greeks Calculator (Real-Time) | QuantCore-Labs</title>
+<meta name="description" content="Free real-time Black-Scholes-Merton calculator: European call/put price, Delta, Gamma, Vega, Theta and Rho with continuous dividend yield. Runs entirely in your browser.">
+<link rel="canonical" href="https://quantcore-labs.com/option-greeks-calc/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/option-greeks-calc.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore-Labs">
+<meta property="og:title" content="Black-Scholes Option Greeks Calculator">
+<meta property="og:description" content="Real-time BSM pricing and Greeks (Δ, Γ, ν, Θ, ρ) with dividend yield. Client-side, no sign-up.">
+<meta property="og:url" content="https://quantcore-labs.com/option-greeks-calc/">
+<meta name="twitter:card" content="summary">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore-Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/option-greeks-calc/#app",
+      "name": "Black-Scholes Option Greeks Calculator",
+      "url": "https://quantcore-labs.com/option-greeks-calc/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Options Pricing",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Black-Scholes-Merton European call and put pricing",
+        "Delta, Gamma, Vega (per 1 vol point), Theta (per calendar day), Rho (per 1% rate)",
+        "Continuous dividend yield q",
+        "Put-call parity check",
+        "Price vs. spot payoff chart",
+        "Client-side computation, no data leaves the browser"
+      ],
+      "publisher": { "@id": "https://quantcore-labs.com/#org" },
+      "mainEntityOfPage": { "@id": "https://quantcore-labs.com/option-greeks-calc/#article" }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/option-greeks-calc/#article",
+      "headline": "Black-Scholes-Merton Pricing and Greeks: Formulas and Conventions",
+      "about": ["Black-Scholes model", "Option Greeks", "Derivatives pricing"],
+      "proficiencyLevel": "Expert",
+      "inLanguage": "en",
+      "datePublished": "2026-11-08",
+      "dateModified": "2026-11-08",
+      "author": { "@id": "https://quantcore-labs.com/#org" },
+      "publisher": { "@id": "https://quantcore-labs.com/#org" },
+      "articleBody": "Under Black-Scholes-Merton with continuous dividend yield q: d1 = [ln(S/K) + (r - q + sigma^2/2)T] / (sigma sqrt(T)), d2 = d1 - sigma sqrt(T). Call = S e^(-qT) N(d1) - K e^(-rT) N(d2). Put = K e^(-rT) N(-d2) - S e^(-qT) N(-d1). Delta(call) = e^(-qT) N(d1); Delta(put) = -e^(-qT) N(-d1). Gamma = e^(-qT) phi(d1) / (S sigma sqrt(T)). Vega = S e^(-qT) phi(d1) sqrt(T), reported per 1 volatility point (divided by 100). Theta is reported per calendar day (annual theta divided by 365). Rho = K T e^(-rT) N(d2) for calls and -K T e^(-rT) N(-d2) for puts, reported per 1% change in r. N(x) is computed with the Hart (1968) double-precision rational approximation as given by West (2005), absolute error below 1e-14. Desks use these Greeks for delta hedging, gamma/vega risk limits, scenario P&L attribution, and quoting European-style index and ETF options."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/option-greeks-calc/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Theta in this calculator per day or per year?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Per calendar day. The annualised Black-Scholes theta is divided by 365. Divide by 252 instead if your desk uses trading-day theta; multiply the shown value by 365/252." }
+        },
+        {
+          "@type": "Question",
+          "name": "How is Vega scaled?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Vega is shown as the change in option price for a 1 volatility point move (for example 20% to 21%), which is the raw derivative dV/dsigma divided by 100." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use Black-Scholes for American options or A-share ETF options?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Black-Scholes prices European exercise only. Exchange-listed ETF options in China (such as those on the SSE 50 ETF and CSI 300 ETF) are European-style, so BSM is the standard reference model, though desks calibrate to an implied volatility surface rather than a single sigma. American options with dividends need a binomial tree or finite-difference solver because early exercise can be optimal." }
+        },
+        {
+          "@type": "Question",
+          "name": "How accurate is the normal CDF implementation?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The calculator uses Hart's double-precision rational approximation (West, 2005), with absolute error below 1e-14, which is close to machine precision and far tighter than the common Abramowitz-Stegun 26.2.17 approximation (about 7.5e-8)." }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "QuantCore-Labs", "item": "https://quantcore-labs.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Option Greeks Calculator", "item": "https://quantcore-labs.com/option-greeks-calc/" }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--call:#5ec27a;--put:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+header .crumb{font:12px var(--mono);color:var(--dim);letter-spacing:.04em}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:760px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,360px) 1fr}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+.field{margin-bottom:12px}
+.field label{display:flex;justify-content:space-between;font:12px var(--mono);color:var(--dim);margin-bottom:4px}
+.field .row{display:flex;gap:8px;align-items:center}
+input[type=number]{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:14px var(--mono)}
+input[type=number]:focus{outline:none;border-color:var(--acc)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.field .row input[type=number]{max-width:110px}
+.err{color:var(--put);font:12px var(--mono);min-height:16px}
+table.out{width:100%;border-collapse:collapse;font:14px var(--mono)}
+table.out th,table.out td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.out th:first-child,table.out td:first-child{text-align:left;color:var(--dim)}
+table.out thead th{font-size:12px;color:var(--dim);font-weight:500}
+table.out .c{color:var(--call)} table.out .p{color:var(--put)}
+td small{color:var(--dim);font-size:11px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font:12px var(--mono);color:var(--dim);margin-top:12px}
+.meta b{color:var(--text);font-weight:500}
+.ok{color:var(--call)}.bad{color:var(--put)}
+canvas{width:100%;height:240px;display:block;margin-top:14px;background:#0a0e13;border:1px solid var(--line);border-radius:4px}
+.legend{font:12px var(--mono);color:var(--dim);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:2px;vertical-align:middle;margin:0 4px 0 10px}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono);color:var(--text)}
+.md h3{font:600 14px var(--mono);margin:18px 0 6px;color:var(--acc)}
+.md p,.md li{color:var(--text)}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / option-greeks-calc</nav>
+  <h1>Black-Scholes Option Greeks Calculator <span class="tag">BSM · REAL-TIME</span></h1>
+  <p class="lede">European call and put prices with Delta, Gamma, Vega, Theta and Rho under Black-Scholes-Merton with continuous dividend yield. Results update as you type. Everything runs in your browser, so no data leaves your device.</p>
+</header>
+
+<noscript>
+  <p><strong>JavaScript is disabled.</strong> This calculator computes Black-Scholes-Merton prices and Greeks in the browser. The formulas and conventions used are documented below and in the <a href="/option-greeks-calc.md">Markdown version</a>.</p>
+</noscript>
+
+<main>
+<section aria-labelledby="calc-h">
+  <h2 id="calc-h">Calculator</h2>
+  <div class="grid">
+    <form class="panel" id="inputs" autocomplete="off" onsubmit="return false">
+      <h3>Inputs</h3>
+      <div class="field"><label for="S">Spot price S</label>
+        <input type="number" id="S" value="100" step="0.01" min="0"></div>
+      <div class="field"><label for="K">Strike K</label>
+        <input type="number" id="K" value="100" step="0.01" min="0"></div>
+      <div class="field"><label for="Tn">Days to expiry <span id="Tyr">1.0000 yr</span></label>
+        <div class="row"><input type="range" id="Tr" min="0" max="730" step="1" value="365"><input type="number" id="Tn" value="365" min="0" step="1"></div></div>
+      <div class="field"><label for="Vn">Volatility σ (%)</label>
+        <div class="row"><input type="range" id="Vr" min="1" max="150" step="0.5" value="20"><input type="number" id="Vn" value="20" min="0" step="0.1"></div></div>
+      <div class="field"><label for="r">Risk-free rate r (%, cont.)</label>
+        <input type="number" id="r" value="5" step="0.01"></div>
+      <div class="field"><label for="q">Dividend yield q (%, cont.)</label>
+        <input type="number" id="q" value="0" step="0.01"></div>
+      <div class="err" id="err" role="alert"></div>
+    </form>
+
+    <div class="panel" aria-live="polite">
+      <h3>Output</h3>
+      <table class="out" id="out">
+        <thead><tr><th>Metric</th><th class="c">Call</th><th class="p">Put</th></tr></thead>
+        <tbody>
+          <tr><td>Price</td><td id="cP">–</td><td id="pP">–</td></tr>
+          <tr><td>Delta Δ <small>∂V/∂S</small></td><td id="cD">–</td><td id="pD">–</td></tr>
+          <tr><td>Gamma Γ <small>∂²V/∂S²</small></td><td id="cG">–</td><td id="pG">–</td></tr>
+          <tr><td>Vega ν <small>per 1 vol pt</small></td><td id="cV">–</td><td id="pV">–</td></tr>
+          <tr><td>Theta Θ <small>per day</small></td><td id="cT">–</td><td id="pT">–</td></tr>
+          <tr><td>Rho ρ <small>per 1% r</small></td><td id="cR">–</td><td id="pR">–</td></tr>
+        </tbody>
+      </table>
+      <div class="meta">
+        <span>d1 <b id="d1">–</b></span><span>d2 <b id="d2">–</b></span>
+        <span>N(d1) <b id="nd1">–</b></span><span>N(d2) <b id="nd2">–</b></span>
+        <span>Parity C−P−(Se<sup>−qT</sup>−Ke<sup>−rT</sup>) <b id="par">–</b></span>
+      </div>
+      <canvas id="chart" aria-label="Option value versus spot price chart" role="img"></canvas>
+      <div class="legend"><i style="background:var(--call)"></i>Call <i style="background:var(--put)"></i>Put <i style="background:var(--dim)"></i>Payoff at expiry <i style="background:var(--warn)"></i>Current S</div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="method-h">
+  <h2 id="method-h">Formulas and conventions</h2>
+<div class="formula">d1 = [ ln(S/K) + (r − q + σ²/2)·T ] / (σ·√T)
+d2 = d1 − σ·√T
+
+Call  C = S·e^(−qT)·N(d1) − K·e^(−rT)·N(d2)
+Put   P = K·e^(−rT)·N(−d2) − S·e^(−qT)·N(−d1)
+
+Δ_call = e^(−qT)·N(d1)            Δ_put = −e^(−qT)·N(−d1)
+Γ      = e^(−qT)·φ(d1) / (S·σ·√T)
+ν      = S·e^(−qT)·φ(d1)·√T / 100            (per 1 vol point)
+Θ_call = [ −S·e^(−qT)·φ(d1)·σ/(2√T) − r·K·e^(−rT)·N(d2)  + q·S·e^(−qT)·N(d1)  ] / 365
+Θ_put  = [ −S·e^(−qT)·φ(d1)·σ/(2√T) + r·K·e^(−rT)·N(−d2) − q·S·e^(−qT)·N(−d1) ] / 365
+ρ_call = K·T·e^(−rT)·N(d2) / 100   ρ_put = −K·T·e^(−rT)·N(−d2) / 100</div>
+  <p>N(·) is the standard normal CDF, computed with Hart's double-precision rational approximation (West, 2005; absolute error &lt; 1e−14). φ(·) is the standard normal density. T is days ÷ 365. Rates and yield are continuously compounded. At T = 0 or σ = 0 the calculator returns the deterministic limit: the option is worth its discounted forward intrinsic value, and Gamma and Vega are zero.</p>
+</section>
+
+<section aria-labelledby="ai-h" class="md" id="llm-summary">
+  <h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+  <p># Black-Scholes Option Greeks Calculator</p>
+  <p>&gt; Client-side Black-Scholes-Merton pricer for European options with continuous dividend yield. URL: https://quantcore-labs.com/option-greeks-calc/</p>
+  <h3>## Inputs</h3>
+  <ul>
+    <li>- S: spot price; K: strike</li>
+    <li>- T: days to expiry (converted as days/365)</li>
+    <li>- σ: annualised volatility in %</li>
+    <li>- r: continuously compounded risk-free rate in %; q: continuous dividend yield in %</li>
+  </ul>
+  <h3>## Outputs and units</h3>
+  <ul>
+    <li>- Price: call and put, in the units of S</li>
+    <li>- Delta: ∂V/∂S; Gamma: ∂²V/∂S²</li>
+    <li>- Vega: price change per 1 volatility point</li>
+    <li>- Theta: price change per calendar day (annual/365)</li>
+    <li>- Rho: price change per 1 percentage point in r</li>
+  </ul>
+  <h3>## Reference values (S=100, K=100, T=1y, σ=20%, r=5%, q=0)</h3>
+  <ul>
+    <li>- Call 10.4506, Put 5.5735</li>
+    <li>- Δ call 0.6368, Δ put −0.3632, Γ 0.01876, ν 0.3752</li>
+    <li>- Θ call −0.01757/day, Θ put −0.00454/day, ρ call 0.5323, ρ put −0.4189</li>
+  </ul>
+  <h3>## Limitations</h3>
+  <ul>
+    <li>- European exercise only; constant σ and r; no discrete dividends</li>
+    <li>- Not a substitute for a calibrated implied-volatility surface</li>
+  </ul>
+</section>
+
+<section aria-labelledby="faq-h">
+  <h2 id="faq-h">FAQ</h2>
+  <dl class="faq">
+    <dt>Is Theta in this calculator per day or per year?</dt>
+    <dd>Per calendar day. The annualised Black-Scholes theta is divided by 365. Divide by 252 instead if your desk uses trading-day theta; multiply the shown value by 365/252.</dd>
+    <dt>How is Vega scaled?</dt>
+    <dd>Vega is shown as the change in option price for a 1 volatility point move (for example 20% to 21%), which is the raw derivative dV/dσ divided by 100.</dd>
+    <dt>Can I use Black-Scholes for American options or A-share ETF options?</dt>
+    <dd>Black-Scholes prices European exercise only. Exchange-listed ETF options in China (such as those on the SSE 50 ETF and CSI 300 ETF) are European-style, so BSM is the standard reference model, though desks calibrate to an implied volatility surface rather than a single σ. American options with dividends need a binomial tree or finite-difference solver because early exercise can be optimal.</dd>
+    <dt>How accurate is the normal CDF implementation?</dt>
+    <dd>The calculator uses Hart's double-precision rational approximation (West, 2005), with absolute error below 1e−14, which is close to machine precision and far tighter than the common Abramowitz-Stegun 26.2.17 approximation (about 7.5e−8).</dd>
+  </dl>
+</section>
+</main>
+
+<footer class="disclaimer">
+  <p>For educational and analytical use only. This is not investment advice and not an offer to buy or sell any security. Model outputs depend on the assumptions entered and may differ from market prices. © QuantCore-Labs.</p>
+</footer>
+</div>
+
+<script>
+/* ===== BSM-CORE-BEGIN ===== */
+// Standard normal CDF — Hart (1968) double precision, per West (2005), |err| < 1e-14
+function normCdf(x){
+  var z = Math.abs(x), c;
+  if (z > 37) { c = 0; }
+  else {
+    var e = Math.exp(-z * z / 2);
+    if (z < 7.07106781186547) {
+      var n = 3.52624965998911e-02 * z + 0.700383064443688;
+      n = n * z + 6.37396220353165; n = n * z + 33.912866078383;
+      n = n * z + 112.079291497871; n = n * z + 221.213596169931;
+      n = n * z + 220.206867912376;
+      var d = 8.83883476483184e-02 * z + 1.75566716318264;
+      d = d * z + 16.064177579207; d = d * z + 86.7807322029461;
+      d = d * z + 296.564248779674; d = d * z + 637.333633378831;
+      d = d * z + 793.826512519948; d = d * z + 440.413735824752;
+      c = e * n / d;
+    } else {
+      var b = z + 0.65; b = z + 4 / b; b = z + 3 / b; b = z + 2 / b; b = z + 1 / b;
+      c = e / b / 2.506628274631;
+    }
+  }
+  return x > 0 ? 1 - c : c;
+}
+function normPdf(x){ return Math.exp(-0.5 * x * x) / 2.5066282746310002; }
+
+// S,K > 0; T years >= 0; sigma, r, q as decimals. Vega per 1 vol pt, Theta per day, Rho per 1%.
+function bsm(S, K, T, sigma, r, q){
+  var dq = Math.exp(-q * T), dr = Math.exp(-r * T);
+  var Fd = S * dq, Kd = K * dr;            // discounted forward and strike
+  var sT = sigma * Math.sqrt(T);
+  var out = { d1: NaN, d2: NaN, nd1: NaN, nd2: NaN, call: {}, put: {} };
+
+  if (!(sT > 1e-12)) {
+    // Deterministic limit (T = 0 or sigma = 0): N(d) -> step function, phi terms -> 0
+    var itm = Fd > Kd ? 1 : (Fd < Kd ? 0 : 0.5);
+    out.d1 = out.d2 = itm === 1 ? Infinity : (itm === 0 ? -Infinity : 0);
+    out.nd1 = out.nd2 = itm;
+    out.call = { price: Math.max(Fd - Kd, 0), delta: dq * itm, gamma: 0, vega: 0,
+                 theta: (-r * Kd * itm + q * Fd * itm) / 365, rho: K * T * dr * itm / 100 };
+    out.put  = { price: Math.max(Kd - Fd, 0), delta: -dq * (1 - itm), gamma: 0, vega: 0,
+                 theta: (r * Kd * (1 - itm) - q * Fd * (1 - itm)) / 365, rho: -K * T * dr * (1 - itm) / 100 };
+    return out;
+  }
+
+  var d1 = (Math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / sT;
+  var d2 = d1 - sT;
+  var Nd1 = normCdf(d1), Nd2 = normCdf(d2), Nm1 = normCdf(-d1), Nm2 = normCdf(-d2);
+  var pd1 = normPdf(d1);
+  var decay = -Fd * pd1 * sigma / (2 * Math.sqrt(T));
+
+  out.d1 = d1; out.d2 = d2; out.nd1 = Nd1; out.nd2 = Nd2;
+  var gamma = dq * pd1 / (S * sT);
+  var vega = Fd * pd1 * Math.sqrt(T) / 100;
+  out.call = { price: Fd * Nd1 - Kd * Nd2, delta: dq * Nd1, gamma: gamma, vega: vega,
+               theta: (decay - r * Kd * Nd2 + q * Fd * Nd1) / 365, rho: K * T * dr * Nd2 / 100 };
+  out.put  = { price: Kd * Nm2 - Fd * Nm1, delta: -dq * Nm1, gamma: gamma, vega: vega,
+               theta: (decay + r * Kd * Nm2 - q * Fd * Nm1) / 365, rho: -K * T * dr * Nm2 / 100 };
+  return out;
+}
+/* ===== BSM-CORE-END ===== */
+
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(v, dp){
+    if (v === Infinity) return '+∞'; if (v === -Infinity) return '−∞';
+    if (!isFinite(v)) return '–';
+    var s = v.toFixed(dp); return (s.charAt(0) === '-' ? '−' + s.slice(1) : s);
+  };
+
+  // Keep slider and number box in sync
+  function link(rangeId, numId){
+    var rg = $(rangeId), nb = $(numId);
+    rg.addEventListener('input', function(){ nb.value = rg.value; run(); });
+    nb.addEventListener('input', function(){
+      var v = parseFloat(nb.value);
+      if (isFinite(v)) rg.value = Math.min(Math.max(v, +rg.min), +rg.max);
+      run();
+    });
+  }
+  link('Tr', 'Tn'); link('Vr', 'Vn');
+  ['S', 'K', 'r', 'q'].forEach(function(id){ $(id).addEventListener('input', run); });
+  window.addEventListener('resize', run);
+
+  function read(){
+    var p = { S: parseFloat($('S').value), K: parseFloat($('K').value),
+              days: parseFloat($('Tn').value), vol: parseFloat($('Vn').value),
+              r: parseFloat($('r').value), q: parseFloat($('q').value) };
+    var e = '';
+    if (!(p.S > 0)) e = 'S must be > 0';
+    else if (!(p.K > 0)) e = 'K must be > 0';
+    else if (!(p.days >= 0)) e = 'Days to expiry must be ≥ 0';
+    else if (!(p.vol >= 0)) e = 'Volatility must be ≥ 0';
+    else if (!isFinite(p.r) || !isFinite(p.q)) e = 'r and q must be numbers';
+    return { p: p, err: e };
+  }
+
+  function run(){
+    var x = read(); $('err').textContent = x.err;
+    if (x.err) return;
+    var p = x.p, T = p.days / 365, sig = p.vol / 100, r = p.r / 100, q = p.q / 100;
+    $('Tyr').textContent = T.toFixed(4) + ' yr';
+    var o = bsm(p.S, p.K, T, sig, r, q);
+    $('cP').textContent = fmt(o.call.price, 4);  $('pP').textContent = fmt(o.put.price, 4);
+    $('cD').textContent = fmt(o.call.delta, 4);  $('pD').textContent = fmt(o.put.delta, 4);
+    $('cG').textContent = fmt(o.call.gamma, 5);  $('pG').textContent = fmt(o.put.gamma, 5);
+    $('cV').textContent = fmt(o.call.vega, 4);   $('pV').textContent = fmt(o.put.vega, 4);
+    $('cT').textContent = fmt(o.call.theta, 5);  $('pT').textContent = fmt(o.put.theta, 5);
+    $('cR').textContent = fmt(o.call.rho, 4);    $('pR').textContent = fmt(o.put.rho, 4);
+    $('d1').textContent = fmt(o.d1, 4); $('d2').textContent = fmt(o.d2, 4);
+    $('nd1').textContent = fmt(o.nd1, 4); $('nd2').textContent = fmt(o.nd2, 4);
+    var par = o.call.price - o.put.price - (p.S * Math.exp(-q * T) - p.K * Math.exp(-r * T));
+    var pe = $('par'); pe.textContent = par.toExponential(1);
+    pe.className = Math.abs(par) < 1e-9 * Math.max(1, p.S) ? 'ok' : 'bad';
+    draw(p, T, sig, r, q);
+  }
+
+  function draw(p, T, sig, r, q){
+    var cv = $('chart'), dpr = window.devicePixelRatio || 1;
+    var W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    var css = getComputedStyle(document.documentElement);
+    var col = function(n){ return css.getPropertyValue(n).trim(); };
+    var lo = p.K * 0.5, hi = p.K * 1.5, N = 160, pad = { l: 44, r: 10, t: 10, b: 22 };
+    var xs = [], cs = [], ps = [], cp = [], pp = [], ymax = 0;
+    for (var i = 0; i <= N; i++) {
+      var s = lo + (hi - lo) * i / N, o = bsm(s, p.K, T, sig, r, q);
+      xs.push(s); cs.push(o.call.price); ps.push(o.put.price);
+      cp.push(Math.max(s - p.K, 0)); pp.push(Math.max(p.K - s, 0));
+      ymax = Math.max(ymax, o.call.price, o.put.price, cp[i], pp[i]);
+    }
+    ymax = ymax * 1.05 || 1;
+    var X = function(s){ return pad.l + (s - lo) / (hi - lo) * (W - pad.l - pad.r); };
+    var Y = function(v){ return H - pad.b - v / ymax * (H - pad.t - pad.b); };
+    g.strokeStyle = col('--line'); g.fillStyle = col('--dim'); g.font = '11px ' + col('--mono'); g.lineWidth = 1;
+    for (var k = 0; k <= 4; k++) {
+      var yv = ymax * k / 4, yy = Y(yv);
+      g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(W - pad.r, yy); g.stroke();
+      g.fillText(yv.toFixed(1), 4, yy + 4);
+    }
+    for (var m = 0; m <= 4; m++) {
+      var xv = lo + (hi - lo) * m / 4; g.fillText(xv.toFixed(0), X(xv) - 10, H - 6);
+    }
+    function line(arr, c, w, dash){
+      g.strokeStyle = c; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath();
+      arr.forEach(function(v, j){ var px = X(xs[j]), py = Y(v); j ? g.lineTo(px, py) : g.moveTo(px, py); });
+      g.stroke(); g.setLineDash([]);
+    }
+    line(cp, col('--dim'), 1, [4, 4]); line(pp, col('--dim'), 1, [4, 4]);
+    line(cs, col('--call'), 2); line(ps, col('--put'), 2);
+    if (p.S >= lo && p.S <= hi) {
+      g.strokeStyle = col('--warn'); g.lineWidth = 1; g.beginPath();
+      g.moveTo(X(p.S), pad.t); g.lineTo(X(p.S), H - pad.b); g.stroke();
+    }
+  }
+
+  run();
+})();
+</script>
+</body>
+</html>
