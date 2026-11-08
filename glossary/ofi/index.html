@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Flow Imbalance (OFI): Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/ofi/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Order Flow Imbalance (OFI): Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/ofi/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/ofi/#term",
+      "name": "Order Flow Imbalance (OFI)",
+      "termCode": "ofi",
+      "description": "Order Flow Imbalance aggregates every event at the best quotes (limit orders, cancellations and market orders) into one signed number. Demand added at the bid or supply removed from the ask counts as positive; supply added at the ask or demand removed from the bid counts as negative.",
+      "url": "https://quantcore-labs.com/glossary/ofi/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/ofi/#article",
+      "headline": "Order Flow Imbalance (OFI): Definition, Formula and Python",
+      "description": "Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/ofi/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T20:00:00-05:00",
+      "dateModified": "2026-11-07T20:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/ofi/"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can OFI be computed from trade data alone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. OFI needs best bid/ask prices and sizes. Trade-only data gives trade-sign imbalance (buy volume minus sell volume), a related but different measure."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "OFI",
+          "item": "https://quantcore-labs.com/glossary/ofi/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">ofi</span></nav><div class="tag">GLOSSARY · OFI</div></div></header>
+<main>
+<article>
+<h1>Order Flow Imbalance (OFI)</h1>
+<p class="lede">HFT &amp; Order Book Dynamics · Term ID: <code>ofi</code></p>
+<p class="def"><strong>Definition.</strong> Order Flow Imbalance aggregates every event at the best quotes (limit orders, cancellations and market orders) into one signed number. Demand added at the bid or supply removed from the ask counts as positive; supply added at the ask or demand removed from the bid counts as negative.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">Per-event contribution (Cont, Kukanov &amp; Stoikov, 2014):
+
+eₙ =  1{Pᴮₙ ≥ Pᴮₙ₋₁}·qᴮₙ − 1{Pᴮₙ ≤ Pᴮₙ₋₁}·qᴮₙ₋₁
+    − 1{Pᴬₙ ≤ Pᴬₙ₋₁}·qᴬₙ + 1{Pᴬₙ ≥ Pᴬₙ₋₁}·qᴬₙ₋₁
+
+OFIₖ = Σ eₙ   over events n in interval k
+
+Price impact:  ΔPₖ ≈ βₖ · OFIₖ + εₖ,   βₖ ∝ 1 / average depth
+
+Pᴮ, qᴮ : best bid price and size     Pᴬ, qᴬ : best ask price and size</pre></section>
+
+<section><h2>Interpretation</h2>
+<ul>
+<li>When the bid price is unchanged, the bid term reduces to the change in bid size. A rising bid counts the full new size, and a falling bid subtracts the full old size. The ask side mirrors this with the sign flipped.</li>
+<li>The original study on US equities reports that a single linear OFI regression explains a large share of short-interval mid-price variance. It also finds that the impact coefficient scales inversely with market depth.</li>
+</ul>
+</section>
+<section><h2>Institutional usage</h2>
+<ul>
+<li>Short-horizon alpha and quote-skewing signals for market makers.</li>
+<li>Execution: pausing or accelerating child orders when OFI runs against the order.</li>
+<li>Multi-level OFI, computed over the top N levels, adds information beyond level 1 in deeper books.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li>Snapshot data such as the 3-second L2 snapshots common in A-share feeds hides intermediate events, so OFI computed from snapshots is a coarse approximation.</li>
+<li>Normalise by average depth or volume before comparing OFI across stocks.</li>
+</ul>
+</section>
+
+<section><h2>Python reference implementation</h2>
+<p>Tested with NumPy and pandas. Copy and use freely.</p>
+<pre><code>import numpy as np
+import pandas as pd
+
+def ofi(book: pd.DataFrame) -&gt; pd.Series:
+    &quot;&quot;&quot;Per-event order flow imbalance e_n (Cont, Kukanov &amp; Stoikov, 2014).
+    book: rows are successive top-of-book snapshots with columns
+          bid_px, bid_sz, ask_px, ask_sz.
+    Sum e_n over a time window to get OFI for that window.&quot;&quot;&quot;
+    bp, bq = book[&quot;bid_px&quot;], book[&quot;bid_sz&quot;]
+    ap, aq = book[&quot;ask_px&quot;], book[&quot;ask_sz&quot;]
+    bp0, bq0, ap0, aq0 = bp.shift(), bq.shift(), ap.shift(), aq.shift()
+    e = (np.where(bp &gt;= bp0, bq, 0.0) - np.where(bp &lt;= bp0, bq0, 0.0)
+         - np.where(ap &lt;= ap0, aq, 0.0) + np.where(ap &gt;= ap0, aq0, 0.0))
+    e = pd.Series(e, index=book.index)
+    e.iloc[0] = 0.0  # no previous snapshot
+    return e
+
+# Window OFI, e.g. 10-second buckets:
+# ofi_10s = ofi(book).resample(&quot;10s&quot;).sum()
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Can OFI be computed from trade data alone?</h3><p>No. OFI needs best bid/ask prices and sizes. Trade-only data gives trade-sign imbalance (buy volume minus sell volume), a related but different measure.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Order Flow Imbalance (OFI)</p>
+<p>&gt; Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.</p>
+<p>- Category: HFT &amp; Order Book Dynamics</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/ofi/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+</section>
+
+<section class="related"><h2>Related terms</h2><a href="/glossary/vwap/">Volume-Weighted Average Price (VWAP)</a> <a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -1,12 +1,21 @@
 # QuantCore-Labs
 
-> Free, client-side quantitative finance micro-tools. Each tool is a single static page that computes in the browser; no sign-up, no data upload.
+> Free, client-side quantitative finance micro-tools and a glossary of quant terms. Each tool is a single static page that computes in the browser; no sign-up, no data upload.
 
-All tools document their formulas, units and conventions on-page. Each tool has a Markdown mirror at /<slug>.md.
+All tools document their formulas, units and conventions on-page. Glossary entries give a definition, formula, institutional usage and a tested Python reference implementation.
 
 ## Tools
 
 - [Black-Scholes Option Greeks Calculator](https://quantcore-labs.com/option-greeks-calc/): European call/put price, Delta, Gamma, Vega (per vol pt), Theta (per day), Rho (per 1%) under Black-Scholes-Merton with continuous dividend yield. Markdown: https://quantcore-labs.com/option-greeks-calc.md
+- [Monte Carlo Asset Path Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/): Geometric Brownian Motion path simulation with multi-trajectory chart and confidence-interval statistics.
+- [Markowitz Efficient Frontier Calculator](https://quantcore-labs.com/tools/portfolio-efficient-frontier/): Mean-variance optimisation, maximum-Sharpe portfolio weights and efficient frontier from expected returns and a covariance matrix.
+
+## Glossary
+
+- [Glossary index](https://quantcore-labs.com/glossary/): all terms
+- [Volume-Weighted Average Price (VWAP)](https://quantcore-labs.com/glossary/vwap/): definition, formula, execution-cost vs VWAP, Python implementation
+- [Order Flow Imbalance (OFI)](https://quantcore-labs.com/glossary/ofi/): Cont-Kukanov-Stoikov top-of-book OFI, price-impact relation, Python implementation
+- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/): R/S and lagged-difference estimators, mean-reversion interpretation, small-sample bias, Python implementation
 
 ## Optional
 
