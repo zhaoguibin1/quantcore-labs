@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realized Volatility: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day&#x27;s realized variance. Do not do that to a stack of many days.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/realized-volatility/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Realized Volatility: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day&#x27;s realized variance. Do not do that to a stack of many days.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/realized-volatility/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/realized-volatility/#term",
+      "name": "Realized Volatility",
+      "termCode": "realized-volatility",
+      "description": "Realized variance over a window is the sum of squared logarithmic returns of the prices inside it. Realized volatility is its square root. Under a diffusion with no jumps, that sum estimates the integrated variance of the window, and finer sampling makes the estimate tighter until microstructure noise dominates. The function annualises by multiplying the sum by a periods-per-year factor before the square root. That factor is correct when the sum is one period's variance (one day, if the factor is 252). Applied to a year of already-daily returns it multiplies a yearly total by 252 and overstates volatility by about sqrt(252).",
+      "url": "https://quantcore-labs.com/glossary/realized-volatility/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/realized-volatility/#article",
+      "headline": "Realized Volatility: Definition, Formula and Python",
+      "description": "The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day's realized variance. Do not do that to a stack of many days.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/realized-volatility/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/realized-volatility/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/realized-volatility/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/realized-volatility/#code",
+      "name": "Realized Volatility in Python",
+      "description": "Tested Python reference implementation: The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day's realized variance. Do not do that to a stack of many days.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/realized-volatility/",
+      "contentUrl": "https://quantcore-labs.com/glossary/realized-volatility/realized-volatility.py",
+      "text": "import numpy as np\n\ndef realized_vol(prices, periods_per_year=252) -> float:\n    \"\"\"Square root of summed squared log returns, scaled by periods_per_year.\n\n    periods_per_year annualises a SINGLE window. Use 1 to return the\n    un-annualised sqrt(sum of squares). Prices must be positive.\n    \"\"\"\n    px = np.asarray(prices, dtype=float)\n    if px.size < 2 or not np.all(np.isfinite(px)) or np.any(px <= 0):\n        raise ValueError(\"need at least two positive finite prices\")\n    if periods_per_year <= 0:\n        raise ValueError(\"periods_per_year must be positive\")\n    r = np.diff(np.log(px))\n    return float(np.sqrt(np.sum(r * r) * periods_per_year))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/realized-volatility/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I annualise a year of daily realized variances?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Average the daily sums of squared intraday returns first (that average estimates average daily variance), then multiply by the number of sessions in a year and take the square root. Passing every intraday price of the year into this function with periods_per_year=252 multiplies a year of variance by 252."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why log returns?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Squared log returns add up to integrated variance for a diffusion. Squared simple returns are close when the moves are small and are a different estimator when they are not. The function uses logs."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Realized Volatility",
+          "item": "https://quantcore-labs.com/glossary/realized-volatility/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">realized-volatility</span></nav><div class="tag">GLOSSARY · REALIZED VOLATILITY</div></div></header>
+<main>
+<article>
+<h1>Realized Volatility</h1>
+<p class="lede">Volatility Modeling · Term ID: <code>realized-volatility</code></p>
+<p class="def"><strong>Definition.</strong> Realized variance over a window is the sum of squared logarithmic returns of the prices inside it. Realized volatility is its square root. Under a diffusion with no jumps, that sum estimates the integrated variance of the window, and finer sampling makes the estimate tighter until microstructure noise dominates. The function annualises by multiplying the sum by a periods-per-year factor before the square root. That factor is correct when the sum is one period&#x27;s variance (one day, if the factor is 252). Applied to a year of already-daily returns it multiplies a yearly total by 252 and overstates volatility by about sqrt(252).</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">r_i = ln(P_i / P_{i−1})
+RV  = sqrt( (Σ_i r_i²) · P )
+
+P = periods per year used to annualise THIS window.
+One day of intraday returns → P = 252 (or 242) gives an annualised number from that day.
+A window you do not want to annualise → P = 1, which returns sqrt(Σ r_i²).
+
+The sum of squares, not the square of the sum. Signs of returns do not matter.</pre></section>
+
+<section><h2>What the window is</h2>
+<ul>
+<li>Pass the prices of one period. A session of one-minute prices in, an annualised volatility for that session out, if you set the factor to the number of sessions in a year.</li>
+<li>To describe a year, compute each day's sum of squares and then average the daily realized variances, and only then scale. This function does not do that average. It scales whatever sum you hand it.</li>
+<li>Close-to-close volatility is the ordinary standard deviation of daily log returns, a different estimator. Range estimators such as <a href="/glossary/parkinson-volatility/">Parkinson</a> use high and low. A conditional model is <a href="/glossary/garch/">GARCH</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Annualisation is the easy mistake.</strong> Σ r² over 252 daily returns is already a year of variance. Multiplying by another 252 is wrong. Use P = 1 for a pre-aggregated sum you do not want scaled.</li>
+<li><strong>Microstructure.</strong> Bid-ask bounce biases the sum of squares up as the sampling gets finer. One-second returns on a wide spread mostly measure the spread.</li>
+<li><strong>Jumps and overnight.</strong> A close-to-open jump is one large r_i if you include it, and is invisible if you only pass the cash session. Neither choice is free.</li>
+<li><strong>Zeros and negative prices.</strong> Log returns require positive prices. The function rejects the rest.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/realized-volatility/realized-volatility.py">Download realized-volatility.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def realized_vol(prices, periods_per_year=252) -&gt; float:
+    &quot;&quot;&quot;Square root of summed squared log returns, scaled by periods_per_year.
+
+    periods_per_year annualises a SINGLE window. Use 1 to return the
+    un-annualised sqrt(sum of squares). Prices must be positive.
+    &quot;&quot;&quot;
+    px = np.asarray(prices, dtype=float)
+    if px.size &lt; 2 or not np.all(np.isfinite(px)) or np.any(px &lt;= 0):
+        raise ValueError(&quot;need at least two positive finite prices&quot;)
+    if periods_per_year &lt;= 0:
+        raise ValueError(&quot;periods_per_year must be positive&quot;)
+    r = np.diff(np.log(px))
+    return float(np.sqrt(np.sum(r * r) * periods_per_year))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>How do I annualise a year of daily realized variances?</h3><p>Average the daily sums of squared intraday returns first (that average estimates average daily variance), then multiply by the number of sessions in a year and take the square root. Passing every intraday price of the year into this function with periods_per_year=252 multiplies a year of variance by 252.</p><h3>Why log returns?</h3><p>Squared log returns add up to integrated variance for a diffusion. Squared simple returns are close when the moves are small and are a different estimator when they are not. The function uses logs.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Realized Volatility</p>
+<p>&gt; The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day&#x27;s realized variance. Do not do that to a stack of many days.</p>
+<p>- Category: Volatility Modeling</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/realized-volatility/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/realized-volatility/realized-volatility.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/parkinson-volatility/">Parkinson Volatility</a> <a href="/glossary/garch/">GARCH(1,1)</a> <a href="/glossary/implied-volatility/">Implied Volatility</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

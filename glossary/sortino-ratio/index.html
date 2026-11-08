@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sortino Ratio: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/sortino-ratio/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Sortino Ratio: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/sortino-ratio/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#term",
+      "name": "Sortino Ratio",
+      "termCode": "sortino-ratio",
+      "description": "The Sortino ratio replaces the Sharpe denominator with downside deviation: the root-mean-square of returns that fall short of a target, with shortfalls of zero on periods that meet the target still included in the average. The target used here is an annual minimum acceptable return, converted to a per-period rate the same way the risk-free rate is converted for the Sharpe ratio. The result is annualised by sqrt(P). It penalises missing the target. It does not penalise beating it.",
+      "url": "https://quantcore-labs.com/glossary/sortino-ratio/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#article",
+      "headline": "Sortino Ratio: Definition, Formula and Python",
+      "description": "Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/sortino-ratio/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#code",
+      "name": "Sortino Ratio in Python",
+      "description": "Tested Python reference implementation: Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/sortino-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/sortino-ratio/sortino-ratio.py",
+      "text": "import numpy as np\n\ndef sortino_ratio(returns, mar_annual=0.0, periods=252) -> float:\n    \"\"\"Annualised Sortino ratio.\n\n    Downside deviation is the root-mean-square of min(r - MAR, 0) over all\n    periods. MAR is an annual rate, compounded to a per-period rate.\n    No downside variation returns NaN. Matches /tools/performance-analytics/.\n    \"\"\"\n    r = np.asarray(returns, dtype=float)\n    r = r[np.isfinite(r)]\n    if r.size < 2:\n        raise ValueError(\"need at least two finite returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    mar = (1.0 + mar_annual) ** (1.0 / periods) - 1.0\n    downside = float(np.sqrt(np.mean(np.minimum(r - mar, 0.0) ** 2)))\n    if downside == 0.0:\n        return float(\"nan\")\n    return float((r.mean() - mar) / downside * np.sqrt(periods))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why average the squared shortfalls over periods that were not shortfalls?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Those periods contribute a zero, so they dilute the root-mean-square. Dropping them would divide by the number of bad periods only and would make a rare crash look like a small downside. The version that keeps the zeros is the one the performance calculator uses."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Should the target be the risk-free rate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Only if that is the return you have decided is the minimum you care about. The parameter is a minimum acceptable return, not a funding rate. Leaving it at zero scores any negative periodic return as downside."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sortino Ratio",
+          "item": "https://quantcore-labs.com/glossary/sortino-ratio/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">sortino-ratio</span></nav><div class="tag">GLOSSARY · SORTINO RATIO</div></div></header>
+<main>
+<article>
+<h1>Sortino Ratio</h1>
+<p class="lede">Performance &amp; Risk Metrics · Term ID: <code>sortino-ratio</code></p>
+<p class="def"><strong>Definition.</strong> The Sortino ratio replaces the Sharpe denominator with downside deviation: the root-mean-square of returns that fall short of a target, with shortfalls of zero on periods that meet the target still included in the average. The target used here is an annual minimum acceptable return, converted to a per-period rate the same way the risk-free rate is converted for the Sharpe ratio. The result is annualised by sqrt(P). It penalises missing the target. It does not penalise beating it.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">MAR_period = (1 + MAR_annual) ^ (1/P) − 1
+d_t = min(R_t − MAR_period, 0)
+DD  = sqrt( mean(d_t²) )                 average over every period, not only the negative ones
+
+Sortino = (mean(R) − MAR_period) / DD · sqrt(P)
+
+DD = 0 → undefined (NaN). Using only the negative periods in the mean would be a different statistic.</pre></section>
+
+<section><h2>Why the denominator ignores upside</h2>
+<ul>
+<li>Two strategies can share a volatility and a <a href="/glossary/sharpe-ratio/">Sharpe ratio</a> while one of them makes its volatility on the upside. Sortino treats those as different.</li>
+<li>The target is not automatically the risk-free rate. It is whatever minimum acceptable return you pass in. Zero means "negative periodic returns count against the strategy".</li>
+<li>The <a href="/tools/performance-analytics/">performance calculator</a> uses this downside definition (root-mean-square over all periods) and the same annualisation.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>A sample with no down period is undefined, not infinite.</strong> The function returns NaN. Reporting a huge Sortino from a handful of up days is a presentation choice the code refuses.</li>
+<li><strong>The mean in the square root is over n, not n − 1.</strong> That matches the calculator. Mixing it with a sample-standard-deviation downside changes the number.</li>
+<li><strong>It still does not see path.</strong> A slow grind below the target and a crash with the same squared shortfalls can share a Sortino. Look at <a href="/glossary/max-drawdown/">maximum drawdown</a> as well.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/sortino-ratio/sortino-ratio.py">Download sortino-ratio.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def sortino_ratio(returns, mar_annual=0.0, periods=252) -&gt; float:
+    &quot;&quot;&quot;Annualised Sortino ratio.
+
+    Downside deviation is the root-mean-square of min(r - MAR, 0) over all
+    periods. MAR is an annual rate, compounded to a per-period rate.
+    No downside variation returns NaN. Matches /tools/performance-analytics/.
+    &quot;&quot;&quot;
+    r = np.asarray(returns, dtype=float)
+    r = r[np.isfinite(r)]
+    if r.size &lt; 2:
+        raise ValueError(&quot;need at least two finite returns&quot;)
+    if periods &lt;= 0:
+        raise ValueError(&quot;periods must be positive&quot;)
+    mar = (1.0 + mar_annual) ** (1.0 / periods) - 1.0
+    downside = float(np.sqrt(np.mean(np.minimum(r - mar, 0.0) ** 2)))
+    if downside == 0.0:
+        return float(&quot;nan&quot;)
+    return float((r.mean() - mar) / downside * np.sqrt(periods))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why average the squared shortfalls over periods that were not shortfalls?</h3><p>Those periods contribute a zero, so they dilute the root-mean-square. Dropping them would divide by the number of bad periods only and would make a rare crash look like a small downside. The version that keeps the zeros is the one the performance calculator uses.</p><h3>Should the target be the risk-free rate?</h3><p>Only if that is the return you have decided is the minimum you care about. The parameter is a minimum acceptable return, not a funding rate. Leaving it at zero scores any negative periodic return as downside.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Sortino Ratio</p>
+<p>&gt; Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.</p>
+<p>- Category: Performance &amp; Risk Metrics</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/sortino-ratio/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/sortino-ratio/sortino-ratio.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> <a href="/glossary/max-drawdown/">Maximum Drawdown</a> <a href="/glossary/calmar-ratio/">Calmar Ratio</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

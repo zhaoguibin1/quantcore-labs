@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attach the Prevailing Quote to Each Trade: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.">
+<link rel="canonical" href="https://quantcore-labs.com/code/polars-asof-join-quotes/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Attach the Prevailing Quote to Each Trade: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.">
+<meta property="og:url" content="https://quantcore-labs.com/code/polars-asof-join-quotes/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/polars-asof-join-quotes/#article",
+      "headline": "Attach the Prevailing Quote to Each Trade: Tested Python Implementation",
+      "description": "Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/polars-asof-join-quotes/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/polars-asof-join-quotes/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/polars-asof-join-quotes/#code",
+      "name": "Polars As-Of Quotes in Python",
+      "description": "Tested Python reference implementation: Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, polars",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/polars-asof-join-quotes/",
+      "contentUrl": "https://quantcore-labs.com/code/polars-asof-join-quotes/polars-asof-join-quotes.py",
+      "text": "import polars as pl\n\ndef tag_trades_with_quotes(trades: pl.DataFrame, quotes: pl.DataFrame, tolerance=None) -> pl.DataFrame:\n    \"\"\"Backward as-of join of quotes onto trades, per symbol, plus a mid rule.\n\n    side is +1 above the mid, -1 below, 0 at the mid, and null if no quote\n    is available at or before the trade. tolerance drops quotes older than that.\n    \"\"\"\n    need_t = {\"symbol\", \"ts\", \"price\"}\n    need_q = {\"symbol\", \"ts\", \"bid\", \"ask\"}\n    if not need_t.issubset(trades.columns) or not need_q.issubset(quotes.columns):\n        raise ValueError(\"trades need symbol, ts, price; quotes need symbol, ts, bid, ask\")\n    out = (\n        trades.sort(\"ts\")\n        .join_asof(\n            quotes.sort(\"ts\"),\n            on=\"ts\",\n            by=\"symbol\",\n            strategy=\"backward\",\n            tolerance=tolerance,\n            check_sortedness=False,\n        )\n    )\n    mid = (pl.col(\"bid\") + pl.col(\"ask\")) / 2\n    known = mid.is_not_null()\n    return out.with_columns(\n        side=pl.when(known & (pl.col(\"price\") > mid)).then(pl.lit(1))\n        .when(known & (pl.col(\"price\") < mid)).then(pl.lit(-1))\n        .when(known).then(pl.lit(0))\n        .otherwise(pl.lit(None))\n    )\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why not join on an equal timestamp?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Quotes and trades rarely share a timestamp. An inner join on ts drops almost every trade. An as-of join keeps the quote that was current, which is the one a labelling rule can actually use."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does a missing side mean?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No quote for that symbol had a timestamp at or before the trade, or the matched quote was older than the tolerance. It does not mean the trade was at the mid. At-mid trades have side 0."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polars As-Of Quotes",
+          "item": "https://quantcore-labs.com/code/polars-asof-join-quotes/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">polars-asof-join-quotes</span></nav><div class="tag">CODE · POLARS AS-OF QUOTES</div></div></header>
+<main>
+<article>
+<h1>Attach the Prevailing Quote to Each Trade</h1>
+<p class="lede">Data Engineering for Quants · Snippet ID: <code>polars-asof-join-quotes</code></p>
+<p class="def"><strong>What it does.</strong> An as-of join matches each trade to the most recent quote that was already on the book, rather than to a quote with the same timestamp only. Doing it by symbol keeps one name&#x27;s quote from attaching to another name&#x27;s trade. The side rule compares the trade price to the matched mid-price. It is a labelling convention for research, not the exchange&#x27;s aggressor flag.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">For each trade (symbol s, time t), choose the quote of s with the greatest t_q ≤ t.
+  mid = (bid + ask) / 2
+  side =  1  if price &gt; mid
+       = −1  if price &lt; mid
+       =  0  if price = mid
+       = missing if no quote has t_q ≤ t
+
+Both frames are sorted by time before the join. Exact timestamp matches are allowed.</pre></section>
+
+<section><h2>Why backward, and by symbol</h2>
+<ul>
+<li>A trade can only be labelled with a quote the matching engine had already published. A forward as-of join would use a future quote. That is look-ahead.</li>
+<li><code>by="symbol"</code> is the difference between a usable tape and a join that pastes the wrong book onto a print whenever two names trade at close times.</li>
+<li>The labelled tape is an input to signed-volume measures such as <a href="/glossary/kyles-lambda/">Kyle's lambda</a> and to the buy and sell buckets in <a href="/glossary/vpin/">VPIN</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>No tolerance by default.</strong> The latest quote might be hours old, or from the previous session. Pass a tolerance if a stale quote should not label a trade.</li>
+<li><strong>Quote rule is not Lee-Ready.</strong> The full tick test also looks at whether the quote itself moved. A price above the mid is only a clue about the aggressor.</li>
+<li><strong>Sort both sides.</strong> <code>join_asof</code> requires the time key to be sorted. This function sorts by time. A secondary sequence number should already have broken ties in the frame you pass in, or two events in the same timestamp keep their original relative order only if the sort is stable, which Polars' default sort is.</li>
+<li><strong>Missing quote is not side 0.</strong> Side 0 means the trade printed at the mid. A trade before the first quote has a missing side. Collapsing both to 0 hides a join failure.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires polars. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/polars-asof-join-quotes/polars-asof-join-quotes.py">Download polars-asof-join-quotes.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import polars as pl
+
+def tag_trades_with_quotes(trades: pl.DataFrame, quotes: pl.DataFrame, tolerance=None) -&gt; pl.DataFrame:
+    &quot;&quot;&quot;Backward as-of join of quotes onto trades, per symbol, plus a mid rule.
+
+    side is +1 above the mid, -1 below, 0 at the mid, and null if no quote
+    is available at or before the trade. tolerance drops quotes older than that.
+    &quot;&quot;&quot;
+    need_t = {&quot;symbol&quot;, &quot;ts&quot;, &quot;price&quot;}
+    need_q = {&quot;symbol&quot;, &quot;ts&quot;, &quot;bid&quot;, &quot;ask&quot;}
+    if not need_t.issubset(trades.columns) or not need_q.issubset(quotes.columns):
+        raise ValueError(&quot;trades need symbol, ts, price; quotes need symbol, ts, bid, ask&quot;)
+    out = (
+        trades.sort(&quot;ts&quot;)
+        .join_asof(
+            quotes.sort(&quot;ts&quot;),
+            on=&quot;ts&quot;,
+            by=&quot;symbol&quot;,
+            strategy=&quot;backward&quot;,
+            tolerance=tolerance,
+            check_sortedness=False,
+        )
+    )
+    mid = (pl.col(&quot;bid&quot;) + pl.col(&quot;ask&quot;)) / 2
+    known = mid.is_not_null()
+    return out.with_columns(
+        side=pl.when(known &amp; (pl.col(&quot;price&quot;) &gt; mid)).then(pl.lit(1))
+        .when(known &amp; (pl.col(&quot;price&quot;) &lt; mid)).then(pl.lit(-1))
+        .when(known).then(pl.lit(0))
+        .otherwise(pl.lit(None))
+    )
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why not join on an equal timestamp?</h3><p>Quotes and trades rarely share a timestamp. An inner join on ts drops almost every trade. An as-of join keeps the quote that was current, which is the one a labelling rule can actually use.</p><h3>What does a missing side mean?</h3><p>No quote for that symbol had a timestamp at or before the trade, or the matched quote was older than the tolerance. It does not mean the trade was at the mid. At-mid trades have side 0.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Attach the Prevailing Quote to Each Trade</p>
+<p>&gt; Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.</p>
+<p>- Category: Data Engineering for Quants</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/polars-asof-join-quotes/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/polars-asof-join-quotes/polars-asof-join-quotes.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/kyles-lambda/">Kyle&#x27;s Lambda</a> <a href="/glossary/vpin/">Volume-Synchronized Probability of Informed Trading (VPIN)</a> <a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

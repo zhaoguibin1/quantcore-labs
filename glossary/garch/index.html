@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GARCH(1,1): Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="A conditional variance that is a constant plus a weight on yesterday&#x27;s squared shock plus a weight on yesterday&#x27;s variance. This page filters a series with given parameters. It does not estimate them.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/garch/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="GARCH(1,1): Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="A conditional variance that is a constant plus a weight on yesterday&#x27;s squared shock plus a weight on yesterday&#x27;s variance. This page filters a series with given parameters. It does not estimate them.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/garch/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/garch/#term",
+      "name": "GARCH(1,1)",
+      "termCode": "garch",
+      "description": "GARCH(1,1), Bollerslev (1986), says today's variance depends on a long-run piece, on how large yesterday's surprise was, and on yesterday's variance. Clusters of large moves follow because a large shock raises the next variance, which keeps later variances high until the β term decays. The function below runs that recursion. ω, α and β are inputs. Fitting them by maximum likelihood is a numerical problem this page does not solve. The variance at step 0 is the first squared return, so the filter does not use later data to start itself.",
+      "url": "https://quantcore-labs.com/glossary/garch/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/garch/#article",
+      "headline": "GARCH(1,1): Definition, Formula and Python",
+      "description": "A conditional variance that is a constant plus a weight on yesterday's squared shock plus a weight on yesterday's variance. This page filters a series with given parameters. It does not estimate them.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/garch/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/garch/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/garch/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/garch/#code",
+      "name": "GARCH(1,1) in Python",
+      "description": "Tested Python reference implementation: A conditional variance that is a constant plus a weight on yesterday's squared shock plus a weight on yesterday's variance. This page filters a series with given parameters. It does not estimate them.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/garch/",
+      "contentUrl": "https://quantcore-labs.com/glossary/garch/garch.py",
+      "text": "import numpy as np\n\ndef garch11_variance(returns, omega, alpha, beta):\n    \"\"\"GARCH(1,1) variance path. Parameters are inputs, not estimates.\n\n    var[0] = returns[0] ** 2. Later terms use the previous return and the\n    previous variance only. omega, alpha, beta must be non-negative.\n    \"\"\"\n    r = np.asarray(returns, dtype=float)\n    if r.ndim != 1 or not np.all(np.isfinite(r)):\n        raise ValueError(\"returns must be a finite 1-d array\")\n    if omega < 0 or alpha < 0 or beta < 0:\n        raise ValueError(\"omega, alpha and beta must be non-negative\")\n    var = np.empty(r.shape, dtype=float)\n    if r.size == 0:\n        return var\n    var[0] = r[0] * r[0]\n    for t in range(1, r.size):\n        var[t] = omega + alpha * r[t - 1] * r[t - 1] + beta * var[t - 1]\n    return var\n\ndef garch11_unconditional(omega, alpha, beta) -> float:\n    \"\"\"ω / (1 − α − β). Inf when α + β ≥ 1.\"\"\"\n    if omega < 0 or alpha < 0 or beta < 0:\n        raise ValueError(\"omega, alpha and beta must be non-negative\")\n    if alpha + beta >= 1.0:\n        return float(\"inf\")\n    return float(omega / (1.0 - alpha - beta))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/garch/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why not fit the parameters on this page?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A Gaussian likelihood, a Student-t likelihood and a robust estimator do not return the same (ω, α, β), and the optimiser needs constraints so that variances stay positive. The recursion itself is the part that can be checked exactly. Bring parameters from a fit you trust."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the variance at t allowed to use the return at t?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not in this filter. σ²_t is the variance assigned before ε_t is treated as realised, which is what you want if the next step is to standardise ε_t by σ_t. The update that includes ε_t² lands in σ²_{t+1}."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "GARCH(1,1)",
+          "item": "https://quantcore-labs.com/glossary/garch/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">garch</span></nav><div class="tag">GLOSSARY · GARCH(1,1)</div></div></header>
+<main>
+<article>
+<h1>GARCH(1,1)</h1>
+<p class="lede">Volatility Modeling · Term ID: <code>garch</code></p>
+<p class="def"><strong>Definition.</strong> GARCH(1,1), Bollerslev (1986), says today&#x27;s variance depends on a long-run piece, on how large yesterday&#x27;s surprise was, and on yesterday&#x27;s variance. Clusters of large moves follow because a large shock raises the next variance, which keeps later variances high until the β term decays. The function below runs that recursion. ω, α and β are inputs. Fitting them by maximum likelihood is a numerical problem this page does not solve. The variance at step 0 is the first squared return, so the filter does not use later data to start itself.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">σ²_t = ω + α ε²_{t−1} + β σ²_{t−1}
+
+σ²_0 = ε_0²          (a one-point start; not the sample variance of the whole series)
+Unconditional variance, when α ≥ 0, β ≥ 0 and α + β &lt; 1:
+  σ²_∞ = ω / (1 − α − β)
+
+α + β is the persistence. α + β ≥ 1 means there is no finite unconditional variance.
+The filter still runs. Half-life of a shock to variance is about ln(2) / −ln(α+β) periods when α+β &lt; 1.
+
+EWMA is the case ω = 0, α + β = 1, with α = 1−λ and β = λ. See the Numba EWMA page.</pre></section>
+
+<section><h2>Filter versus estimate</h2>
+<ul>
+<li>Given parameters, the recursion is a one-pass filter. That is what <code>garch11_variance</code> does, and what the tests check.</li>
+<li>The parameters themselves are usually estimated by maximising a Gaussian or Student-t likelihood. Different likelihoods, different estimates. Publishing a 20-line fitter here would hide that choice.</li>
+<li>Compare the path with <a href="/glossary/realized-volatility/">realized volatility</a> (a sum of squares, no parameters) and with <a href="/code/numba-ewma-volatility/">EWMA</a> (persistence fixed at 1).</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>The shock is the return only if the mean is zero.</strong> The recursion treats the series you pass as ε. If you meant a demeaned residual, demean first. A large mean inside ε² looks like volatility.</li>
+<li><strong>Starting value.</strong> ε_0² can be a wild first day. An alternative is the unconditional variance, which depends on the parameters and, if those were fit on this same sample, uses the whole sample. This filter does not do that.</li>
+<li><strong>α + β close to 1</strong> makes the unconditional variance huge and the filter slow to forget. Integrated GARCH (α + β = 1) never forgets a shock in the level of variance.</li>
+<li><strong>No leverage term.</strong> Plain GARCH treats an up move and a down move of the same size identically. GJR and EGARCH exist because equity returns usually do not.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/garch/garch.py">Download garch.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def garch11_variance(returns, omega, alpha, beta):
+    &quot;&quot;&quot;GARCH(1,1) variance path. Parameters are inputs, not estimates.
+
+    var[0] = returns[0] ** 2. Later terms use the previous return and the
+    previous variance only. omega, alpha, beta must be non-negative.
+    &quot;&quot;&quot;
+    r = np.asarray(returns, dtype=float)
+    if r.ndim != 1 or not np.all(np.isfinite(r)):
+        raise ValueError(&quot;returns must be a finite 1-d array&quot;)
+    if omega &lt; 0 or alpha &lt; 0 or beta &lt; 0:
+        raise ValueError(&quot;omega, alpha and beta must be non-negative&quot;)
+    var = np.empty(r.shape, dtype=float)
+    if r.size == 0:
+        return var
+    var[0] = r[0] * r[0]
+    for t in range(1, r.size):
+        var[t] = omega + alpha * r[t - 1] * r[t - 1] + beta * var[t - 1]
+    return var
+
+def garch11_unconditional(omega, alpha, beta) -&gt; float:
+    &quot;&quot;&quot;ω / (1 − α − β). Inf when α + β ≥ 1.&quot;&quot;&quot;
+    if omega &lt; 0 or alpha &lt; 0 or beta &lt; 0:
+        raise ValueError(&quot;omega, alpha and beta must be non-negative&quot;)
+    if alpha + beta &gt;= 1.0:
+        return float(&quot;inf&quot;)
+    return float(omega / (1.0 - alpha - beta))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why not fit the parameters on this page?</h3><p>A Gaussian likelihood, a Student-t likelihood and a robust estimator do not return the same (ω, α, β), and the optimiser needs constraints so that variances stay positive. The recursion itself is the part that can be checked exactly. Bring parameters from a fit you trust.</p><h3>Is the variance at t allowed to use the return at t?</h3><p>Not in this filter. σ²_t is the variance assigned before ε_t is treated as realised, which is what you want if the next step is to standardise ε_t by σ_t. The update that includes ε_t² lands in σ²_{t+1}.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># GARCH(1,1)</p>
+<p>&gt; A conditional variance that is a constant plus a weight on yesterday&#x27;s squared shock plus a weight on yesterday&#x27;s variance. This page filters a series with given parameters. It does not estimate them.</p>
+<p>- Category: Volatility Modeling</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/garch/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/garch/garch.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/code/numba-ewma-volatility/">RiskMetrics EWMA Volatility in Numba</a> <a href="/glossary/realized-volatility/">Realized Volatility</a> <a href="/glossary/parkinson-volatility/">Parkinson Volatility</a> <a href="/glossary/implied-volatility/">Implied Volatility</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

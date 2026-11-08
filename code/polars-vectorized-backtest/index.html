@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polars Moving-Average Crossover, Lagged One Bar: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.">
+<link rel="canonical" href="https://quantcore-labs.com/code/polars-vectorized-backtest/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Polars Moving-Average Crossover, Lagged One Bar: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.">
+<meta property="og:url" content="https://quantcore-labs.com/code/polars-vectorized-backtest/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/polars-vectorized-backtest/#article",
+      "headline": "Polars Moving-Average Crossover, Lagged One Bar: Tested Python Implementation",
+      "description": "A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/polars-vectorized-backtest/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/polars-vectorized-backtest/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/polars-vectorized-backtest/#code",
+      "name": "Polars MA Backtest in Python",
+      "description": "Tested Python reference implementation: A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, polars",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/polars-vectorized-backtest/",
+      "contentUrl": "https://quantcore-labs.com/code/polars-vectorized-backtest/polars-vectorized-backtest.py",
+      "text": "import polars as pl\n\ndef ma_crossover_backtest(df: pl.DataFrame, fast: int = 20, slow: int = 100, cost_bps: float = 1.0) -> pl.DataFrame:\n    \"\"\"Moving-average crossover on columns timestamp, close.\n\n    The position implied by bar t is applied to the return of bar t+1.\n    cost_bps is charged on the absolute change in position.\n    Educational example only; not a trading strategy.\n    \"\"\"\n    if fast < 1 or slow < 1:\n        raise ValueError(\"fast and slow windows must be positive\")\n    if cost_bps < 0:\n        raise ValueError(\"cost_bps must be non-negative\")\n    ready = pl.col(\"fast_ma\").is_not_null() & pl.col(\"slow_ma\").is_not_null()\n    signal = pl.when(ready & (pl.col(\"fast_ma\") > pl.col(\"slow_ma\"))).then(1.0).otherwise(0.0)\n    return (\n        df.lazy()\n        .sort(\"timestamp\")\n        .with_columns(\n            ret=pl.col(\"close\").pct_change(),\n            fast_ma=pl.col(\"close\").rolling_mean(fast),\n            slow_ma=pl.col(\"close\").rolling_mean(slow),\n        )\n        .with_columns(pos=signal.shift(1).fill_null(0.0))\n        .with_columns(cost=pl.col(\"pos\").diff().abs().fill_null(0.0) * cost_bps / 1e4)\n        .with_columns(strat_ret=pl.col(\"pos\") * pl.col(\"ret\").fill_null(0.0) - pl.col(\"cost\"))\n        .with_columns(equity=(1 + pl.col(\"strat_ret\")).cum_prod())\n        .collect()\n    )\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is the position shifted by one bar?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The close that updates the moving averages is the same close that ends the bar's return. Using the signal on that same return treats the bar as both the information and the fill. The shift makes the signal wait for the next return."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does a higher equity curve mean the rule works?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. The curve is the result of this rule, this cost and this sample, with no market impact. Use it to check the code. Judging whether a rule is worth trading needs a later sample, realistic costs and a risk report."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Polars MA Backtest",
+          "item": "https://quantcore-labs.com/code/polars-vectorized-backtest/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">polars-vectorized-backtest</span></nav><div class="tag">CODE · POLARS MA BACKTEST</div></div></header>
+<main>
+<article>
+<h1>Polars Moving-Average Crossover, Lagged One Bar</h1>
+<p class="lede">Backtesting · Snippet ID: <code>polars-vectorized-backtest</code></p>
+<p class="def"><strong>What it does.</strong> The signal is long when the fast mean of close is above the slow mean, and flat otherwise. That decision is delayed by one bar before it multiplies returns, which is the minimum delay that removes same-bar look-ahead on a close-to-close return. Turnover is the absolute change in position. Cost is turnover times a constant in basis points. This is a single-series illustration, not a portfolio backtest and not a trading recommendation.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">ret_t     = C_t / C_{t−1} − 1
+signal_t  = 1{ MA_fast(C)_t &gt; MA_slow(C)_t }     (0 while either mean is null)
+pos_t     = signal_{t−1}                         (0 at t = 0)
+cost_t    = |pos_t − pos_{t−1}| · cost_bps / 10^4
+strat_t   = pos_t · ret_t − cost_t
+equity_t  = Π_{s≤t} (1 + strat_s)
+
+Warm-up bars, where a mean is missing, contribute signal 0.</pre></section>
+
+<section><h2>What the lag does</h2>
+<ul>
+<li>The means at bar t use the close of bar t. The return of bar t is the move from t−1 to t, which is already in that close. Multiplying them on the same row would book a fill at a price the signal has already used.</li>
+<li><code>shift(1)</code> applies the decision from bar t to the return of bar t+1: the earliest close-to-close return that starts after the signal.</li>
+<li>For a dates × stocks book with suspensions and limit-up or limit-down flags, use <a href="/code/vectorized-backtest/">vectorized-backtest</a>. This page is one series and no trading constraints.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Costs are a flat bps charge.</strong> There is no spread, no impact and no borrow. A crossover that looks fine here can be negative once those are added.</li>
+<li><strong>One position, all or nothing.</strong> The position is 0 or 1. It does not size by volatility or cap turnover.</li>
+<li><strong>Adjusted prices.</strong> Splits and dividends have to be in the close series already. A raw close series invents returns on corporate actions.</li>
+<li><strong>This is not a forecast.</strong> A historical equity curve of a moving-average rule is a description of that sample. It is not evidence that the rule will make money on the next sample.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires polars. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/polars-vectorized-backtest/polars-vectorized-backtest.py">Download polars-vectorized-backtest.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import polars as pl
+
+def ma_crossover_backtest(df: pl.DataFrame, fast: int = 20, slow: int = 100, cost_bps: float = 1.0) -&gt; pl.DataFrame:
+    &quot;&quot;&quot;Moving-average crossover on columns timestamp, close.
+
+    The position implied by bar t is applied to the return of bar t+1.
+    cost_bps is charged on the absolute change in position.
+    Educational example only; not a trading strategy.
+    &quot;&quot;&quot;
+    if fast &lt; 1 or slow &lt; 1:
+        raise ValueError(&quot;fast and slow windows must be positive&quot;)
+    if cost_bps &lt; 0:
+        raise ValueError(&quot;cost_bps must be non-negative&quot;)
+    ready = pl.col(&quot;fast_ma&quot;).is_not_null() &amp; pl.col(&quot;slow_ma&quot;).is_not_null()
+    signal = pl.when(ready &amp; (pl.col(&quot;fast_ma&quot;) &gt; pl.col(&quot;slow_ma&quot;))).then(1.0).otherwise(0.0)
+    return (
+        df.lazy()
+        .sort(&quot;timestamp&quot;)
+        .with_columns(
+            ret=pl.col(&quot;close&quot;).pct_change(),
+            fast_ma=pl.col(&quot;close&quot;).rolling_mean(fast),
+            slow_ma=pl.col(&quot;close&quot;).rolling_mean(slow),
+        )
+        .with_columns(pos=signal.shift(1).fill_null(0.0))
+        .with_columns(cost=pl.col(&quot;pos&quot;).diff().abs().fill_null(0.0) * cost_bps / 1e4)
+        .with_columns(strat_ret=pl.col(&quot;pos&quot;) * pl.col(&quot;ret&quot;).fill_null(0.0) - pl.col(&quot;cost&quot;))
+        .with_columns(equity=(1 + pl.col(&quot;strat_ret&quot;)).cum_prod())
+        .collect()
+    )
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is the position shifted by one bar?</h3><p>The close that updates the moving averages is the same close that ends the bar&#x27;s return. Using the signal on that same return treats the bar as both the information and the fill. The shift makes the signal wait for the next return.</p><h3>Does a higher equity curve mean the rule works?</h3><p>No. The curve is the result of this rule, this cost and this sample, with no market impact. Use it to check the code. Judging whether a rule is worth trading needs a later sample, realistic costs and a risk report.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Polars Moving-Average Crossover, Lagged One Bar</p>
+<p>&gt; A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.</p>
+<p>- Category: Backtesting</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/polars-vectorized-backtest/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/polars-vectorized-backtest/polars-vectorized-backtest.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/code/vectorized-backtest/">Vectorised Daily Backtest with A-share Trading Constraints</a> <a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> <a href="/glossary/max-drawdown/">Maximum Drawdown</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

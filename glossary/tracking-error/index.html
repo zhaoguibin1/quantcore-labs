@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracking Error: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/tracking-error/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Tracking Error: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/tracking-error/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/tracking-error/#term",
+      "name": "Tracking Error",
+      "termCode": "tracking-error",
+      "description": "Tracking error is the volatility of active returns. A portfolio that beats its benchmark by exactly one basis point every period has a positive average active return and a tracking error of zero. A portfolio that oscillates around the benchmark has tracking error and, possibly, a zero average. The implementation is the sample standard deviation of the paired difference, times sqrt(P).",
+      "url": "https://quantcore-labs.com/glossary/tracking-error/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/tracking-error/#article",
+      "headline": "Tracking Error: Definition, Formula and Python",
+      "description": "The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/tracking-error/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/tracking-error/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/tracking-error/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/tracking-error/#code",
+      "name": "Tracking Error in Python",
+      "description": "Tested Python reference implementation: The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/tracking-error/",
+      "contentUrl": "https://quantcore-labs.com/glossary/tracking-error/tracking-error.py",
+      "text": "import numpy as np\n\ndef tracking_error(port, bench, periods=252) -> float:\n    \"\"\"Annualised sample standard deviation of port minus bench.\"\"\"\n    active = np.asarray(port, dtype=float) - np.asarray(bench, dtype=float)\n    if active.ndim != 1 or active.size < 2 or not np.all(np.isfinite(active)):\n        raise ValueError(\"need at least two finite paired returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    return float(active.std(ddof=1) * np.sqrt(periods))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/tracking-error/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can tracking error be zero while the portfolio differs from the benchmark?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, if the difference in returns is constant. Standard deviation does not see the mean. A constant lag of one basis point per day is a large cumulative gap and a zero tracking error."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is tracking error the same as active risk?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In mandate language, active risk usually means this volatility of active returns, sometimes the ex-ante forecast of it. Quote whether the number is realised or predicted. This function is realised."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Tracking Error",
+          "item": "https://quantcore-labs.com/glossary/tracking-error/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">tracking-error</span></nav><div class="tag">GLOSSARY · TRACKING ERROR</div></div></header>
+<main>
+<article>
+<h1>Tracking Error</h1>
+<p class="lede">Performance &amp; Risk Metrics · Term ID: <code>tracking-error</code></p>
+<p class="def"><strong>Definition.</strong> Tracking error is the volatility of active returns. A portfolio that beats its benchmark by exactly one basis point every period has a positive average active return and a tracking error of zero. A portfolio that oscillates around the benchmark has tracking error and, possibly, a zero average. The implementation is the sample standard deviation of the paired difference, times sqrt(P).</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">a_t = R_port,t − R_bench,t
+TE  = std(a, ddof=1) · sqrt(P)
+
+P defaults to 252. Reported as a decimal (0.02 means 2 percent annualised), not in basis points.
+The information ratio is mean(a) / std(a) · sqrt(P), so IR = annualised mean active return / TE.</pre></section>
+
+<section><h2>Where it shows up</h2>
+<ul>
+<li>Index tracking and closet indexing. A mandate that says "stay within 2 percent tracking error" is a constraint on this number, usually estimated on an ex-ante covariance as well as measured ex post. This function is the ex-post measurement.</li>
+<li>Next to the <a href="/glossary/information-ratio/">information ratio</a>, which is undefined when tracking error is zero.</li>
+<li><a href="/glossary/beta/">Beta</a> is a different summary of the same pair of series: a slope, not the volatility of the residual gap. Two portfolios can share a beta and have very different tracking errors.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Ex post is not ex ante.</strong> The standard deviation of realised active returns is not the tracking error a covariance model would predict for the current holdings.</li>
+<li><strong>Annualisation.</strong> Multiplying a daily active-return standard deviation by sqrt(252) assumes uncorrelated active returns. A persistent active bet (a permanent sector tilt) has a tracking error that does not scale that way if you change the sampling interval without care. Be consistent about P.</li>
+<li><strong>Levels versus returns.</strong> Tracking error is defined on returns. A price spread between an ETF and its basket is a different measurement.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/tracking-error/tracking-error.py">Download tracking-error.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def tracking_error(port, bench, periods=252) -&gt; float:
+    &quot;&quot;&quot;Annualised sample standard deviation of port minus bench.&quot;&quot;&quot;
+    active = np.asarray(port, dtype=float) - np.asarray(bench, dtype=float)
+    if active.ndim != 1 or active.size &lt; 2 or not np.all(np.isfinite(active)):
+        raise ValueError(&quot;need at least two finite paired returns&quot;)
+    if periods &lt;= 0:
+        raise ValueError(&quot;periods must be positive&quot;)
+    return float(active.std(ddof=1) * np.sqrt(periods))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Can tracking error be zero while the portfolio differs from the benchmark?</h3><p>Yes, if the difference in returns is constant. Standard deviation does not see the mean. A constant lag of one basis point per day is a large cumulative gap and a zero tracking error.</p><h3>Is tracking error the same as active risk?</h3><p>In mandate language, active risk usually means this volatility of active returns, sometimes the ex-ante forecast of it. Quote whether the number is realised or predicted. This function is realised.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Tracking Error</p>
+<p>&gt; The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.</p>
+<p>- Category: Performance &amp; Risk Metrics</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/tracking-error/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/tracking-error/tracking-error.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/information-ratio/">Information Ratio</a> <a href="/glossary/beta/">Beta</a> <a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

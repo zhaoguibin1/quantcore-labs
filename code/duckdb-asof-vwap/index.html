@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Per-Symbol Minute VWAP in DuckDB: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.">
+<link rel="canonical" href="https://quantcore-labs.com/code/duckdb-asof-vwap/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Per-Symbol Minute VWAP in DuckDB: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.">
+<meta property="og:url" content="https://quantcore-labs.com/code/duckdb-asof-vwap/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/duckdb-asof-vwap/#article",
+      "headline": "Per-Symbol Minute VWAP in DuckDB: Tested Python Implementation",
+      "description": "Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/duckdb-asof-vwap/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/duckdb-asof-vwap/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/duckdb-asof-vwap/#code",
+      "name": "DuckDB Minute VWAP in Python",
+      "description": "Tested Python reference implementation: Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, duckdb",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/duckdb-asof-vwap/",
+      "contentUrl": "https://quantcore-labs.com/code/duckdb-asof-vwap/duckdb-asof-vwap.py",
+      "text": "import duckdb\n\ndef minute_vwap(parquet_glob: str):\n    \"\"\"Minute VWAP and volume per symbol from Parquet trades.\n\n    parquet_glob is a bound parameter (a file path or a glob). The query is an\n    aggregation on time_bucket, not an as-of join.\n    \"\"\"\n    if not isinstance(parquet_glob, str) or parquet_glob == \"\":\n        raise ValueError(\"parquet_glob must be a non-empty string\")\n    con = duckdb.connect()\n    return con.execute(\n        \"\"\"\n        SELECT symbol,\n               time_bucket(INTERVAL 1 MINUTE, timestamp) AS minute,\n               SUM(price * volume) / NULLIF(SUM(volume), 0) AS vwap,\n               SUM(volume) AS volume\n        FROM read_parquet(?)\n        GROUP BY ALL\n        ORDER BY symbol, minute\n        \"\"\",\n        [parquet_glob],\n    ).df()\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is this not an as-of join?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "VWAP needs every trade in the minute, weighted by size. An as-of join would keep a single neighbouring row. The page id was fixed by the batch that added it; the SQL matches the definition above, and the as-of join lives on the Polars quotes page."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why bind the path?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The glob is data. Concatenating it into the query string turns a peculiar folder name into SQL syntax. read_parquet(?) keeps it a parameter, including globs."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "DuckDB Minute VWAP",
+          "item": "https://quantcore-labs.com/code/duckdb-asof-vwap/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">duckdb-asof-vwap</span></nav><div class="tag">CODE · DUCKDB MINUTE VWAP</div></div></header>
+<main>
+<article>
+<h1>Per-Symbol Minute VWAP in DuckDB</h1>
+<p class="lede">Data Engineering for Quants · Snippet ID: <code>duckdb-asof-vwap</code></p>
+<p class="def"><strong>What it does.</strong> Minute VWAP is the traded value in that minute divided by the traded volume, computed separately for each symbol. DuckDB&#x27;s time_bucket assigns each timestamp to the start of its minute, and GROUP BY ALL groups by the selected symbol and minute columns. Division uses NULLIF so a minute whose volume sums to zero gets a missing VWAP instead of an error or an infinity. The path to the Parquet files is passed as a parameter.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">minute = time_bucket(INTERVAL 1 MINUTE, timestamp)
+VWAP   = Σ(price · volume) / Σ volume     within (symbol, minute)
+volume = Σ volume
+
+SELECT symbol, minute, VWAP, volume
+FROM read_parquet(?)          -- path is bound, not concatenated
+GROUP BY ALL
+ORDER BY symbol, minute</pre></section>
+
+<section><h2>When to use it</h2>
+<ul>
+<li>You want minute bars from a large tape and you do not want to materialise every tick as a DataFrame. The aggregation runs in DuckDB and only the bars come back.</li>
+<li>The same VWAP, computed after loading the ticks, is <a href="/code/pandas-tick-to-ohlcv/">pandas-tick-to-ohlcv</a>. Session VWAP as an execution benchmark is the <a href="/glossary/vwap/">VWAP</a> term.</li>
+<li>Attaching quotes to trades is a different operation. That as-of join is <a href="/code/polars-asof-join-quotes/">polars-asof-join-quotes</a>. This query does not look at quotes.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>The slug says asof.</strong> The query is a group-by on a time bucket. There is no ASOF JOIN in it. Keeping the slug stable matters more than renaming the page to match the SQL keyword.</li>
+<li><strong>Timestamp ties and order.</strong> VWAP does not care which trade came first. Open and close would. Do not extend this query with an unordered <code>first(price)</code> and call it the open.</li>
+<li><strong>Zero volume.</strong> <code>NULLIF</code> makes VWAP null when the minute's volume is 0. The row is still returned, so a caller can see the empty minute. Filter it if you want only real bars.</li>
+<li><strong>Clock and time zone.</strong> <code>time_bucket</code> uses the timestamp as stored. Naive and timezone-aware columns must not be mixed across files.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires duckdb. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/duckdb-asof-vwap/duckdb-asof-vwap.py">Download duckdb-asof-vwap.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import duckdb
+
+def minute_vwap(parquet_glob: str):
+    &quot;&quot;&quot;Minute VWAP and volume per symbol from Parquet trades.
+
+    parquet_glob is a bound parameter (a file path or a glob). The query is an
+    aggregation on time_bucket, not an as-of join.
+    &quot;&quot;&quot;
+    if not isinstance(parquet_glob, str) or parquet_glob == &quot;&quot;:
+        raise ValueError(&quot;parquet_glob must be a non-empty string&quot;)
+    con = duckdb.connect()
+    return con.execute(
+        &quot;&quot;&quot;
+        SELECT symbol,
+               time_bucket(INTERVAL 1 MINUTE, timestamp) AS minute,
+               SUM(price * volume) / NULLIF(SUM(volume), 0) AS vwap,
+               SUM(volume) AS volume
+        FROM read_parquet(?)
+        GROUP BY ALL
+        ORDER BY symbol, minute
+        &quot;&quot;&quot;,
+        [parquet_glob],
+    ).df()
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why is this not an as-of join?</h3><p>VWAP needs every trade in the minute, weighted by size. An as-of join would keep a single neighbouring row. The page id was fixed by the batch that added it; the SQL matches the definition above, and the as-of join lives on the Polars quotes page.</p><h3>Why bind the path?</h3><p>The glob is data. Concatenating it into the query string turns a peculiar folder name into SQL syntax. read_parquet(?) keeps it a parameter, including globs.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Per-Symbol Minute VWAP in DuckDB</p>
+<p>&gt; Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.</p>
+<p>- Category: Data Engineering for Quants</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/duckdb-asof-vwap/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/duckdb-asof-vwap/duckdb-asof-vwap.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/vwap/">Volume-Weighted Average Price (VWAP)</a> <a href="/code/duckdb-parquet-ticks/">Query Tick Data in Parquet with DuckDB</a> <a href="/code/pandas-tick-to-ohlcv/">Resample Trade Ticks to OHLCV and VWAP Bars</a> <a href="/code/polars-asof-join-quotes/">Attach the Prevailing Quote to Each Trade</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

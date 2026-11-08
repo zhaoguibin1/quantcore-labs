@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quantitative Finance Glossary &amp; Terminology | QuantCore Labs</title>
-<meta name="description" content="Definitions, formulas and tested Python implementations for quantitative finance, market microstructure and algorithmic trading terms.">
+<meta name="description" content="Definitions, formulas and tested Python implementations for quantitative finance: execution, microstructure, risk, volatility, options and statistical arbitrage.">
 <link rel="canonical" href="https://quantcore-labs.com/glossary/">
 <meta name="robots" content="index,follow,max-snippet:-1">
 <meta name="theme-color" content="#020617">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="QuantCore Labs">
 <meta property="og:title" content="Quantitative Finance Glossary &amp; Terminology | QuantCore Labs">
-<meta property="og:description" content="Definitions, formulas and tested Python implementations for quantitative finance, market microstructure and algorithmic trading terms.">
+<meta property="og:description" content="Definitions, formulas and tested Python implementations for quantitative finance: execution, microstructure, risk, volatility, options and statistical arbitrage.">
 <meta property="og:url" content="https://quantcore-labs.com/glossary/">
 <script type="application/ld+json">
 {
@@ -28,7 +28,7 @@
       "@id": "https://quantcore-labs.com/glossary/#set",
       "name": "QuantCore Labs Quantitative Finance Glossary",
       "url": "https://quantcore-labs.com/glossary/",
-      "description": "Definitions, formulas and Python implementations for quantitative finance, market microstructure and algorithmic trading terms.",
+      "description": "Definitions, formulas and Python implementations for quantitative finance: execution, microstructure, risk, volatility, options and statistical arbitrage.",
       "publisher": {
         "@id": "https://quantcore-labs.com/#org"
       },
@@ -120,6 +120,303 @@
           "inDefinedTermSet": {
             "@id": "https://quantcore-labs.com/glossary/#set"
           }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/vpin/#term",
+          "name": "Volume-Synchronized Probability of Informed Trading (VPIN)",
+          "termCode": "vpin",
+          "description": "VPIN averages the absolute difference between buy volume and sell volume across the last n equal-volume buckets, and divides by the volume those buckets represent. Easley, López de Prado and O'Hara designed it as a high-frequency cousin of the probability of informed trading: a bucket is toxic when one side dominates. The measure does not classify trades by itself. Buy and sell volume are inputs, usually from a bulk-volume split or from an aggressor flag.",
+          "url": "https://quantcore-labs.com/glossary/vpin/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/twap/#term",
+          "name": "Time-Weighted Average Price (TWAP)",
+          "termCode": "twap",
+          "description": "TWAP is the mean of a price series after it has been sampled at equal time intervals. Volume does not enter. A TWAP execution schedule therefore sends about the same quantity in each slice of the horizon, regardless of whether the market is busy. The benchmark form asks whether fills beat the average of those sampled prices.",
+          "url": "https://quantcore-labs.com/glossary/twap/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/implementation-shortfall/#term",
+          "name": "Implementation Shortfall",
+          "termCode": "implementation-shortfall",
+          "description": "Perold's implementation shortfall compares two portfolios. The paper portfolio trades the full target at the price that was current when the decision was made. The real portfolio trades what was filled, at the prices that were filled, and pays fees. The difference is the shortfall. It splits into an execution component on the shares that traded and an opportunity component on the shares that did not. A positive number is a cost relative to the paper portfolio.",
+          "url": "https://quantcore-labs.com/glossary/implementation-shortfall/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/arrival-price/#term",
+          "name": "Arrival-Price Slippage",
+          "termCode": "arrival-price",
+          "description": "The arrival price is the mid (or other pre-agreed reference) when the order reached the desk or the algorithm, before the order's own child trades. Slippage is the signed difference between the average fill and that reference, scaled to basis points. Buys are costly when the average fill is above the arrival mid. Sells are costly when it is below.",
+          "url": "https://quantcore-labs.com/glossary/arrival-price/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/participation-rate/#term",
+          "name": "Participation Rate (Percent of Volume)",
+          "termCode": "participation-rate",
+          "description": "Participation rate, or POV, is own volume divided by market volume over the same interval. A POV algorithm watches the market print, and sends a child quantity equal to a target fraction of that print, without exceeding the residual parent quantity. The target is a fraction of volume, not a clock and not a forecast of the day's volume curve.",
+          "url": "https://quantcore-labs.com/glossary/participation-rate/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/almgren-chriss/#term",
+          "name": "Almgren-Chriss Optimal Execution Trajectory",
+          "termCode": "almgren-chriss",
+          "description": "Almgren and Chriss (2000) choose a trading path that finishes a position by time T. Trading faster pays more temporary impact and less price risk, because the inventory is held for less time. The risk aversion λ sets that tradeoff. With linear temporary impact, no permanent impact, and arithmetic Brownian motion, the inventory that remains at time t is a hyperbolic sine of the time left. The path is a plan computed from volatility, impact and risk aversion. It is not a guarantee of the cost, and it is not an order.",
+          "url": "https://quantcore-labs.com/glossary/almgren-chriss/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#term",
+          "name": "Kyle's Lambda",
+          "termCode": "kyles-lambda",
+          "description": "In Kyle's 1985 model, competitive market makers set price impact so that the price is the conditional expectation of value given the net order flow. The impact coefficient is lambda. Empirically, lambda is estimated as the OLS slope of a price change on signed volume over a chosen interval. The intercept absorbs drift. This page is that regression, not a maximum-likelihood estimate of the structural model.",
+          "url": "https://quantcore-labs.com/glossary/kyles-lambda/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/pin-informed-trading/#term",
+          "name": "Probability of Informed Trading (PIN)",
+          "termCode": "pin-informed-trading",
+          "description": "PIN is the model's probability that the next trade comes from an informed trader. An information event occurs with probability α. If it does, informed orders arrive at rate μ, on the buy side or the sell side according to the news. Uninformed buys and sells arrive at rates ε_b and ε_s whether or not there was news. PIN is the expected informed arrival divided by the expected total arrival. Estimating α, μ and the epsilons is a separate maximum-likelihood problem on daily buy and sell counts. This page evaluates the formula once those parameters are in hand. It does not fit them.",
+          "url": "https://quantcore-labs.com/glossary/pin-informed-trading/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#term",
+          "name": "Sharpe Ratio",
+          "termCode": "sharpe-ratio",
+          "description": "The Sharpe ratio asks how much excess return a series delivered per unit of volatility. Excess is the periodic return minus a periodic risk-free rate. The rate used here is an annual rate converted by compound interest, (1 + r_f)^(1/P) − 1, not a simple r_f/P. Volatility is the sample standard deviation (divide by n − 1). Annualisation multiplies by sqrt(P). A higher number means more excess return per unit of variability in that sample. It is not a forecast and it is not a certificate of skill.",
+          "url": "https://quantcore-labs.com/glossary/sharpe-ratio/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/sortino-ratio/#term",
+          "name": "Sortino Ratio",
+          "termCode": "sortino-ratio",
+          "description": "The Sortino ratio replaces the Sharpe denominator with downside deviation: the root-mean-square of returns that fall short of a target, with shortfalls of zero on periods that meet the target still included in the average. The target used here is an annual minimum acceptable return, converted to a per-period rate the same way the risk-free rate is converted for the Sharpe ratio. The result is annualised by sqrt(P). It penalises missing the target. It does not penalise beating it.",
+          "url": "https://quantcore-labs.com/glossary/sortino-ratio/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/information-ratio/#term",
+          "name": "Information Ratio",
+          "termCode": "information-ratio",
+          "description": "Active return is the portfolio's periodic return minus the benchmark's periodic return over the same periods. The information ratio is the mean of that difference divided by its sample standard deviation, multiplied by sqrt(P). It is the Sharpe ratio of the active returns, with the benchmark playing the role of the risk-free asset and no extra cash rate. A positive ratio means the portfolio's sample average was above the benchmark. It does not say the average will stay there.",
+          "url": "https://quantcore-labs.com/glossary/information-ratio/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/tracking-error/#term",
+          "name": "Tracking Error",
+          "termCode": "tracking-error",
+          "description": "Tracking error is the volatility of active returns. A portfolio that beats its benchmark by exactly one basis point every period has a positive average active return and a tracking error of zero. A portfolio that oscillates around the benchmark has tracking error and, possibly, a zero average. The implementation is the sample standard deviation of the paired difference, times sqrt(P).",
+          "url": "https://quantcore-labs.com/glossary/tracking-error/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/max-drawdown/#term",
+          "name": "Maximum Drawdown",
+          "termCode": "max-drawdown",
+          "description": "Drawdown at each point is the equity divided by the highest equity seen so far, minus one. The maximum drawdown is the smallest of those numbers (the deepest loss from a peak). It is path dependent: the order of returns matters, not only their mean and variance. The function expects a positive equity curve, not a return series.",
+          "url": "https://quantcore-labs.com/glossary/max-drawdown/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/calmar-ratio/#term",
+          "name": "Calmar Ratio",
+          "termCode": "calmar-ratio",
+          "description": "Calmar divides a growth rate by the worst peak-to-trough loss over the window you care about. Here the growth rate is the compound annual growth that takes the first equity point to the last, using P periods per year, and the loss is the maximum drawdown of the same points. A curve that never falls has an undefined Calmar, returned as NaN, rather than an infinite one. The original published ratio used a trailing three-year window. Using the whole sample is what the performance calculator on this site does, and it will not match a 36-month Calmar when the sample is a different length.",
+          "url": "https://quantcore-labs.com/glossary/calmar-ratio/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/kelly-criterion/#term",
+          "name": "Kelly Criterion",
+          "termCode": "kelly-criterion",
+          "description": "A log-utility investor who can repeat the same bet wants the fraction of wealth that maximises the expected log of wealth after the bet. For a binary outcome that pays net odds b with probability p, that fraction is p − (1 − p) / b. For a continuous excess return with mean μ and variance σ², the corresponding unconstrained fraction is approximately μ / σ² when the higher moments are ignored. Estimated μ and σ² are noisy, and the full fraction is aggressive when the estimate is wrong, so practitioners who use the idea often scale it down. Nothing on this page says that an investor should.",
+          "url": "https://quantcore-labs.com/glossary/kelly-criterion/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/beta/#term",
+          "name": "Beta",
+          "termCode": "beta",
+          "description": "Beta measures how much an asset's return tended to move with the market return in a sample. It is Cov(R_i, R_m) / Var(R_m), which is also the slope of a regression of the asset on the market with an intercept. A beta of 1 means the asset moved one-for-one with the market on average, after the intercept absorbed the mean difference. It says nothing, by itself, about residual risk or about whether the sample will repeat.",
+          "url": "https://quantcore-labs.com/glossary/beta/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/realized-volatility/#term",
+          "name": "Realized Volatility",
+          "termCode": "realized-volatility",
+          "description": "Realized variance over a window is the sum of squared logarithmic returns of the prices inside it. Realized volatility is its square root. Under a diffusion with no jumps, that sum estimates the integrated variance of the window, and finer sampling makes the estimate tighter until microstructure noise dominates. The function annualises by multiplying the sum by a periods-per-year factor before the square root. That factor is correct when the sum is one period's variance (one day, if the factor is 252). Applied to a year of already-daily returns it multiplies a yearly total by 252 and overstates volatility by about sqrt(252).",
+          "url": "https://quantcore-labs.com/glossary/realized-volatility/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/parkinson-volatility/#term",
+          "name": "Parkinson Volatility",
+          "termCode": "parkinson-volatility",
+          "description": "Parkinson (1980) replaces the squared close-to-close return with the squared log range. The scaling 1 / (4 ln 2) makes the average of those squared ranges an estimate of the variance per period, for a Brownian motion with no drift. Multiplying by the number of periods in a year and taking the square root annualises it. The estimator never sees the open or the close. A day that gaps and then trades in a narrow range looks quiet.",
+          "url": "https://quantcore-labs.com/glossary/parkinson-volatility/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/garch/#term",
+          "name": "GARCH(1,1)",
+          "termCode": "garch",
+          "description": "GARCH(1,1), Bollerslev (1986), says today's variance depends on a long-run piece, on how large yesterday's surprise was, and on yesterday's variance. Clusters of large moves follow because a large shock raises the next variance, which keeps later variances high until the β term decays. The function below runs that recursion. ω, α and β are inputs. Fitting them by maximum likelihood is a numerical problem this page does not solve. The variance at step 0 is the first squared return, so the filter does not use later data to start itself.",
+          "url": "https://quantcore-labs.com/glossary/garch/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/implied-volatility/#term",
+          "name": "Implied Volatility",
+          "termCode": "implied-volatility",
+          "description": "Implied volatility is defined by an equation, not by a formula you can rearrange. Given a market premium, a spot, a strike, a time to expiry, a rate and a dividend yield, it is the σ that sets the Black-Scholes-Merton price equal to that premium. This page solves it with Brent's method on a bracket. The same inversion, across strikes and expiries, is what the smile tool on this site plots. A single number always belongs to one contract and one set of inputs.",
+          "url": "https://quantcore-labs.com/glossary/implied-volatility/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/delta/#term",
+          "name": "Delta",
+          "termCode": "delta",
+          "description": "Delta is how much the model value changes for a small move in the underlying, holding the other inputs fixed. In Black-Scholes-Merton it is a closed form. For a call it lies between 0 and e^{−qT}; for a put it lies between −e^{−qT} and 0. With no dividend yield those bounds are 0 and 1, and −1 and 0. The figure is a model sensitivity. Hedging with it leaves everything the model left out, including jumps and the fact that volatility is not a constant.",
+          "url": "https://quantcore-labs.com/glossary/delta/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/gamma/#term",
+          "name": "Gamma",
+          "termCode": "gamma",
+          "description": "Gamma tells you how fast delta changes as the spot moves. It is largest near the strike and near expiry, where the distribution of finishing in or out of the money is most sensitive to the current spot. Because a European call and put that share strike and expiry differ by a forward (put-call parity), and a forward has no gamma, their gammas are equal. The formula below is that common value.",
+          "url": "https://quantcore-labs.com/glossary/gamma/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/vega/#term",
+          "name": "Vega",
+          "termCode": "vega",
+          "description": "Vega is the derivative of the model price with respect to the volatility input. A raw derivative is per 1.00 of σ, that is, per 100 volatility points, which is an awkward unit. Dividing by 100 quotes the change in premium for a one-point move in volatility, the convention used by the Greeks calculator on this site. Because of put-call parity, a European call and put with the same strike and expiry have the same vega: the forward that separates them does not depend on σ.",
+          "url": "https://quantcore-labs.com/glossary/vega/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/theta/#term",
+          "name": "Theta",
+          "termCode": "theta",
+          "description": "Theta is the derivative of the model value with respect to calendar time, holding spot, volatility, rates and yield fixed. Time to expiry shrinks as calendar time advances, so the formula is minus the derivative with respect to T, then divided by 365 to quote a per-day number. Long options usually have negative theta: the premium decays as expiry approaches, all else equal. That \"all else equal\" is the catch. Spot and implied volatility do not stay still so that theta can be observed on its own.",
+          "url": "https://quantcore-labs.com/glossary/theta/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/rho/#term",
+          "name": "Rho",
+          "termCode": "rho",
+          "description": "Rho is the derivative of the model price with respect to the interest rate, holding spot, strike, time, volatility and dividend yield fixed. Dividing by 100 quotes it per one percentage point (from 5 percent to 6 percent, for example), matching the Greeks calculator on this site. A European call's rho is positive: a higher rate lowers the present value of the strike you might pay. A European put's rho is negative. Dividend yield q is a different input and is not what this derivative moves.",
+          "url": "https://quantcore-labs.com/glossary/rho/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/put-call-parity/#term",
+          "name": "Put-Call Parity",
+          "termCode": "put-call-parity",
+          "description": "Put-call parity says that a long European call and a short European put, same strike and expiry, replicate a long forward position struck at K. Rearranged, the call premium minus the put premium equals the spot discounted by the dividend yield, minus the strike discounted by the interest rate. No volatility, no distribution of returns and no pricing model enters. If the two premiums violate the equation by more than transaction costs, the packages are different prices for the same payoff. The function returns the gap, which is zero when parity holds.",
+          "url": "https://quantcore-labs.com/glossary/put-call-parity/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#term",
+          "name": "Half-Life of Mean Reversion",
+          "termCode": "half-life-mean-reversion",
+          "description": "Fit the regression Δy_t = a + g y_{t−1} + ε_t. The autoregressive level coefficient is φ = 1 + g. When g is between −1 and 0, the series pulls back toward its mean, and the number of periods required for a deviation to fall by half is ln 2 / −ln(1 + g). That is the discrete half-life. The continuous approximation −ln 2 / g is close only when g is near zero; at φ = 0.9 it is already about 5 percent longer than the discrete number. If g is not negative, the series is not mean-reverting on this regression and the half-life is infinite.",
+          "url": "https://quantcore-labs.com/glossary/half-life-mean-reversion/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
         }
       ]
     },
@@ -181,7 +478,7 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <span style="color:var(--text)">glossary</span></nav><div class="tag">KNOWLEDGE BASE · GLOSSARY</div></div></header>
 <main>
 <h1>Quantitative Finance Glossary</h1>
-<p class="lede">Definitions, formulas and tested Python reference implementations for market microstructure, execution and statistical-arbitrage concepts. Written for quantitative researchers and AI agents.</p>
+<p class="lede">Definitions, formulas and tested Python reference implementations for execution, microstructure, risk, volatility, options and statistical arbitrage. Written for quantitative researchers and AI agents.</p>
 <section aria-label="Terms">
 <article class="card">
 <div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">Term ID: vwap</span></div>
@@ -223,6 +520,141 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <h2><a href="/glossary/amihud-illiquidity/">Amihud Illiquidity Measure (ILLIQ)</a></h2>
 <p>The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</p>
 </article>
+<article class="card">
+<div class="meta"><span class="cat">Market Microstructure &amp; Order Flow</span><span class="id">Term ID: vpin</span></div>
+<h2><a href="/glossary/vpin/">Volume-Synchronized Probability of Informed Trading (VPIN)</a></h2>
+<p>An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">Term ID: twap</span></div>
+<h2><a href="/glossary/twap/">Time-Weighted Average Price (TWAP)</a></h2>
+<p>The arithmetic average of prices sampled on a regular clock. As a benchmark every interval counts once; as a schedule, a parent order is sliced evenly in time.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Transaction Cost Analysis</span><span class="id">Term ID: implementation-shortfall</span></div>
+<h2><a href="/glossary/implementation-shortfall/">Implementation Shortfall</a></h2>
+<p>The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Transaction Cost Analysis</span><span class="id">Term ID: arrival-price</span></div>
+<h2><a href="/glossary/arrival-price/">Arrival-Price Slippage</a></h2>
+<p>Execution cost against the mid-price at the moment the order arrived, in basis points. Positive means the fills were worse than that mid.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">Term ID: participation-rate</span></div>
+<h2><a href="/glossary/participation-rate/">Participation Rate (Percent of Volume)</a></h2>
+<p>The fraction of market volume an order takes over an interval. A percent-of-volume schedule sets each child order to that fraction of the volume just observed, capped by what is left.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Impact</span><span class="id">Term ID: almgren-chriss</span></div>
+<h2><a href="/glossary/almgren-chriss/">Almgren-Chriss Optimal Execution Trajectory</a></h2>
+<p>A deterministic schedule that liquidates a position by a fixed horizon, trading off temporary market impact against the variance of the remaining inventory. This page uses the continuous-time trajectory with permanent impact set to zero.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Market Microstructure &amp; Order Flow</span><span class="id">Term ID: kyles-lambda</span></div>
+<h2><a href="/glossary/kyles-lambda/">Kyle&#x27;s Lambda</a></h2>
+<p>The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Market Microstructure &amp; Order Flow</span><span class="id">Term ID: pin-informed-trading</span></div>
+<h2><a href="/glossary/pin-informed-trading/">Probability of Informed Trading (PIN)</a></h2>
+<p>The share of trading that the Easley-Kiefer-O&#x27;Hara-Paperman model attributes to informed traders, given the chance of an information event and the arrival rates of informed and uninformed orders.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">Term ID: sharpe-ratio</span></div>
+<h2><a href="/glossary/sharpe-ratio/">Sharpe Ratio</a></h2>
+<p>Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">Term ID: sortino-ratio</span></div>
+<h2><a href="/glossary/sortino-ratio/">Sortino Ratio</a></h2>
+<p>Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">Term ID: information-ratio</span></div>
+<h2><a href="/glossary/information-ratio/">Information Ratio</a></h2>
+<p>Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">Term ID: tracking-error</span></div>
+<h2><a href="/glossary/tracking-error/">Tracking Error</a></h2>
+<p>The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">Term ID: max-drawdown</span></div>
+<h2><a href="/glossary/max-drawdown/">Maximum Drawdown</a></h2>
+<p>The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Performance &amp; Risk Metrics</span><span class="id">Term ID: calmar-ratio</span></div>
+<h2><a href="/glossary/calmar-ratio/">Calmar Ratio</a></h2>
+<p>Compound annual growth of an equity curve divided by the absolute value of its maximum drawdown. This implementation uses the whole sample, not a trailing 36-month window.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Position Sizing</span><span class="id">Term ID: kelly-criterion</span></div>
+<h2><a href="/glossary/kelly-criterion/">Kelly Criterion</a></h2>
+<p>The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Portfolio &amp; Factor Models</span><span class="id">Term ID: beta</span></div>
+<h2><a href="/glossary/beta/">Beta</a></h2>
+<p>The OLS slope of an asset&#x27;s returns on a market&#x27;s returns: covariance divided by the market&#x27;s variance. It is the CAPM coefficient on the sample you pass in, not a forecast.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Volatility Modeling</span><span class="id">Term ID: realized-volatility</span></div>
+<h2><a href="/glossary/realized-volatility/">Realized Volatility</a></h2>
+<p>The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day&#x27;s realized variance. Do not do that to a stack of many days.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Volatility Modeling</span><span class="id">Term ID: parkinson-volatility</span></div>
+<h2><a href="/glossary/parkinson-volatility/">Parkinson Volatility</a></h2>
+<p>A volatility estimator that uses each period&#x27;s high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Volatility Modeling</span><span class="id">Term ID: garch</span></div>
+<h2><a href="/glossary/garch/">GARCH(1,1)</a></h2>
+<p>A conditional variance that is a constant plus a weight on yesterday&#x27;s squared shock plus a weight on yesterday&#x27;s variance. This page filters a series with given parameters. It does not estimate them.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: implied-volatility</span></div>
+<h2><a href="/glossary/implied-volatility/">Implied Volatility</a></h2>
+<p>The volatility that makes a Black-Scholes-Merton price match an observed option premium. It is solved numerically. There is no closed form for the call price inverted in volatility.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: delta</span></div>
+<h2><a href="/glossary/delta/">Delta</a></h2>
+<p>The derivative of a European option&#x27;s Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: gamma</span></div>
+<h2><a href="/glossary/gamma/">Gamma</a></h2>
+<p>The second derivative of a European option&#x27;s value with respect to the spot, and the derivative of delta. In Black-Scholes-Merton the call and the put of the same strike and expiry have the same gamma.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: vega</span></div>
+<h2><a href="/glossary/vega/">Vega</a></h2>
+<p>The sensitivity of a European option&#x27;s Black-Scholes-Merton value to volatility, quoted per volatility point (one percentage point of σ). Call and put vegas of the same contract are equal.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: theta</span></div>
+<h2><a href="/glossary/theta/">Theta</a></h2>
+<p>The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: rho</span></div>
+<h2><a href="/glossary/rho/">Rho</a></h2>
+<p>The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Options &amp; Derivatives</span><span class="id">Term ID: put-call-parity</span></div>
+<h2><a href="/glossary/put-call-parity/">Put-Call Parity</a></h2>
+<p>A model-free relation between European call and put prices that share a strike and an expiry. With a continuous dividend yield, the call minus the put equals the prepaid forward minus the discounted strike.</p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">Term ID: half-life-mean-reversion</span></div>
+<h2><a href="/glossary/half-life-mean-reversion/">Half-Life of Mean Reversion</a></h2>
+<p>How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.</p>
+</article>
 </section>
 <section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
 <p># QuantCore Labs Glossary</p>
@@ -234,7 +666,34 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <li>- [ADF Test](https://quantcore-labs.com/glossary/adf-test/): A unit-root test that checks whether a time series is non-stationary. In stat-arb it is the standard check that a spread mean-reverts before it is traded.</li>
 <li>- [Cointegration](https://quantcore-labs.com/glossary/cointegration/): Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.</li>
 <li>- [VaR &amp; ES](https://quantcore-labs.com/glossary/var-expected-shortfall/): VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.</li>
-<li>- [Amihud Illiquidity](https://quantcore-labs.com/glossary/amihud-illiquidity/): The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</li></ul>
+<li>- [Amihud Illiquidity](https://quantcore-labs.com/glossary/amihud-illiquidity/): The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.</li>
+<li>- [VPIN](https://quantcore-labs.com/glossary/vpin/): An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.</li>
+<li>- [TWAP](https://quantcore-labs.com/glossary/twap/): The arithmetic average of prices sampled on a regular clock. As a benchmark every interval counts once; as a schedule, a parent order is sliced evenly in time.</li>
+<li>- [Implementation Shortfall](https://quantcore-labs.com/glossary/implementation-shortfall/): The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.</li>
+<li>- [Arrival Price](https://quantcore-labs.com/glossary/arrival-price/): Execution cost against the mid-price at the moment the order arrived, in basis points. Positive means the fills were worse than that mid.</li>
+<li>- [Participation Rate](https://quantcore-labs.com/glossary/participation-rate/): The fraction of market volume an order takes over an interval. A percent-of-volume schedule sets each child order to that fraction of the volume just observed, capped by what is left.</li>
+<li>- [Almgren-Chriss](https://quantcore-labs.com/glossary/almgren-chriss/): A deterministic schedule that liquidates a position by a fixed horizon, trading off temporary market impact against the variance of the remaining inventory. This page uses the continuous-time trajectory with permanent impact set to zero.</li>
+<li>- [Kyle&#x27;s Lambda](https://quantcore-labs.com/glossary/kyles-lambda/): The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.</li>
+<li>- [PIN](https://quantcore-labs.com/glossary/pin-informed-trading/): The share of trading that the Easley-Kiefer-O&#x27;Hara-Paperman model attributes to informed traders, given the chance of an information event and the arrival rates of informed and uninformed orders.</li>
+<li>- [Sharpe Ratio](https://quantcore-labs.com/glossary/sharpe-ratio/): Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.</li>
+<li>- [Sortino Ratio](https://quantcore-labs.com/glossary/sortino-ratio/): Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.</li>
+<li>- [Information Ratio](https://quantcore-labs.com/glossary/information-ratio/): Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.</li>
+<li>- [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/): The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.</li>
+<li>- [Max Drawdown](https://quantcore-labs.com/glossary/max-drawdown/): The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.</li>
+<li>- [Calmar Ratio](https://quantcore-labs.com/glossary/calmar-ratio/): Compound annual growth of an equity curve divided by the absolute value of its maximum drawdown. This implementation uses the whole sample, not a trailing 36-month window.</li>
+<li>- [Kelly Criterion](https://quantcore-labs.com/glossary/kelly-criterion/): The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.</li>
+<li>- [Beta](https://quantcore-labs.com/glossary/beta/): The OLS slope of an asset&#x27;s returns on a market&#x27;s returns: covariance divided by the market&#x27;s variance. It is the CAPM coefficient on the sample you pass in, not a forecast.</li>
+<li>- [Realized Volatility](https://quantcore-labs.com/glossary/realized-volatility/): The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day&#x27;s realized variance. Do not do that to a stack of many days.</li>
+<li>- [Parkinson Volatility](https://quantcore-labs.com/glossary/parkinson-volatility/): A volatility estimator that uses each period&#x27;s high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.</li>
+<li>- [GARCH(1,1)](https://quantcore-labs.com/glossary/garch/): A conditional variance that is a constant plus a weight on yesterday&#x27;s squared shock plus a weight on yesterday&#x27;s variance. This page filters a series with given parameters. It does not estimate them.</li>
+<li>- [Implied Volatility](https://quantcore-labs.com/glossary/implied-volatility/): The volatility that makes a Black-Scholes-Merton price match an observed option premium. It is solved numerically. There is no closed form for the call price inverted in volatility.</li>
+<li>- [Delta](https://quantcore-labs.com/glossary/delta/): The derivative of a European option&#x27;s Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.</li>
+<li>- [Gamma](https://quantcore-labs.com/glossary/gamma/): The second derivative of a European option&#x27;s value with respect to the spot, and the derivative of delta. In Black-Scholes-Merton the call and the put of the same strike and expiry have the same gamma.</li>
+<li>- [Vega](https://quantcore-labs.com/glossary/vega/): The sensitivity of a European option&#x27;s Black-Scholes-Merton value to volatility, quoted per volatility point (one percentage point of σ). Call and put vegas of the same contract are equal.</li>
+<li>- [Theta](https://quantcore-labs.com/glossary/theta/): The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.</li>
+<li>- [Rho](https://quantcore-labs.com/glossary/rho/): The sensitivity of a European option&#x27;s Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.</li>
+<li>- [Put-Call Parity](https://quantcore-labs.com/glossary/put-call-parity/): A model-free relation between European call and put prices that share a strike and an expiry. With a continuous dividend yield, the call minus the put equals the prepaid forward minus the discounted strike.</li>
+<li>- [Half-Life](https://quantcore-labs.com/glossary/half-life-mean-reversion/): How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.</li></ul>
 </section>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>

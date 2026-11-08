@@ -23,6 +23,33 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [Cointegration (Engle-Granger & Johansen)](https://quantcore-labs.com/glossary/cointegration/): Two or more non-stationary price series are cointegrated when some linear combination of them is stationary. This is the statistical basis of pairs and basket trading.
 - [Value at Risk (VaR) and Expected Shortfall (ES)](https://quantcore-labs.com/glossary/var-expected-shortfall/): VaR is the loss threshold that is exceeded only with a given small probability. Expected Shortfall is the average loss in that tail. Both are standard risk limits; ES is what Basel FRTB uses for market risk capital.
 - [Amihud Illiquidity Measure (ILLIQ)](https://quantcore-labs.com/glossary/amihud-illiquidity/): The average absolute return per unit of traded value: how much the price moves for each yuan or dollar traded. It is a low-frequency price-impact proxy and a widely used liquidity factor.
+- [Volume-Synchronized Probability of Informed Trading (VPIN)](https://quantcore-labs.com/glossary/vpin/): An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.
+- [Time-Weighted Average Price (TWAP)](https://quantcore-labs.com/glossary/twap/): The arithmetic average of prices sampled on a regular clock. As a benchmark every interval counts once; as a schedule, a parent order is sliced evenly in time.
+- [Implementation Shortfall](https://quantcore-labs.com/glossary/implementation-shortfall/): The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.
+- [Arrival-Price Slippage](https://quantcore-labs.com/glossary/arrival-price/): Execution cost against the mid-price at the moment the order arrived, in basis points. Positive means the fills were worse than that mid.
+- [Participation Rate (Percent of Volume)](https://quantcore-labs.com/glossary/participation-rate/): The fraction of market volume an order takes over an interval. A percent-of-volume schedule sets each child order to that fraction of the volume just observed, capped by what is left.
+- [Almgren-Chriss Optimal Execution Trajectory](https://quantcore-labs.com/glossary/almgren-chriss/): A deterministic schedule that liquidates a position by a fixed horizon, trading off temporary market impact against the variance of the remaining inventory. This page uses the continuous-time trajectory with permanent impact set to zero.
+- [Kyle's Lambda](https://quantcore-labs.com/glossary/kyles-lambda/): The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.
+- [Probability of Informed Trading (PIN)](https://quantcore-labs.com/glossary/pin-informed-trading/): The share of trading that the Easley-Kiefer-O'Hara-Paperman model attributes to informed traders, given the chance of an information event and the arrival rates of informed and uninformed orders.
+- [Sharpe Ratio](https://quantcore-labs.com/glossary/sharpe-ratio/): Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.
+- [Sortino Ratio](https://quantcore-labs.com/glossary/sortino-ratio/): Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.
+- [Information Ratio](https://quantcore-labs.com/glossary/information-ratio/): Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.
+- [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/): The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.
+- [Maximum Drawdown](https://quantcore-labs.com/glossary/max-drawdown/): The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.
+- [Calmar Ratio](https://quantcore-labs.com/glossary/calmar-ratio/): Compound annual growth of an equity curve divided by the absolute value of its maximum drawdown. This implementation uses the whole sample, not a trailing 36-month window.
+- [Kelly Criterion](https://quantcore-labs.com/glossary/kelly-criterion/): The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.
+- [Beta](https://quantcore-labs.com/glossary/beta/): The OLS slope of an asset's returns on a market's returns: covariance divided by the market's variance. It is the CAPM coefficient on the sample you pass in, not a forecast.
+- [Realized Volatility](https://quantcore-labs.com/glossary/realized-volatility/): The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day's realized variance. Do not do that to a stack of many days.
+- [Parkinson Volatility](https://quantcore-labs.com/glossary/parkinson-volatility/): A volatility estimator that uses each period's high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.
+- [GARCH(1,1)](https://quantcore-labs.com/glossary/garch/): A conditional variance that is a constant plus a weight on yesterday's squared shock plus a weight on yesterday's variance. This page filters a series with given parameters. It does not estimate them.
+- [Implied Volatility](https://quantcore-labs.com/glossary/implied-volatility/): The volatility that makes a Black-Scholes-Merton price match an observed option premium. It is solved numerically. There is no closed form for the call price inverted in volatility.
+- [Delta](https://quantcore-labs.com/glossary/delta/): The derivative of a European option's Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.
+- [Gamma](https://quantcore-labs.com/glossary/gamma/): The second derivative of a European option's value with respect to the spot, and the derivative of delta. In Black-Scholes-Merton the call and the put of the same strike and expiry have the same gamma.
+- [Vega](https://quantcore-labs.com/glossary/vega/): The sensitivity of a European option's Black-Scholes-Merton value to volatility, quoted per volatility point (one percentage point of σ). Call and put vegas of the same contract are equal.
+- [Theta](https://quantcore-labs.com/glossary/theta/): The sensitivity of a European option's Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.
+- [Rho](https://quantcore-labs.com/glossary/rho/): The sensitivity of a European option's Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.
+- [Put-Call Parity](https://quantcore-labs.com/glossary/put-call-parity/): A model-free relation between European call and put prices that share a strike and an expiry. With a continuous dividend yield, the call minus the put equals the prepaid forward minus the discounted strike.
+- [Half-Life of Mean Reversion](https://quantcore-labs.com/glossary/half-life-mean-reversion/): How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.
 
 ## Code
 
@@ -30,6 +57,17 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [rolling-window-numba.py](https://quantcore-labs.com/code/rolling-window-numba/rolling-window-numba.py): Numba Rolling Operators (numpy, numba)
 - [duckdb-parquet-ticks.py](https://quantcore-labs.com/code/duckdb-parquet-ticks/duckdb-parquet-ticks.py): DuckDB + Parquet Ticks (duckdb)
 - [vectorized-backtest.py](https://quantcore-labs.com/code/vectorized-backtest/vectorized-backtest.py): Vectorised Backtest (numpy, pandas, polars)
+- [cython-rolling-mean.py](https://quantcore-labs.com/code/cython-rolling-mean/cython-rolling-mean.py): Cython Rolling Mean (numpy)
+- [duckdb-parquet-loader.py](https://quantcore-labs.com/code/duckdb-parquet-loader/duckdb-parquet-loader.py): DuckDB Parquet Loader (duckdb)
+- [polars-vectorized-backtest.py](https://quantcore-labs.com/code/polars-vectorized-backtest/polars-vectorized-backtest.py): Polars MA Backtest (polars)
+- [numba-ewma-volatility.py](https://quantcore-labs.com/code/numba-ewma-volatility/numba-ewma-volatility.py): Numba EWMA Vol (numpy, numba)
+- [pandas-tick-to-ohlcv.py](https://quantcore-labs.com/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py): Tick to OHLCV (pandas)
+- [pandas-volume-bars.py](https://quantcore-labs.com/code/pandas-volume-bars/pandas-volume-bars.py): Volume Bars (numpy, pandas)
+- [pairs-zscore-signal.py](https://quantcore-labs.com/code/pairs-zscore-signal/pairs-zscore-signal.py): Pair Z-Score (pandas)
+- [numpy-strided-rolling.py](https://quantcore-labs.com/code/numpy-strided-rolling/numpy-strided-rolling.py): NumPy Strided Rolling (numpy)
+- [numba-order-book-replay.py](https://quantcore-labs.com/code/numba-order-book-replay/numba-order-book-replay.py): Numba Book Imbalance (numpy, numba)
+- [polars-asof-join-quotes.py](https://quantcore-labs.com/code/polars-asof-join-quotes/polars-asof-join-quotes.py): Polars As-Of Quotes (polars)
+- [duckdb-asof-vwap.py](https://quantcore-labs.com/code/duckdb-asof-vwap/duckdb-asof-vwap.py): DuckDB Minute VWAP (duckdb)
 - [vwap.py](https://quantcore-labs.com/glossary/vwap/vwap.py): VWAP in Python (numpy, pandas)
 - [ofi.py](https://quantcore-labs.com/glossary/ofi/ofi.py): OFI in Python (numpy, pandas)
 - [hurst-exponent.py](https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py): Hurst Exponent in Python (numpy)
@@ -38,6 +76,33 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [cointegration.py](https://quantcore-labs.com/glossary/cointegration/cointegration.py): Cointegration in Python (numpy, statsmodels)
 - [var-expected-shortfall.py](https://quantcore-labs.com/glossary/var-expected-shortfall/var-expected-shortfall.py): VaR & ES in Python (numpy, scipy)
 - [amihud-illiquidity.py](https://quantcore-labs.com/glossary/amihud-illiquidity/amihud-illiquidity.py): Amihud Illiquidity in Python (numpy, pandas)
+- [vpin.py](https://quantcore-labs.com/glossary/vpin/vpin.py): VPIN in Python (numpy, pandas)
+- [twap.py](https://quantcore-labs.com/glossary/twap/twap.py): TWAP in Python (pandas)
+- [implementation-shortfall.py](https://quantcore-labs.com/glossary/implementation-shortfall/implementation-shortfall.py): Implementation Shortfall in Python (standard library)
+- [arrival-price.py](https://quantcore-labs.com/glossary/arrival-price/arrival-price.py): Arrival Price in Python (standard library)
+- [participation-rate.py](https://quantcore-labs.com/glossary/participation-rate/participation-rate.py): Participation Rate in Python (standard library)
+- [almgren-chriss.py](https://quantcore-labs.com/glossary/almgren-chriss/almgren-chriss.py): Almgren-Chriss in Python (numpy)
+- [kyles-lambda.py](https://quantcore-labs.com/glossary/kyles-lambda/kyles-lambda.py): Kyle's Lambda in Python (numpy)
+- [pin-informed-trading.py](https://quantcore-labs.com/glossary/pin-informed-trading/pin-informed-trading.py): PIN in Python (standard library)
+- [sharpe-ratio.py](https://quantcore-labs.com/glossary/sharpe-ratio/sharpe-ratio.py): Sharpe Ratio in Python (numpy)
+- [sortino-ratio.py](https://quantcore-labs.com/glossary/sortino-ratio/sortino-ratio.py): Sortino Ratio in Python (numpy)
+- [information-ratio.py](https://quantcore-labs.com/glossary/information-ratio/information-ratio.py): Information Ratio in Python (numpy)
+- [tracking-error.py](https://quantcore-labs.com/glossary/tracking-error/tracking-error.py): Tracking Error in Python (numpy)
+- [max-drawdown.py](https://quantcore-labs.com/glossary/max-drawdown/max-drawdown.py): Max Drawdown in Python (numpy)
+- [calmar-ratio.py](https://quantcore-labs.com/glossary/calmar-ratio/calmar-ratio.py): Calmar Ratio in Python (numpy)
+- [kelly-criterion.py](https://quantcore-labs.com/glossary/kelly-criterion/kelly-criterion.py): Kelly Criterion in Python (standard library)
+- [beta.py](https://quantcore-labs.com/glossary/beta/beta.py): Beta in Python (numpy)
+- [realized-volatility.py](https://quantcore-labs.com/glossary/realized-volatility/realized-volatility.py): Realized Volatility in Python (numpy)
+- [parkinson-volatility.py](https://quantcore-labs.com/glossary/parkinson-volatility/parkinson-volatility.py): Parkinson Volatility in Python (numpy)
+- [garch.py](https://quantcore-labs.com/glossary/garch/garch.py): GARCH(1,1) in Python (numpy)
+- [implied-volatility.py](https://quantcore-labs.com/glossary/implied-volatility/implied-volatility.py): Implied Volatility in Python (scipy)
+- [delta.py](https://quantcore-labs.com/glossary/delta/delta.py): Delta in Python (scipy)
+- [gamma.py](https://quantcore-labs.com/glossary/gamma/gamma.py): Gamma in Python (scipy)
+- [vega.py](https://quantcore-labs.com/glossary/vega/vega.py): Vega in Python (scipy)
+- [theta.py](https://quantcore-labs.com/glossary/theta/theta.py): Theta in Python (scipy)
+- [rho.py](https://quantcore-labs.com/glossary/rho/rho.py): Rho in Python (scipy)
+- [put-call-parity.py](https://quantcore-labs.com/glossary/put-call-parity/put-call-parity.py): Put-Call Parity in Python (standard library)
+- [half-life-mean-reversion.py](https://quantcore-labs.com/glossary/half-life-mean-reversion/half-life-mean-reversion.py): Half-Life in Python (numpy)
 
 ## Optional
 

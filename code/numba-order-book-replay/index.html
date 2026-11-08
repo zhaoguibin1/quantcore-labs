@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top-of-Book Queue Imbalance while Replaying Quotes: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.">
+<link rel="canonical" href="https://quantcore-labs.com/code/numba-order-book-replay/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Top-of-Book Queue Imbalance while Replaying Quotes: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.">
+<meta property="og:url" content="https://quantcore-labs.com/code/numba-order-book-replay/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/numba-order-book-replay/#article",
+      "headline": "Top-of-Book Queue Imbalance while Replaying Quotes: Tested Python Implementation",
+      "description": "Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/numba-order-book-replay/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/numba-order-book-replay/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/numba-order-book-replay/#code",
+      "name": "Numba Book Imbalance in Python",
+      "description": "Tested Python reference implementation: Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, numba",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/numba-order-book-replay/",
+      "contentUrl": "https://quantcore-labs.com/code/numba-order-book-replay/numba-order-book-replay.py",
+      "text": "import numpy as np\nfrom numba import njit\n\n@njit(cache=True)\ndef queue_imbalance(bid_sz, ask_sz):\n    \"\"\"Queue imbalance (bid_sz - ask_sz) / (bid_sz + ask_sz) at each update.\n\n    Replay order is the array order. Total size of 0 yields 0. Negative sizes raise.\n    \"\"\"\n    n = bid_sz.shape[0]\n    if ask_sz.shape[0] != n:\n        raise ValueError(\"bid_sz and ask_sz must have the same length\")\n    out = np.empty(n, dtype=np.float64)\n    for i in range(n):\n        b = bid_sz[i]\n        a = ask_sz[i]\n        if b < 0.0 or a < 0.0:\n            raise ValueError(\"sizes must be non-negative\")\n        tot = b + a\n        out[i] = (b - a) / tot if tot > 0.0 else 0.0\n    return out\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How is this different from order-flow imbalance?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Order-flow imbalance adds up changes at the best quotes: size added on the bid is buying pressure, size added on the ask is selling pressure. Queue imbalance ignores the change and only looks at the sizes currently sitting at the touch."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why return 0 when both sizes are 0?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There is no queue to compare. Returning NaN is also defensible; 0 keeps a compiled reduction from turning the rest of a session into NaN when a single empty update appears. Check the rate of empty updates separately."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numba Book Imbalance",
+          "item": "https://quantcore-labs.com/code/numba-order-book-replay/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">numba-order-book-replay</span></nav><div class="tag">CODE · NUMBA BOOK IMBALANCE</div></div></header>
+<main>
+<article>
+<h1>Top-of-Book Queue Imbalance while Replaying Quotes</h1>
+<p class="lede">High-Performance Python · Snippet ID: <code>numba-order-book-replay</code></p>
+<p class="def"><strong>What it does.</strong> Queue imbalance at the touch is the bid size minus the ask size, divided by the sum of the two. It is positive when more size is displayed on the bid than on the ask. Replaying the top-of-book tape means evaluating that ratio at every update, in order, without building an intermediate DataFrame. The function does not reconstruct price levels and it does not infer trade direction. It is the size ratio only.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">I_t = (q^b_t − q^a_t) / (q^b_t + q^a_t)    if q^b_t + q^a_t &gt; 0
+    = 0                                         otherwise
+
+−1 ≤ I_t ≤ 1
+I_t = 1  → all displayed touch size is on the bid
+I_t = −1 → all of it is on the ask
+Sizes must be ≥ 0. This is not Cont–Kukanov–Stoikov order-flow imbalance.</pre></section>
+
+<section><h2>Where it fits</h2>
+<ul>
+<li>A feature on a quote tape: one number per book update, cheap enough to compute inside a compiled replay of millions of rows.</li>
+<li>As a simpler cousin of <a href="/glossary/ofi/">order-flow imbalance</a>. OFI uses price changes and the size that was added or removed. Queue imbalance uses only the sizes currently displayed.</li>
+<li>Trade-sign toxicity measures such as <a href="/glossary/vpin/">VPIN</a> need trades, not this quote ratio.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Displayed size is not the true queue.</strong> Iceberg orders, hidden liquidity and fleeting quotes mean the ratio is a picture of what was shown, not of demand.</li>
+<li><strong>Crossed or zero sizes.</strong> A feed glitch can report a zero or negative size. Negative sizes raise. A zero total returns 0 so one bad print does not poison a later reduction with NaN, but you should still count how often that branch hits.</li>
+<li><strong>Not comparable across names without care.</strong> The ratio is already scale-free. Its variance still depends on how often the touch flips, which differs between a thick future and a thin stock.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, numba. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/numba-order-book-replay/numba-order-book-replay.py">Download numba-order-book-replay.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+from numba import njit
+
+@njit(cache=True)
+def queue_imbalance(bid_sz, ask_sz):
+    &quot;&quot;&quot;Queue imbalance (bid_sz - ask_sz) / (bid_sz + ask_sz) at each update.
+
+    Replay order is the array order. Total size of 0 yields 0. Negative sizes raise.
+    &quot;&quot;&quot;
+    n = bid_sz.shape[0]
+    if ask_sz.shape[0] != n:
+        raise ValueError(&quot;bid_sz and ask_sz must have the same length&quot;)
+    out = np.empty(n, dtype=np.float64)
+    for i in range(n):
+        b = bid_sz[i]
+        a = ask_sz[i]
+        if b &lt; 0.0 or a &lt; 0.0:
+            raise ValueError(&quot;sizes must be non-negative&quot;)
+        tot = b + a
+        out[i] = (b - a) / tot if tot &gt; 0.0 else 0.0
+    return out
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>How is this different from order-flow imbalance?</h3><p>Order-flow imbalance adds up changes at the best quotes: size added on the bid is buying pressure, size added on the ask is selling pressure. Queue imbalance ignores the change and only looks at the sizes currently sitting at the touch.</p><h3>Why return 0 when both sizes are 0?</h3><p>There is no queue to compare. Returning NaN is also defensible; 0 keeps a compiled reduction from turning the rest of a session into NaN when a single empty update appears. Check the rate of empty updates separately.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Top-of-Book Queue Imbalance while Replaying Quotes</p>
+<p>&gt; Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.</p>
+<p>- Category: High-Performance Python</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/numba-order-book-replay/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/numba-order-book-replay/numba-order-book-replay.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/vpin/">Volume-Synchronized Probability of Informed Trading (VPIN)</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

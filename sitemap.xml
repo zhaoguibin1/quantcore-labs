@@ -1,20 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://quantcore-labs.com/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/code/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/code/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/option-greeks-calc/</loc><lastmod>2026-11-08T08:52:59+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/code/duckdb-parquet-ticks/</loc></url>
-  <url><loc>https://quantcore-labs.com/code/rolling-window-numba/</loc></url>
-  <url><loc>https://quantcore-labs.com/code/vectorized-backtest/</loc></url>
-  <url><loc>https://quantcore-labs.com/glossary/adf-test/</loc></url>
-  <url><loc>https://quantcore-labs.com/glossary/amihud-illiquidity/</loc></url>
-  <url><loc>https://quantcore-labs.com/glossary/cointegration/</loc></url>
-  <url><loc>https://quantcore-labs.com/glossary/hurst-exponent/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/information-coefficient/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/ofi/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/var-expected-shortfall/</loc></url>
-  <url><loc>https://quantcore-labs.com/glossary/vwap/</loc><lastmod>2026-11-08T10:01:18+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/code/cython-rolling-mean/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/duckdb-asof-vwap/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/duckdb-parquet-loader/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/duckdb-parquet-ticks/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/code/numba-ewma-volatility/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/numba-order-book-replay/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/numpy-strided-rolling/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/pairs-zscore-signal/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/pandas-tick-to-ohlcv/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/pandas-volume-bars/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/polars-asof-join-quotes/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/polars-vectorized-backtest/</loc></url>
+  <url><loc>https://quantcore-labs.com/code/rolling-window-numba/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/code/vectorized-backtest/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/adf-test/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/almgren-chriss/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/amihud-illiquidity/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/arrival-price/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/beta/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/calmar-ratio/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/cointegration/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/delta/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/gamma/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/garch/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/half-life-mean-reversion/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/hurst-exponent/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/implementation-shortfall/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/implied-volatility/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/information-coefficient/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/information-ratio/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/kelly-criterion/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/kyles-lambda/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/max-drawdown/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/ofi/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/parkinson-volatility/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/participation-rate/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/pin-informed-trading/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/put-call-parity/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/realized-volatility/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/rho/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/sharpe-ratio/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/sortino-ratio/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/theta/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/tracking-error/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/twap/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/var-expected-shortfall/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/vega/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/vpin/</loc></url>
+  <url><loc>https://quantcore-labs.com/glossary/vwap/</loc><lastmod>2026-11-08T11:29:04+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/iv-smile/</loc><lastmod>2026-11-08T09:56:23+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/monte-carlo-asset-sim/</loc><lastmod>2026-11-08T09:08:27+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/performance-analytics/</loc><lastmod>2026-11-08T09:49:54+08:00</lastmod></url>

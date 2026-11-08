@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Half-Life of Mean Reversion: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/half-life-mean-reversion/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Half-Life of Mean Reversion: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/half-life-mean-reversion/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#term",
+      "name": "Half-Life of Mean Reversion",
+      "termCode": "half-life-mean-reversion",
+      "description": "Fit the regression Δy_t = a + g y_{t−1} + ε_t. The autoregressive level coefficient is φ = 1 + g. When g is between −1 and 0, the series pulls back toward its mean, and the number of periods required for a deviation to fall by half is ln 2 / −ln(1 + g). That is the discrete half-life. The continuous approximation −ln 2 / g is close only when g is near zero; at φ = 0.9 it is already about 5 percent longer than the discrete number. If g is not negative, the series is not mean-reverting on this regression and the half-life is infinite.",
+      "url": "https://quantcore-labs.com/glossary/half-life-mean-reversion/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#article",
+      "headline": "Half-Life of Mean Reversion: Definition, Formula and Python",
+      "description": "How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/half-life-mean-reversion/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#code",
+      "name": "Half-Life in Python",
+      "description": "Tested Python reference implementation: How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/half-life-mean-reversion/",
+      "contentUrl": "https://quantcore-labs.com/glossary/half-life-mean-reversion/half-life-mean-reversion.py",
+      "text": "import numpy as np\n\ndef half_life(spread) -> float:\n    \"\"\"Discrete mean-reversion half-life, ln(2) / -ln(1+g), from Δy = a + g y_lag.\n\n    Infinite when g >= 0 (no mean reversion). NaN when g <= -1.\n    Same definition as half_life on the ADF page.\n    \"\"\"\n    y = np.asarray(spread, dtype=float)\n    if y.ndim != 1 or y.size < 3 or not np.all(np.isfinite(y)):\n        raise ValueError(\"need at least three finite observations\")\n    lag = y[:-1]\n    if float(np.var(lag)) == 0.0:\n        return float(\"inf\")\n    X = np.column_stack([np.ones(lag.size), lag])\n    g = float(np.linalg.lstsq(X, np.diff(y), rcond=None)[0][1])\n    if g >= -1e-12:\n        return float(\"inf\")\n    if g <= -1.0:\n        return float(\"nan\")\n    return float(np.log(2.0) / -np.log1p(g))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/half-life-mean-reversion/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why not use −ln(2) / g, which is the formula many notes quote?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "That is the continuous-time limit. The regression Δy_t = a + g y_{t−1} implies a discrete autoregressive coefficient φ = 1 + g, and a deviation multiplies by φ each period. Halving means φ^h = 1/2, so h = ln(2) / −ln(φ). At φ = 0.9 the continuous shortcut is about 6.93 periods and the discrete half-life is about 6.58."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What half-life should a pairs trade use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "This page does not pick one. It estimates a half-life from the series you pass. Whether the residual is stationary, whether both legs can be traded, and what it costs are separate questions; a finite estimate is not a signal to trade the spread."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Half-Life",
+          "item": "https://quantcore-labs.com/glossary/half-life-mean-reversion/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">half-life-mean-reversion</span></nav><div class="tag">GLOSSARY · HALF-LIFE</div></div></header>
+<main>
+<article>
+<h1>Half-Life of Mean Reversion</h1>
+<p class="lede">Time Series &amp; Stat-Arb · Term ID: <code>half-life-mean-reversion</code></p>
+<p class="def"><strong>Definition.</strong> Fit the regression Δy_t = a + g y_{t−1} + ε_t. The autoregressive level coefficient is φ = 1 + g. When g is between −1 and 0, the series pulls back toward its mean, and the number of periods required for a deviation to fall by half is ln 2 / −ln(1 + g). That is the discrete half-life. The continuous approximation −ln 2 / g is close only when g is near zero; at φ = 0.9 it is already about 5 percent longer than the discrete number. If g is not negative, the series is not mean-reverting on this regression and the half-life is infinite.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">Δy_t = a + g · y_{t−1} + ε_t
+φ = 1 + g
+
+half-life = ln(2) / −ln(1 + g)     if −1 &lt; g &lt; 0
+          = ∞                       if g ≥ 0
+          undefined (NaN)           if g ≤ −1  (oscillatory or explosive)
+
+Continuous approximation, small g:  ln(2) / −g
+Example: φ = 0.9 → g = −0.1 → half-life = ln(2) / −ln(0.9) ≈ 6.58 periods.
+The ADF page uses this discrete definition, not ln(2) / −g.</pre></section>
+
+<section><h2>Where the number is used</h2>
+<ul>
+<li>As a holding-period scale for a spread that has already passed a stationarity check. See <a href="/glossary/adf-test/">ADF</a> and <a href="/glossary/cointegration/">cointegration</a>. A half-life of six days and a half-life of six months are different research problems.</li>
+<li>As a way to set the window on a <a href="/code/pairs-zscore-signal/">rolling z-score</a>. A window much shorter than the half-life mostly fits noise; a window of many half-lives averages different regimes.</li>
+<li><a href="/glossary/hurst-exponent/">Hurst</a> is a related but different summary of the same wish: H below one half suggests anti-persistence. It is not a half-life.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Use the discrete form.</strong> Dividing ln 2 by −g treats g as a continuous-time speed. The regression you just ran is discrete. This function matches the half-life already published on the ADF page, ln 2 / −ln(1+g).</li>
+<li><strong>The regression is not a proof of mean reversion.</strong> A short sample of a random walk often produces a slightly negative g. Pair the half-life with an ADF or cointegration test, and expect the estimate to move when you add data.</li>
+<li><strong>An intercept is included.</strong> The mean that the series reverts to is −a/g, not necessarily zero. Forcing the regression through the origin changes g.</li>
+<li><strong>Not a trading rule.</strong> A finite half-life is a sample statistic. It does not say the spread will keep reverting, or that a position sized to it is desirable.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/half-life-mean-reversion/half-life-mean-reversion.py">Download half-life-mean-reversion.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def half_life(spread) -&gt; float:
+    &quot;&quot;&quot;Discrete mean-reversion half-life, ln(2) / -ln(1+g), from Δy = a + g y_lag.
+
+    Infinite when g &gt;= 0 (no mean reversion). NaN when g &lt;= -1.
+    Same definition as half_life on the ADF page.
+    &quot;&quot;&quot;
+    y = np.asarray(spread, dtype=float)
+    if y.ndim != 1 or y.size &lt; 3 or not np.all(np.isfinite(y)):
+        raise ValueError(&quot;need at least three finite observations&quot;)
+    lag = y[:-1]
+    if float(np.var(lag)) == 0.0:
+        return float(&quot;inf&quot;)
+    X = np.column_stack([np.ones(lag.size), lag])
+    g = float(np.linalg.lstsq(X, np.diff(y), rcond=None)[0][1])
+    if g &gt;= -1e-12:
+        return float(&quot;inf&quot;)
+    if g &lt;= -1.0:
+        return float(&quot;nan&quot;)
+    return float(np.log(2.0) / -np.log1p(g))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why not use −ln(2) / g, which is the formula many notes quote?</h3><p>That is the continuous-time limit. The regression Δy_t = a + g y_{t−1} implies a discrete autoregressive coefficient φ = 1 + g, and a deviation multiplies by φ each period. Halving means φ^h = 1/2, so h = ln(2) / −ln(φ). At φ = 0.9 the continuous shortcut is about 6.93 periods and the discrete half-life is about 6.58.</p><h3>What half-life should a pairs trade use?</h3><p>This page does not pick one. It estimates a half-life from the series you pass. Whether the residual is stationary, whether both legs can be traded, and what it costs are separate questions; a finite estimate is not a signal to trade the spread.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Half-Life of Mean Reversion</p>
+<p>&gt; How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.</p>
+<p>- Category: Time Series &amp; Stat-Arb</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/half-life-mean-reversion/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/half-life-mean-reversion/half-life-mean-reversion.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/adf-test/">Augmented Dickey-Fuller (ADF) Test</a> <a href="/glossary/cointegration/">Cointegration (Engle-Granger &amp; Johansen)</a> <a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a> <a href="/code/pairs-zscore-signal/">Rolling Hedge Ratio and Spread Z-Score</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

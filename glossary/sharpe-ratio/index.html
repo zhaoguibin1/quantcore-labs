@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sharpe Ratio: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/sharpe-ratio/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Sharpe Ratio: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/sharpe-ratio/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#term",
+      "name": "Sharpe Ratio",
+      "termCode": "sharpe-ratio",
+      "description": "The Sharpe ratio asks how much excess return a series delivered per unit of volatility. Excess is the periodic return minus a periodic risk-free rate. The rate used here is an annual rate converted by compound interest, (1 + r_f)^(1/P) − 1, not a simple r_f/P. Volatility is the sample standard deviation (divide by n − 1). Annualisation multiplies by sqrt(P). A higher number means more excess return per unit of variability in that sample. It is not a forecast and it is not a certificate of skill.",
+      "url": "https://quantcore-labs.com/glossary/sharpe-ratio/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#article",
+      "headline": "Sharpe Ratio: Definition, Formula and Python",
+      "description": "Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/sharpe-ratio/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#code",
+      "name": "Sharpe Ratio in Python",
+      "description": "Tested Python reference implementation: Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/sharpe-ratio/",
+      "contentUrl": "https://quantcore-labs.com/glossary/sharpe-ratio/sharpe-ratio.py",
+      "text": "import numpy as np\n\ndef sharpe_ratio(returns, rf_annual=0.0, periods=252) -> float:\n    \"\"\"Annualised Sharpe ratio.\n\n    rf_annual is compounded to a per-period rate: (1 + rf_annual) ** (1/periods) - 1.\n    Volatility is the sample standard deviation of excess returns. Zero volatility\n    returns NaN. This matches /tools/performance-analytics/.\n    \"\"\"\n    r = np.asarray(returns, dtype=float)\n    r = r[np.isfinite(r)]\n    if r.size < 2:\n        raise ValueError(\"need at least two finite returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    rf = (1.0 + rf_annual) ** (1.0 / periods) - 1.0\n    excess = r - rf\n    sd = float(excess.std(ddof=1))\n    if sd == 0.0:\n        return float(\"nan\")\n    return float(excess.mean() / sd * np.sqrt(periods))\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/sharpe-ratio/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why compound the risk-free rate instead of dividing by 252?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An annual rate of 2 percent is not 2/252 per day under compound interest. The per-period rate that compounds back to 2 percent is (1.02)^(1/252) − 1, which is slightly less than 2/252. The difference is small at low rates and is the convention the performance calculator on this site uses."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is a Sharpe ratio of 1 good?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It means the sample's mean excess return equalled its annualised volatility. Whether that is attractive depends on the sample, the costs that were left out, and the drawdowns. The ratio is not a threshold for taking a position."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Sharpe Ratio",
+          "item": "https://quantcore-labs.com/glossary/sharpe-ratio/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">sharpe-ratio</span></nav><div class="tag">GLOSSARY · SHARPE RATIO</div></div></header>
+<main>
+<article>
+<h1>Sharpe Ratio</h1>
+<p class="lede">Performance &amp; Risk Metrics · Term ID: <code>sharpe-ratio</code></p>
+<p class="def"><strong>Definition.</strong> The Sharpe ratio asks how much excess return a series delivered per unit of volatility. Excess is the periodic return minus a periodic risk-free rate. The rate used here is an annual rate converted by compound interest, (1 + r_f)^(1/P) − 1, not a simple r_f/P. Volatility is the sample standard deviation (divide by n − 1). Annualisation multiplies by sqrt(P). A higher number means more excess return per unit of variability in that sample. It is not a forecast and it is not a certificate of skill.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">r_f,period = (1 + r_f,annual) ^ (1/P) − 1
+excess_t   = R_t − r_f,period
+
+Sharpe = mean(excess) / std(excess, ddof=1) · sqrt(P)
+
+P = 252 by default, 242 for China A-shares, 365 for a crypto-style calendar.
+std = 0 → the ratio is undefined (returned as NaN).</pre></section>
+
+<section><h2>Conventions that change the number</h2>
+<ul>
+<li>The <a href="/tools/performance-analytics/">performance calculator</a> uses this compounding convention, sample standard deviation, and the same sqrt(P) annualisation. The glossary function is written to match it.</li>
+<li>Some published Sharpes subtract r_f/P, or divide by the population standard deviation, or leave the ratio un-annualised. Those are different statistics. Quote P and the risk-free treatment next to the number.</li>
+<li>Downside-only volatility is the <a href="/glossary/sortino-ratio/">Sortino ratio</a>. Active return over tracking error is the <a href="/glossary/information-ratio/">information ratio</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>It is a sample moment.</strong> A short window, or a window that happens to contain one regime, moves the ratio a lot. It does not carry a promise about the next window.</li>
+<li><strong>Volatility is not the risk you may care about.</strong> Two series with the same Sharpe can have very different <a href="/glossary/max-drawdown/">drawdowns</a> and tail losses. See also <a href="/glossary/var-expected-shortfall/">VaR and expected shortfall</a>.</li>
+<li><strong>Illiquid and smoothed returns look better.</strong> A series that only updates occasionally understates standard deviation and overstates Sharpe. The same is true of a backtest that ignores costs.</li>
+<li><strong>Annualising assumes i.i.d. periods.</strong> Strong autocorrelation makes sqrt(P) the wrong scaling. The function still multiplies by sqrt(P); the assumption is yours to check.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/sharpe-ratio/sharpe-ratio.py">Download sharpe-ratio.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def sharpe_ratio(returns, rf_annual=0.0, periods=252) -&gt; float:
+    &quot;&quot;&quot;Annualised Sharpe ratio.
+
+    rf_annual is compounded to a per-period rate: (1 + rf_annual) ** (1/periods) - 1.
+    Volatility is the sample standard deviation of excess returns. Zero volatility
+    returns NaN. This matches /tools/performance-analytics/.
+    &quot;&quot;&quot;
+    r = np.asarray(returns, dtype=float)
+    r = r[np.isfinite(r)]
+    if r.size &lt; 2:
+        raise ValueError(&quot;need at least two finite returns&quot;)
+    if periods &lt;= 0:
+        raise ValueError(&quot;periods must be positive&quot;)
+    rf = (1.0 + rf_annual) ** (1.0 / periods) - 1.0
+    excess = r - rf
+    sd = float(excess.std(ddof=1))
+    if sd == 0.0:
+        return float(&quot;nan&quot;)
+    return float(excess.mean() / sd * np.sqrt(periods))
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why compound the risk-free rate instead of dividing by 252?</h3><p>An annual rate of 2 percent is not 2/252 per day under compound interest. The per-period rate that compounds back to 2 percent is (1.02)^(1/252) − 1, which is slightly less than 2/252. The difference is small at low rates and is the convention the performance calculator on this site uses.</p><h3>Is a Sharpe ratio of 1 good?</h3><p>It means the sample&#x27;s mean excess return equalled its annualised volatility. Whether that is attractive depends on the sample, the costs that were left out, and the drawdowns. The ratio is not a threshold for taking a position.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Sharpe Ratio</p>
+<p>&gt; Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.</p>
+<p>- Category: Performance &amp; Risk Metrics</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/sharpe-ratio/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/sharpe-ratio/sharpe-ratio.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/sortino-ratio/">Sortino Ratio</a> <a href="/glossary/information-ratio/">Information Ratio</a> <a href="/glossary/max-drawdown/">Maximum Drawdown</a> <a href="/glossary/var-expected-shortfall/">Value at Risk (VaR) and Expected Shortfall (ES)</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

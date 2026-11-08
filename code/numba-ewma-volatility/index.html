@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RiskMetrics EWMA Volatility in Numba: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.">
+<link rel="canonical" href="https://quantcore-labs.com/code/numba-ewma-volatility/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="RiskMetrics EWMA Volatility in Numba: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.">
+<meta property="og:url" content="https://quantcore-labs.com/code/numba-ewma-volatility/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/numba-ewma-volatility/#article",
+      "headline": "RiskMetrics EWMA Volatility in Numba: Tested Python Implementation",
+      "description": "Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/numba-ewma-volatility/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/numba-ewma-volatility/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/numba-ewma-volatility/#code",
+      "name": "Numba EWMA Vol in Python",
+      "description": "Tested Python reference implementation: Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, numba",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/numba-ewma-volatility/",
+      "contentUrl": "https://quantcore-labs.com/code/numba-ewma-volatility/numba-ewma-volatility.py",
+      "text": "import numpy as np\nfrom numba import njit\n\n@njit(cache=True)\ndef ewma_vol(returns, lam=0.94):\n    \"\"\"EWMA volatility. var[t] uses returns[:t] only (r[t] is excluded).\n\n    lam is the weight on the previous variance (RiskMetrics daily default 0.94).\n    \"\"\"\n    if lam < 0.0 or lam > 1.0:\n        raise ValueError(\"lam must be in [0, 1]\")\n    r = returns\n    n = r.shape[0]\n    var = np.empty(n, dtype=np.float64)\n    if n == 0:\n        return var\n    var[0] = r[0] * r[0]\n    one = 1.0 - lam\n    for t in range(1, n):\n        prev = r[t - 1]\n        var[t] = lam * var[t - 1] + one * prev * prev\n    return np.sqrt(var)\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why does the variance at t use the return at t−1?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "So that the volatility sitting on row t was knowable before r_t was. That is the RiskMetrics recursion. Putting r_t into var[t] would make any later Sharpe-style scaling use information from the return it is scaling."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this GARCH?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. GARCH(1,1) has a constant term and the two slopes are estimated. EWMA is the special case ω = 0 and α + β = 1, with λ chosen rather than fitted. It has no finite unconditional variance."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Numba EWMA Vol",
+          "item": "https://quantcore-labs.com/code/numba-ewma-volatility/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">numba-ewma-volatility</span></nav><div class="tag">CODE · NUMBA EWMA VOL</div></div></header>
+<main>
+<article>
+<h1>RiskMetrics EWMA Volatility in Numba</h1>
+<p class="lede">High-Performance Python · Snippet ID: <code>numba-ewma-volatility</code></p>
+<p class="def"><strong>What it does.</strong> RiskMetrics writes today&#x27;s variance as a blend of yesterday&#x27;s variance and yesterday&#x27;s squared return. The weight on the previous variance is λ, often 0.94 for daily data. The square root of that variance is the EWMA volatility. The loop is a prefix recursion, which Numba compiles to a tight machine-code pass. It is a smoother with a fixed λ, not a fitted GARCH model.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">σ²_0 = r_0²
+σ²_t = λ σ²_{t−1} + (1 − λ) r_{t−1}²     t = 1..n−1
+σ_t  = sqrt(σ²_t)
+
+σ_t depends on r_0 .. r_{t−1} only.
+0 ≤ λ ≤ 1.  λ = 1 repeats σ²_0.  λ = 0 gives σ²_t = r_{t−1}².</pre></section>
+
+<section><h2>When to use it</h2>
+<ul>
+<li>A causal volatility estimate on a long return series, for scaling positions or for comparing with <a href="/glossary/realized-volatility/">realized volatility</a>.</li>
+<li>Inside another <code>@njit</code> loop. A Python EWMA over millions of bars spends its time in the interpreter; this one does not, after the first compile.</li>
+<li>For a variance that also reacts to a long-run level and is estimated rather than set, see <a href="/glossary/garch/">GARCH(1,1)</a>.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Initial value.</strong> σ²_0 = r_0² is one observation. A large first return leaves a long tail when λ is close to 1. Some desks seed the recursion with a sample variance of an earlier window instead.</li>
+<li><strong>Look-ahead.</strong> Using r_t² inside σ_t would mix the return you are about to score with the volatility you score it by. This recursion does not do that. Do not "fix" the index.</li>
+<li><strong>λ is not estimated here.</strong> 0.94 is the RiskMetrics daily convention, not a maximum-likelihood estimate for your sample. The half-life of a shock is about ln(0.5)/ln(λ) periods (about 11 days at 0.94).</li>
+<li><strong>NaNs and the first call.</strong> A NaN poisons every later value. The first call compiles; <code>cache=True</code> reuses the compiled code afterwards.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, numba. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/numba-ewma-volatility/numba-ewma-volatility.py">Download numba-ewma-volatility.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+from numba import njit
+
+@njit(cache=True)
+def ewma_vol(returns, lam=0.94):
+    &quot;&quot;&quot;EWMA volatility. var[t] uses returns[:t] only (r[t] is excluded).
+
+    lam is the weight on the previous variance (RiskMetrics daily default 0.94).
+    &quot;&quot;&quot;
+    if lam &lt; 0.0 or lam &gt; 1.0:
+        raise ValueError(&quot;lam must be in [0, 1]&quot;)
+    r = returns
+    n = r.shape[0]
+    var = np.empty(n, dtype=np.float64)
+    if n == 0:
+        return var
+    var[0] = r[0] * r[0]
+    one = 1.0 - lam
+    for t in range(1, n):
+        prev = r[t - 1]
+        var[t] = lam * var[t - 1] + one * prev * prev
+    return np.sqrt(var)
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why does the variance at t use the return at t−1?</h3><p>So that the volatility sitting on row t was knowable before r_t was. That is the RiskMetrics recursion. Putting r_t into var[t] would make any later Sharpe-style scaling use information from the return it is scaling.</p><h3>Is this GARCH?</h3><p>No. GARCH(1,1) has a constant term and the two slopes are estimated. EWMA is the special case ω = 0 and α + β = 1, with λ chosen rather than fitted. It has no finite unconditional variance.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># RiskMetrics EWMA Volatility in Numba</p>
+<p>&gt; Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.</p>
+<p>- Category: High-Performance Python</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/numba-ewma-volatility/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/numba-ewma-volatility/numba-ewma-volatility.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/garch/">GARCH(1,1)</a> <a href="/glossary/realized-volatility/">Realized Volatility</a> <a href="/code/rolling-window-numba/">Fast Rolling Mean, Std, Beta and Z-score with Numba</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

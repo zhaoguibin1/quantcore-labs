@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resample Trade Ticks to OHLCV and VWAP Bars: Tested Python Code | QuantCore Labs</title>
+<meta name="description" content="Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.">
+<link rel="canonical" href="https://quantcore-labs.com/code/pandas-tick-to-ohlcv/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Resample Trade Ticks to OHLCV and VWAP Bars: Tested Python Code | QuantCore Labs">
+<meta property="og:description" content="Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.">
+<meta property="og:url" content="https://quantcore-labs.com/code/pandas-tick-to-ohlcv/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/#article",
+      "headline": "Resample Trade Ticks to OHLCV and VWAP Bars: Tested Python Implementation",
+      "description": "Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/#code",
+      "name": "Tick to OHLCV in Python",
+      "description": "Tested Python reference implementation: Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/",
+      "contentUrl": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py",
+      "text": "import pandas as pd\n\ndef ticks_to_bars(ticks: pd.DataFrame, freq: str = \"1min\") -> pd.DataFrame:\n    \"\"\"OHLCV, VWAP and trade count from a trade tape.\n\n    ticks: DatetimeIndex, columns price and volume, sorted by time.\n    Empty bins are dropped. VWAP is missing when the bin volume is 0.\n    \"\"\"\n    if not isinstance(ticks.index, pd.DatetimeIndex):\n        raise TypeError(\"ticks must be indexed by a DatetimeIndex\")\n    if not {\"price\", \"volume\"}.issubset(ticks.columns):\n        raise ValueError(\"ticks need price and volume columns\")\n    ticks = ticks.sort_index()\n    grouped = ticks.resample(freq)\n    bars = grouped[\"price\"].ohlc()\n    bars[\"volume\"] = grouped[\"volume\"].sum()\n    traded_value = (ticks[\"price\"] * ticks[\"volume\"]).resample(freq).sum()\n    bars[\"vwap\"] = traded_value / bars[\"volume\"].where(bars[\"volume\"] > 0)\n    bars[\"trades\"] = grouped[\"price\"].count()\n    return bars.dropna(subset=[\"open\"])\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why can VWAP differ from a typical-price bar VWAP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Typical price (high + low + close) / 3 times bar volume only approximates the trades. This function weights each trade by its own size, which is the VWAP used as an execution benchmark."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens to a minute with no trades?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It is omitted. The clock bin exists inside resample as an empty row and is then dropped, so you can join the result back onto a complete calendar if you need an explicit gap."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Tick to OHLCV",
+          "item": "https://quantcore-labs.com/code/pandas-tick-to-ohlcv/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/code/">code</a> / <span style="color:var(--text)">pandas-tick-to-ohlcv</span></nav><div class="tag">CODE · TICK TO OHLCV</div></div></header>
+<main>
+<article>
+<h1>Resample Trade Ticks to OHLCV and VWAP Bars</h1>
+<p class="lede">Data Engineering for Quants · Snippet ID: <code>pandas-tick-to-ohlcv</code></p>
+<p class="def"><strong>What it does.</strong> Time bars group irregular trades into fixed clock buckets. Open and close are the first and last trade prices in the bucket, high and low are the extrema, and volume and trade count are sums and counts. VWAP is the volume-weighted average of the trade prices inside the bucket, which is the trade-level VWAP rather than a typical-price approximation from the bar.</p>
+
+<section><h2>Approach</h2>
+<pre class="formula">For the trades in a clock bin of width Δ:
+  open  = price of the earliest trade
+  high  = max price,   low = min price
+  close = price of the latest trade
+  volume = Σ volume,   trades = count
+  VWAP  = Σ price·volume / Σ volume     (undefined if volume is 0)
+
+Bins with no trades are omitted.</pre></section>
+
+<section><h2>When to use it</h2>
+<ul>
+<li>Building a research bar from a trade tape before a backtest or a volatility estimate.</li>
+<li>Checking a SQL aggregation. The same VWAP is computed in <a href="/code/duckdb-asof-vwap/">duckdb-asof-vwap</a> without loading the tape into pandas.</li>
+<li>Session VWAP across a whole day, as a benchmark rather than a bar feature, is the <a href="/glossary/vwap/">VWAP</a> term.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Timestamp ties.</strong> <code>resample</code> uses the index order. Two trades with the same timestamp keep whatever order the frame has, and that order decides open and close. Sort by <code>(timestamp, sequence)</code> before setting the index. The DuckDB ticks page shows the same trap.</li>
+<li><strong>Empty minutes.</strong> They are removed, so the result is not a regular grid. Reindex against a full calendar if a model needs missing bars as gaps.</li>
+<li><strong>Zero volume.</strong> A bucket whose volumes sum to zero gets a missing VWAP rather than a divide-by-zero. Those prints are not a price discovery event.</li>
+<li><strong>Auctions and sessions.</strong> The resampler does not know the cash-session clock. Filter the tape to the session you mean before calling it.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires pandas. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py">Download pandas-tick-to-ohlcv.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import pandas as pd
+
+def ticks_to_bars(ticks: pd.DataFrame, freq: str = &quot;1min&quot;) -&gt; pd.DataFrame:
+    &quot;&quot;&quot;OHLCV, VWAP and trade count from a trade tape.
+
+    ticks: DatetimeIndex, columns price and volume, sorted by time.
+    Empty bins are dropped. VWAP is missing when the bin volume is 0.
+    &quot;&quot;&quot;
+    if not isinstance(ticks.index, pd.DatetimeIndex):
+        raise TypeError(&quot;ticks must be indexed by a DatetimeIndex&quot;)
+    if not {&quot;price&quot;, &quot;volume&quot;}.issubset(ticks.columns):
+        raise ValueError(&quot;ticks need price and volume columns&quot;)
+    ticks = ticks.sort_index()
+    grouped = ticks.resample(freq)
+    bars = grouped[&quot;price&quot;].ohlc()
+    bars[&quot;volume&quot;] = grouped[&quot;volume&quot;].sum()
+    traded_value = (ticks[&quot;price&quot;] * ticks[&quot;volume&quot;]).resample(freq).sum()
+    bars[&quot;vwap&quot;] = traded_value / bars[&quot;volume&quot;].where(bars[&quot;volume&quot;] &gt; 0)
+    bars[&quot;trades&quot;] = grouped[&quot;price&quot;].count()
+    return bars.dropna(subset=[&quot;open&quot;])
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why can VWAP differ from a typical-price bar VWAP?</h3><p>Typical price (high + low + close) / 3 times bar volume only approximates the trades. This function weights each trade by its own size, which is the VWAP used as an execution benchmark.</p><h3>What happens to a minute with no trades?</h3><p>It is omitted. The clock bin exists inside resample as an empty row and is then dropped, so you can join the result back onto a complete calendar if you need an explicit gap.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Resample Trade Ticks to OHLCV and VWAP Bars</p>
+<p>&gt; Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.</p>
+<p>- Category: Data Engineering for Quants</p>
+<p>- Canonical URL: https://quantcore-labs.com/code/pandas-tick-to-ohlcv/</p>
+<p>- Part of: https://quantcore-labs.com/code/</p>
+<p>- Python source: https://quantcore-labs.com/code/pandas-tick-to-ohlcv/pandas-tick-to-ohlcv.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/vwap/">Volume-Weighted Average Price (VWAP)</a> <a href="/code/duckdb-asof-vwap/">Per-Symbol Minute VWAP in DuckDB</a> <a href="/code/pandas-volume-bars/">Equal-Volume Bars from a Trade Tape</a> <a href="/code/">← All snippets</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -393,5 +393,1466 @@
       "var-expected-shortfall",
       "amihud-illiquidity"
     ]
+  },
+  {
+    "term_id": "vpin",
+    "name": "Volume-Synchronized Probability of Informed Trading (VPIN)",
+    "short": "VPIN",
+    "category": "Market Microstructure & Order Flow",
+    "summary": "An estimate of order-flow toxicity from the imbalance between buy and sell volume inside equal-volume buckets. It updates by volume, not by the clock.",
+    "definition": "VPIN averages the absolute difference between buy volume and sell volume across the last n equal-volume buckets, and divides by the volume those buckets represent. Easley, López de Prado and O'Hara designed it as a high-frequency cousin of the probability of informed trading: a bucket is toxic when one side dominates. The measure does not classify trades by itself. Buy and sell volume are inputs, usually from a bulk-volume split or from an aggressor flag.",
+    "formula": "V = target volume of each bucket\nVPIN = Σ_{τ=1..n} |V^B_τ − V^S_τ| / (n · V)\n\nIf every bucket is exactly volume V and V^B + V^S = V, then 0 ≤ VPIN ≤ 1.\nVPIN = 0: buy and sell volume match in every bucket\nVPIN = 1: each bucket is entirely one side",
+    "sections": [
+      {
+        "heading": "How desks use the number",
+        "html": "<ul>\n<li>As a state variable for quoting: a higher reading means recent volume was more one-sided, so a market maker may widen or cut size. It is a description of the recent tape, not a forecast with a promised hit rate.</li>\n<li>The buckets are equal volume, not equal time. Build them with something like <a href=\"/code/pandas-volume-bars/\">volume bars</a>, then split each bar's volume into buy and sell.</li>\n<li>The daily structural model behind the same idea is <a href=\"/glossary/pin-informed-trading/\">PIN</a>. A price-impact slope on signed volume is <a href=\"/glossary/kyles-lambda/\">Kyle's lambda</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Classification is the measurement.</strong> Bulk-volume classification assigns a fraction of each bar to buy or sell from the price change. A different rule produces a different VPIN. Report the rule.</li>\n<li><strong>The denominator assumes equal buckets.</strong> The code below rejects a row whose buy plus sell volume is not the stated bucket size. A partial last bucket should be dropped, not squeezed into the formula.</li>\n<li><strong>It is not a probability you can take to a risk limit without a model.</strong> The name says probability. The calculation is a normalised imbalance. Mapping it onto the structural PIN parameters requires the model, not just the ratio.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef compute_vpin(volume_buckets: pd.DataFrame, bucket_size: float) -> float:\n    \"\"\"VPIN from equal-volume buckets with buy_vol and sell_vol columns.\n\n    Each row must sum to bucket_size. The function does not classify trades.\n    \"\"\"\n    if bucket_size <= 0:\n        raise ValueError(\"bucket_size must be positive\")\n    buy = np.asarray(volume_buckets[\"buy_vol\"], dtype=float)\n    sell = np.asarray(volume_buckets[\"sell_vol\"], dtype=float)\n    if buy.shape != sell.shape or buy.size == 0:\n        raise ValueError(\"need at least one buy/sell bucket\")\n    if np.any(buy < 0) or np.any(sell < 0):\n        raise ValueError(\"volumes must be non-negative\")\n    total = buy + sell\n    if np.max(np.abs(total - bucket_size)) > 1e-6 * bucket_size:\n        raise ValueError(\"each bucket must sum to bucket_size; drop a partial tail\")\n    return float(np.abs(buy - sell).sum() / (buy.size * bucket_size))\n",
+    "faq": [
+      {
+        "question": "Is VPIN the same as PIN?",
+        "answer": "No. PIN is a daily mixture model estimated by maximum likelihood from buy and sell counts. VPIN is a rolling volume-bucket imbalance that can be updated through the day. They share an author and an interpretation, not a formula."
+      },
+      {
+        "question": "What is a high VPIN?",
+        "answer": "The ratio is between 0 and 1 when buckets are well formed. How high is unusual depends on the symbol, the bucket size and the classification rule. Compare a name with its own history before comparing it with another name."
+      }
+    ],
+    "related": [
+      "pin-informed-trading",
+      "kyles-lambda",
+      "pandas-volume-bars",
+      "ofi"
+    ],
+    "test": "\nimport pandas as pd\nb = pd.DataFrame({\"buy_vol\": [80.0, 20.0, 50.0], \"sell_vol\": [20.0, 80.0, 50.0]})\nassert abs(compute_vpin(b, 100) - (60 + 60 + 0) / 300) < 1e-12\ntry:\n    compute_vpin(b.iloc[:2], 90)\n    raise SystemExit(\"unequal bucket should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "twap",
+    "name": "Time-Weighted Average Price (TWAP)",
+    "short": "TWAP",
+    "category": "Execution & Market Microstructure",
+    "summary": "The arithmetic average of prices sampled on a regular clock. As a benchmark every interval counts once; as a schedule, a parent order is sliced evenly in time.",
+    "definition": "TWAP is the mean of a price series after it has been sampled at equal time intervals. Volume does not enter. A TWAP execution schedule therefore sends about the same quantity in each slice of the horizon, regardless of whether the market is busy. The benchmark form asks whether fills beat the average of those sampled prices.",
+    "formula": "TWAP = (1 / N) Σ_{k=1..N} P_{t_k}\n\nt_k equally spaced. P is the sample chosen for that slot (here: the last trade in the bin).\n\nA TWAP schedule over horizon T with quantity Q sends about Q / N in each slice.\nIt does not target a fraction of market volume. That is participation rate.",
+    "sections": [
+      {
+        "heading": "Benchmark versus schedule",
+        "html": "<ul>\n<li><strong>Benchmark.</strong> Sample the market on a clock and average it. The implementation below uses the last trade in each bin, which is one convention. The mean of all trades in the bin is another, and it is not TWAP in the strict equal-time sense because a busy bin would contribute more prints.</li>\n<li><strong>Schedule.</strong> Child orders of equal size at equal times. This page does not size those children. Participation (percent of volume) is a different schedule: <a href=\"/glossary/participation-rate/\">participation rate</a>.</li>\n<li><a href=\"/glossary/vwap/\">VWAP</a> weights the same trades by size, so it follows the volume curve. TWAP does not. Quiet minutes count as much as the close.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Sampling inside the bin matters.</strong> Last trade, first trade, and the bin's VWAP answer different questions. Say which one the benchmark used.</li>\n<li><strong>A regular clock includes empty periods only if you define a price for them.</strong> This function drops empty bins, so a halt does not create a slot. Forward-filling across a halt pretends a trade happened.</li>\n<li><strong>Easy to game, easy to be gamed.</strong> A schedule that must finish a slice every minute will trade through a spread that a volume-aware schedule would wait out. The average is not a target to beat for its own sake.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import pandas as pd\n\ndef calculate_twap(prices, freq=\"1min\") -> float:\n    \"\"\"Arithmetic mean of regularly sampled prices.\n\n    A Series with a DatetimeIndex is sampled by taking the last observation\n    in each bin of width `freq`, dropping empty bins. Any other input is\n    treated as already sampled, and the mean of its values is returned.\n    \"\"\"\n    if not isinstance(prices, pd.Series):\n        prices = pd.Series(prices, dtype=\"float64\")\n    if isinstance(prices.index, pd.DatetimeIndex):\n        sampled = prices.sort_index().resample(freq).last().dropna()\n    else:\n        sampled = prices.dropna()\n    if sampled.empty:\n        raise ValueError(\"no prices to average\")\n    return float(sampled.mean())\n",
+    "faq": [
+      {
+        "question": "Why is TWAP not just the average of every trade?",
+        "answer": "The average of every trade weights busy moments more heavily, because they contain more prints. That is closer to a trade-count weighted price. TWAP gives each time slot one vote, which is why the series is resampled before the mean."
+      },
+      {
+        "question": "When would a TWAP schedule be a poor fit?",
+        "answer": "When volume is concentrated, for example around an open, a close or an announcement. Equal time slices then trade a large fraction of the market when it is quiet and a small fraction when it is not. A VWAP or participation schedule follows the volume instead."
+      }
+    ],
+    "related": [
+      "vwap",
+      "participation-rate",
+      "arrival-price"
+    ],
+    "test": "\nimport pandas as pd\nidx = pd.to_datetime([\"2024-01-02 09:30:00\", \"2024-01-02 09:30:20\", \"2024-01-02 09:31:00\", \"2024-01-02 09:31:40\"])\ns = pd.Series([10.0, 12.0, 14.0, 18.0], index=idx)\nassert calculate_twap(s, \"1min\") == (12.0 + 18.0) / 2\nassert calculate_twap(pd.Series([1.0, 2.0, 3.0, 4.0])) == 2.5\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "implementation-shortfall",
+    "name": "Implementation Shortfall",
+    "short": "Implementation Shortfall",
+    "category": "Execution & Transaction Cost Analysis",
+    "summary": "The gap between a paper portfolio filled at the decision price and the portfolio that was actually traded, including fees and the cost of shares that never got filled.",
+    "definition": "Perold's implementation shortfall compares two portfolios. The paper portfolio trades the full target at the price that was current when the decision was made. The real portfolio trades what was filled, at the prices that were filled, and pays fees. The difference is the shortfall. It splits into an execution component on the shares that traded and an opportunity component on the shares that did not. A positive number is a cost relative to the paper portfolio.",
+    "formula": "side = +1 buy, −1 sell\nfilled = Σ q_i\n\nexecution  = side · Σ q_i (P_i − P_decision)\nopportunity = side · (Q − filled) · (P_end − P_decision)\nIS = execution + opportunity + fees\n\nP_end is the price used to mark the unfilled remainder (often the close, or the price when the order was cancelled).\nIS is in currency of the prices times quantities, not in basis points.",
+    "sections": [
+      {
+        "heading": "Reading the two pieces",
+        "html": "<ul>\n<li><strong>Execution cost</strong> is what you paid, relative to the decision price, on shares that did trade. Buying above the decision price is a positive cost.</li>\n<li><strong>Opportunity cost</strong> is the paper profit on shares you wanted and did not get. If the price runs away after a buy decision and you do not finish, that move is part of the shortfall even though no fill occurred.</li>\n<li>Arrival-price slippage ignores the unfilled part. It is the execution piece only, in basis points: <a href=\"/glossary/arrival-price/\">arrival price</a>. A schedule that balances the two pieces is the point of <a href=\"/glossary/almgren-chriss/\">Almgren-Chriss</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The decision price has to be fixed before the order does anything.</strong> Using the first fill, or the arrival mid after the child orders have already moved the book, understates the shortfall.</li>\n<li><strong>P_end is a choice.</strong> Marking leftovers at the close and marking them at the cancel time are different costs. Write down which one.</li>\n<li><strong>Sign.</strong> The formula returns a cost. A negative shortfall means the real portfolio beat the paper one. Do not flip the sign between buys and sells; <code>side</code> does that.</li>\n<li><strong>Fees sit outside the price.</strong> Commission, stamp and financing belong in <code>fees</code>. Burying them in the fill price double-counts once someone also subtracts them from PnL.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "def implementation_shortfall(fills, decision_px, end_px, target_qty, side=1, fees=0.0) -> float:\n    \"\"\"Implementation shortfall in price-times-quantity units. Positive = cost.\n\n    fills: iterable of (qty, price). side = +1 buy, -1 sell.\n    Unfilled size is marked at end_px. qty is unsigned.\n    \"\"\"\n    if side not in (1, -1):\n        raise ValueError(\"side must be +1 (buy) or -1 (sell)\")\n    if target_qty < 0:\n        raise ValueError(\"target_qty must be non-negative\")\n    filled = 0.0\n    execution = 0.0\n    for qty, price in fills:\n        if qty < 0:\n            raise ValueError(\"fill quantities must be non-negative\")\n        filled += qty\n        execution += side * qty * (price - decision_px)\n    if filled > target_qty + 1e-8:\n        raise ValueError(\"filled quantity exceeds target\")\n    opportunity = side * (target_qty - filled) * (end_px - decision_px)\n    return float(execution + opportunity + fees)\n",
+    "faq": [
+      {
+        "question": "Why charge a cost for shares that did not trade?",
+        "answer": "The decision was to hold the target. Shares that never filled are still a difference between the paper portfolio and the real one. If the price then moves in the direction of the decision, that missed move is an opportunity cost; if it moves the other way, the unfilled part reduces the shortfall."
+      },
+      {
+        "question": "Is a negative shortfall good?",
+        "answer": "It means the real fills, leftovers and fees beat trading the full size at the decision price. It is a cost accounting identity, not a statement that the decision itself was a good one."
+      }
+    ],
+    "related": [
+      "arrival-price",
+      "vwap",
+      "almgren-chriss"
+    ],
+    "test": "\n# Buy 100, decision 10. Fill 60 at 10.2, mark the rest at 10.5, fee 1.\n# execution 60*0.2 = 12; opportunity 40*0.5 = 20; total 33.\nassert abs(implementation_shortfall([(60, 10.2)], 10.0, 10.5, 100, side=1, fees=1) - 33) < 1e-12\n# Sell 100 at 9.8 versus a decision price of 10: cost of 20, fully filled.\nassert abs(implementation_shortfall([(100, 9.8)], 10.0, 9.5, 100, side=-1) - 20) < 1e-12\n# Selling above the decision price is a negative cost.\nassert implementation_shortfall([(100, 10.2)], 10.0, 10.0, 100, side=-1) < 0\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "arrival-price",
+    "name": "Arrival-Price Slippage",
+    "short": "Arrival Price",
+    "category": "Execution & Transaction Cost Analysis",
+    "summary": "Execution cost against the mid-price at the moment the order arrived, in basis points. Positive means the fills were worse than that mid.",
+    "definition": "The arrival price is the mid (or other pre-agreed reference) when the order reached the desk or the algorithm, before the order's own child trades. Slippage is the signed difference between the average fill and that reference, scaled to basis points. Buys are costly when the average fill is above the arrival mid. Sells are costly when it is below.",
+    "formula": "slippage_bps = side · (P_avg − P_arrival) / P_arrival · 10^4\n\nside = +1 buy, −1 sell\nP_arrival is a mid, not the last trade, unless the policy explicitly says otherwise\nPositive slippage = worse than the arrival price",
+    "sections": [
+      {
+        "heading": "What it does and does not include",
+        "html": "<ul>\n<li>It prices the shares that filled. It says nothing about shares that did not. That remainder is the opportunity term in <a href=\"/glossary/implementation-shortfall/\">implementation shortfall</a>.</li>\n<li>It does not know why the price moved. Impact, drift and spread are all inside the same basis-point number. A later decomposition can split them; this ratio cannot.</li>\n<li><a href=\"/glossary/vwap/\">VWAP</a> slippage asks a different question: did you beat the market's own average, rather than the price at arrival.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Stamp the mid before you send.</strong> Reconstructing arrival from the first child fill includes your own impact and makes the order look cheaper than it was.</li>\n<li><strong>Average fill has to be volume-weighted.</strong> The mean of child-order limit prices is not the average execution price.</li>\n<li><strong>Basis points hide the currency.</strong> 5 bp on a large notional is a large amount. Report both when the number goes into a cost report.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "def arrival_slippage_bps(avg_exec_px, arrival_mid, side=1) -> float:\n    \"\"\"Signed execution cost versus the arrival mid, in basis points.\n\n    side = +1 buy, -1 sell. Positive means worse than the arrival mid.\n    \"\"\"\n    if arrival_mid <= 0:\n        raise ValueError(\"arrival_mid must be positive\")\n    if side not in (1, -1):\n        raise ValueError(\"side must be +1 (buy) or -1 (sell)\")\n    return float(side * (avg_exec_px - arrival_mid) / arrival_mid * 1e4)\n",
+    "faq": [
+      {
+        "question": "Why use the mid instead of the last trade?",
+        "answer": "The last trade is whichever side last crossed the spread, so it sits half a spread away from a price you could have notionally dealt at on average. The mid is the usual pre-trade reference. If the policy uses the near touch or the last trade, the function still applies, but the input is no longer a mid and the name should say so."
+      },
+      {
+        "question": "Does a negative number mean the execution was good?",
+        "answer": "It means the average fill beat the arrival reference, after the sign for buy or sell. It does not include unfilled quantity, fees or whether the arrival price itself was a sensible time to trade."
+      }
+    ],
+    "related": [
+      "implementation-shortfall",
+      "vwap",
+      "twap"
+    ],
+    "test": "\nassert abs(arrival_slippage_bps(10.02, 10.0, 1) - 20) < 1e-9\nassert abs(arrival_slippage_bps(9.98, 10.0, -1) - 20) < 1e-9\nassert arrival_slippage_bps(9.99, 10.0, 1) < 0  # buy filled below the mid\ntry:\n    arrival_slippage_bps(10.0, 0.0, 1)\n    raise SystemExit(\"zero mid should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "participation-rate",
+    "name": "Participation Rate (Percent of Volume)",
+    "short": "Participation Rate",
+    "category": "Execution & Market Microstructure",
+    "summary": "The fraction of market volume an order takes over an interval. A percent-of-volume schedule sets each child order to that fraction of the volume just observed, capped by what is left.",
+    "definition": "Participation rate, or POV, is own volume divided by market volume over the same interval. A POV algorithm watches the market print, and sends a child quantity equal to a target fraction of that print, without exceeding the residual parent quantity. The target is a fraction of volume, not a clock and not a forecast of the day's volume curve.",
+    "formula": "POV = V_own / V_market\n\nChild quantity for one interval, given volume V printed in that interval:\n  q = min(Q_remaining, ρ · V)\n\nρ is the target rate as a fraction (0.10 means ten percent of volume).\nThe child does not look ahead at volume that has not printed.",
+    "sections": [
+      {
+        "heading": "How the schedule behaves",
+        "html": "<ul>\n<li>Busy intervals produce larger children. Quiet intervals produce smaller ones. The order slows down when the market does, which a <a href=\"/glossary/twap/\">TWAP</a> slice will not.</li>\n<li>It does not finish by a deadline. If volume dries up, quantity is left over. A horizon with a hard end needs a different schedule, such as <a href=\"/glossary/almgren-chriss/\">Almgren-Chriss</a> or VWAP with a residual sweep.</li>\n<li>The realised rate is own fills over market volume, which includes your own prints if they are in the tape. Subtracting them is a policy choice and changes the number.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>ρ is a fraction.</strong> Passing 10 thinking it means 10 percent requests ten times market volume. The code treats 10 as 1000 percent and will try to take all remaining quantity.</li>\n<li><strong>The cap is the remaining parent, not a market-impact model.</strong> min(remaining, ρ·V) does not estimate how far the child moves the price. Impact still scales with participation; this function only sizes the child.</li>\n<li><strong>Which volume.</strong> Lit continuous volume, auction volume and odd-lot volume are different denominators. The caller passes the volume number; the function does not classify prints.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "def pov_child_qty(market_vol_interval, target_rate, remaining_qty) -> float:\n    \"\"\"Child quantity for a percent-of-volume slice.\n\n    target_rate is a fraction of market volume (0.1 = 10%). The result is\n    never larger than remaining_qty, and is zero when there is nothing to do.\n    \"\"\"\n    if market_vol_interval < 0 or remaining_qty < 0:\n        raise ValueError(\"volumes must be non-negative\")\n    if target_rate < 0:\n        raise ValueError(\"target_rate must be non-negative\")\n    return float(min(remaining_qty, target_rate * market_vol_interval))\n",
+    "faq": [
+      {
+        "question": "Is participation the same as POV?",
+        "answer": "POV (percent of volume) is the schedule that tries to keep participation near a target. Participation rate is the realised or target ratio itself. People use the two names for both the ratio and the algorithm; the formula on this page is the ratio, and the function is the child size that targets it."
+      },
+      {
+        "question": "What rate is reasonable?",
+        "answer": "There is no universal rate. Higher participation finishes sooner and usually moves the price more. The function does not choose ρ. It only converts a chosen rate and an observed volume into a child quantity."
+      }
+    ],
+    "related": [
+      "twap",
+      "vwap",
+      "almgren-chriss"
+    ],
+    "test": "\nassert pov_child_qty(1000, 0.1, 50) == 50\nassert pov_child_qty(100, 0.1, 50) == 10\nassert pov_child_qty(0, 0.2, 50) == 0\ntry:\n    pov_child_qty(-1, 0.1, 10)\n    raise SystemExit(\"negative volume should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "almgren-chriss",
+    "name": "Almgren-Chriss Optimal Execution Trajectory",
+    "short": "Almgren-Chriss",
+    "category": "Execution & Market Impact",
+    "summary": "A deterministic schedule that liquidates a position by a fixed horizon, trading off temporary market impact against the variance of the remaining inventory. This page uses the continuous-time trajectory with permanent impact set to zero.",
+    "definition": "Almgren and Chriss (2000) choose a trading path that finishes a position by time T. Trading faster pays more temporary impact and less price risk, because the inventory is held for less time. The risk aversion λ sets that tradeoff. With linear temporary impact, no permanent impact, and arithmetic Brownian motion, the inventory that remains at time t is a hyperbolic sine of the time left. The path is a plan computed from volatility, impact and risk aversion. It is not a guarantee of the cost, and it is not an order.",
+    "formula": "Inventory remaining (permanent impact taken as 0):\n\n  x(t) = X · sinh(κ (T − t)) / sinh(κ T)\n  κ = sqrt(λ σ² / η)\n\nX     initial position (signed)\nη     temporary-impact coefficient (cost ∝ η · speed² in the standard linear model)\nσ     absolute price volatility\nλ     risk aversion on inventory variance\nT     horizon\n\nAs λ → 0 (or σ → 0), κ → 0 and x(t) → X · (T − t) / T, a straight line.\nTrades are the decreases of x. x(0) = X and x(T) = 0.",
+    "sections": [
+      {
+        "heading": "What the shape means",
+        "html": "<ul>\n<li>Low risk aversion gives a near-linear liquidation: equal amounts of inventory per unit time, close to a <a href=\"/glossary/twap/\">TWAP</a> schedule in trade time.</li>\n<li>High risk aversion sells (or buys) more at the start, because holding the inventory is what the objective penalises. The temporary-impact bill is accepted in exchange for less variance.</li>\n<li>The cost the path is balancing is the same object as <a href=\"/glossary/implementation-shortfall/\">implementation shortfall</a>: impact paid now versus the risk of still being in the position later.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>This is the no-permanent-impact slice of the model.</strong> The 2000 paper also has a permanent impact coefficient. It shifts the expected cost but, in their framework, not the optimal trajectory. Do not quote this κ as the full model if you have estimated a permanent term and intend to use a different objective.</li>\n<li><strong>σ, η and λ have to share units.</strong> σ is absolute price volatility per unit time if the impact is in price, not in return. A return volatility plugged in beside a price impact produces a nonsense κ.</li>\n<li><strong>The path is open-loop.</strong> It does not react to volume, spread or a signal. A <a href=\"/glossary/participation-rate/\">participation</a> schedule does the opposite: it reacts to volume and does not promise a finish time.</li>\n<li><strong>Sinh overflows for large κT.</strong> The implementation uses a ratio of exponentials and switches to the straight line when κT is tiny.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef almgren_chriss_trajectory(X, T, n, sigma, eta, risk_aversion):\n    \"\"\"Inventory remaining on n equal steps from 0 to T, including both endpoints.\n\n    Permanent impact is taken as zero. risk_aversion = 0 (or sigma = 0) returns\n    the straight-line schedule. X may be signed.\n    \"\"\"\n    if T <= 0 or int(n) < 1:\n        raise ValueError(\"T must be positive and n at least 1\")\n    if eta <= 0 or sigma < 0 or risk_aversion < 0:\n        raise ValueError(\"eta must be positive; sigma and risk_aversion non-negative\")\n    t = np.linspace(0.0, float(T), int(n) + 1)\n    if risk_aversion == 0 or sigma == 0:\n        return X * (T - t) / T\n    kappa = np.sqrt(risk_aversion * sigma ** 2 / eta)\n    if kappa * T < 1e-8:\n        return X * (T - t) / T\n    # sinh(κ(T-t)) / sinh(κT) = exp(a-b) * (1 - exp(-2a)) / (1 - exp(-2b))\n    a = kappa * (T - t)\n    b = kappa * T\n    ratio = np.exp(a - b) * (1.0 - np.exp(-2.0 * a)) / (1.0 - np.exp(-2.0 * b))\n    return X * ratio\n",
+    "faq": [
+      {
+        "question": "Why is the zero-risk path a straight line?",
+        "answer": "With no penalty on inventory variance, the objective only punishes trading speed, and the cheapest way to finish by T with linear temporary impact is to trade at a constant speed. Any front-loading would pay more impact without a benefit the objective recognises."
+      },
+      {
+        "question": "Does the trajectory include permanent impact?",
+        "answer": "No. κ above uses temporary impact η only. In the original linear model, adding permanent impact changes expected cost and does not change this particular trajectory. If your impact model is not that one, do not reuse the path unchanged."
+      }
+    ],
+    "related": [
+      "implementation-shortfall",
+      "participation-rate",
+      "twap"
+    ],
+    "test": "\nimport numpy as np\nx = almgren_chriss_trajectory(1000, 1, 4, 0.02, 1e-6, 0.0)\nassert np.allclose(x, [1000, 750, 500, 250, 0])\nfast = almgren_chriss_trajectory(1000, 1, 4, 0.02, 1e-6, 1.0)  # kappa = 20\nassert abs(fast[0] - 1000) < 1e-6 and abs(fast[-1]) < 1e-6\nassert fast[1] < 250  # front-loaded versus the straight line\nassert np.all(np.diff(fast) < 0)\n# Selling a short (negative inventory) buys back toward zero.\ncover = almgren_chriss_trajectory(-1000, 1, 4, 0.02, 1e-6, 0.0)\nassert np.allclose(cover, [-1000, -750, -500, -250, 0])\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "kyles-lambda",
+    "name": "Kyle's Lambda",
+    "short": "Kyle's Lambda",
+    "category": "Market Microstructure & Order Flow",
+    "summary": "The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.",
+    "definition": "In Kyle's 1985 model, competitive market makers set price impact so that the price is the conditional expectation of value given the net order flow. The impact coefficient is lambda. Empirically, lambda is estimated as the OLS slope of a price change on signed volume over a chosen interval. The intercept absorbs drift. This page is that regression, not a maximum-likelihood estimate of the structural model.",
+    "formula": "ΔP_t = α + λ · SignedVolume_t + ε_t\n\nλ = Cov(ΔP, SignedVolume) / Var(SignedVolume)\n\nSignedVolume > 0 means net buying. The sign convention has to match ΔP:\na buy-driven uptick is positive volume with a positive price change.\nUnits of λ are price per unit of volume.",
+    "sections": [
+      {
+        "heading": "What the slope is used for",
+        "html": "<ul>\n<li>Comparing liquidity across names or across time: a higher λ is more impact per unit of signed volume. Scale volume before comparing a high-priced name with a low-priced one, or work in returns and turnover instead of raw price and shares.</li>\n<li>As a cost input. A parent order of signed size Q has an impact term on the order of λ·Q in this linear model, before temporary spread and fees. That is a sketch, not a cost forecast.</li>\n<li>Related tape measures: <a href=\"/glossary/vpin/\">VPIN</a> (volume imbalance), <a href=\"/glossary/ofi/\">OFI</a> (quote updates) and <a href=\"/glossary/amihud-illiquidity/\">Amihud</a> (daily |return| over value).</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Trade signs.</strong> A wrong aggressor flag flips the slope's sign. Quote-rule labels from an <a href=\"/code/polars-asof-join-quotes/\">as-of join</a> are an estimate of the sign, not the exchange flag.</li>\n<li><strong>Horizon.</strong> Lambda on one-second bins and lambda on daily bins are different parameters. Impact decays; a longer bin lets some of it come back and the slope falls.</li>\n<li><strong>Endogeneity.</strong> Signed volume and the price change are determined together. OLS is the reduced form people report. It is not, by itself, the structural Kyle lambda.</li>\n<li><strong>Zero flow variance.</strong> A window with no variation in signed volume has no slope. The function raises rather than returning a silent NaN from a degenerate fit.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef kyles_lambda(price_changes, signed_volume) -> float:\n    \"\"\"OLS slope of price changes on signed volume, with an intercept.\"\"\"\n    x = np.asarray(signed_volume, dtype=float)\n    y = np.asarray(price_changes, dtype=float)\n    if x.shape != y.shape or x.ndim != 1 or x.size < 2:\n        raise ValueError(\"need at least two aligned observations\")\n    xc = x - x.mean()\n    var = float(xc @ xc)\n    if var <= 0:\n        raise ValueError(\"signed volume has zero variance\")\n    yc = y - y.mean()\n    return float((xc @ yc) / var)\n",
+    "faq": [
+      {
+        "question": "Why include an intercept?",
+        "answer": "The price can drift over the sample for reasons other than the signed flow in the regression. Without an intercept, that drift is forced into the slope. OLS with an intercept is also what np.polyfit of degree 1 estimates."
+      },
+      {
+        "question": "Can lambda be negative?",
+        "answer": "In the model, no: informed buying pushes the price up. In a sample, yes, if the signs are noisy or the window is short. A negative estimate is a warning about the regression, not a negative liquidity."
+      }
+    ],
+    "related": [
+      "vpin",
+      "ofi",
+      "amihud-illiquidity",
+      "polars-asof-join-quotes"
+    ],
+    "test": "\nimport numpy as np\nx = np.array([1.0, 2.0, 3.0, 4.0])\ny = 0.5 + 0.2 * x\nassert abs(kyles_lambda(y, x) - 0.2) < 1e-12\nassert abs(kyles_lambda(y, x) - np.polyfit(x, y, 1)[0]) < 1e-12\ntry:\n    kyles_lambda([1.0, 2.0], [5.0, 5.0])\n    raise SystemExit(\"flat flow should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "pin-informed-trading",
+    "name": "Probability of Informed Trading (PIN)",
+    "short": "PIN",
+    "category": "Market Microstructure & Order Flow",
+    "summary": "The share of trading that the Easley-Kiefer-O'Hara-Paperman model attributes to informed traders, given the chance of an information event and the arrival rates of informed and uninformed orders.",
+    "definition": "PIN is the model's probability that the next trade comes from an informed trader. An information event occurs with probability α. If it does, informed orders arrive at rate μ, on the buy side or the sell side according to the news. Uninformed buys and sells arrive at rates ε_b and ε_s whether or not there was news. PIN is the expected informed arrival divided by the expected total arrival. Estimating α, μ and the epsilons is a separate maximum-likelihood problem on daily buy and sell counts. This page evaluates the formula once those parameters are in hand. It does not fit them.",
+    "formula": "PIN = α μ / (α μ + ε_b + ε_s)\n\nα   probability of an information event, in [0, 1]\nμ   arrival rate of informed traders when there is news\nε_b, ε_s  arrival rates of uninformed buyers and sellers\n\nThe denominator is the expected rate of all trades.\nPIN is between 0 and 1 when the inputs are valid.",
+    "sections": [
+      {
+        "heading": "What you do with the parameters",
+        "html": "<ul>\n<li>Once a fit exists, PIN summarises it in one number. Comparing PIN across names is comparing those fits, so the count data, the day length and the optimiser have to be the same kind of exercise.</li>\n<li>The high-frequency imbalance that is often used in place of a daily fit is <a href=\"/glossary/vpin/\">VPIN</a>. It does not estimate α and μ.</li>\n<li>A price-impact slope is a different object again: <a href=\"/glossary/kyles-lambda/\">Kyle's lambda</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The formula is not the estimator.</strong> The likelihood is a mixture of Poissons and it has well known local maxima, including the buy-sell symmetry of the original model. A closed form for PIN does not remove that. This function will happily turn a bad fit into a precise-looking ratio.</li>\n<li><strong>Buys and sells must be classified first.</strong> The classic papers use a trade-classification algorithm. Different signs, different PIN.</li>\n<li><strong>Zero total intensity.</strong> If every rate is zero the ratio is undefined. The function raises.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "def pin(alpha, mu, eps_b, eps_s) -> float:\n    \"\"\"PIN = alpha*mu / (alpha*mu + eps_b + eps_s). Evaluates parameters; does not estimate them.\"\"\"\n    alpha, mu, eps_b, eps_s = float(alpha), float(mu), float(eps_b), float(eps_s)\n    if not 0.0 <= alpha <= 1.0:\n        raise ValueError(\"alpha must be in [0, 1]\")\n    if mu < 0 or eps_b < 0 or eps_s < 0:\n        raise ValueError(\"arrival rates must be non-negative\")\n    informed = alpha * mu\n    total = informed + eps_b + eps_s\n    if total <= 0:\n        raise ValueError(\"total arrival rate must be positive\")\n    return informed / total\n",
+    "faq": [
+      {
+        "question": "Why doesn't this page estimate PIN?",
+        "answer": "The estimate is a constrained maximum-likelihood fit of a Poisson mixture, and the likelihood is not concave. A short optimiser pasted into a glossary page would look authoritative and land in local maxima. The page publishes the map from parameters to PIN, which is the part with a closed form."
+      },
+      {
+        "question": "What does a PIN of 0.2 mean?",
+        "answer": "Inside the model, one trade in five is from an informed trader, at the estimated arrival rates. Outside the model it is only as meaningful as the fit. It is not a probability you can read off the tape without estimating the parameters."
+      }
+    ],
+    "related": [
+      "vpin",
+      "kyles-lambda",
+      "ofi"
+    ],
+    "test": "\nassert abs(pin(0.4, 50, 20, 30) - 20 / 70) < 1e-15\nassert pin(0, 100, 10, 10) == 0\nassert abs(pin(1, 5, 0, 0) - 1) < 1e-15\ntry:\n    pin(1.2, 1, 1, 1)\n    raise SystemExit(\"alpha above 1 should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "sharpe-ratio",
+    "name": "Sharpe Ratio",
+    "short": "Sharpe Ratio",
+    "category": "Performance & Risk Metrics",
+    "summary": "Mean excess return divided by the standard deviation of excess return, annualised by the square root of the number of periods per year. The same definition as the performance calculator on this site.",
+    "definition": "The Sharpe ratio asks how much excess return a series delivered per unit of volatility. Excess is the periodic return minus a periodic risk-free rate. The rate used here is an annual rate converted by compound interest, (1 + r_f)^(1/P) − 1, not a simple r_f/P. Volatility is the sample standard deviation (divide by n − 1). Annualisation multiplies by sqrt(P). A higher number means more excess return per unit of variability in that sample. It is not a forecast and it is not a certificate of skill.",
+    "formula": "r_f,period = (1 + r_f,annual) ^ (1/P) − 1\nexcess_t   = R_t − r_f,period\n\nSharpe = mean(excess) / std(excess, ddof=1) · sqrt(P)\n\nP = 252 by default, 242 for China A-shares, 365 for a crypto-style calendar.\nstd = 0 → the ratio is undefined (returned as NaN).",
+    "sections": [
+      {
+        "heading": "Conventions that change the number",
+        "html": "<ul>\n<li>The <a href=\"/tools/performance-analytics/\">performance calculator</a> uses this compounding convention, sample standard deviation, and the same sqrt(P) annualisation. The glossary function is written to match it.</li>\n<li>Some published Sharpes subtract r_f/P, or divide by the population standard deviation, or leave the ratio un-annualised. Those are different statistics. Quote P and the risk-free treatment next to the number.</li>\n<li>Downside-only volatility is the <a href=\"/glossary/sortino-ratio/\">Sortino ratio</a>. Active return over tracking error is the <a href=\"/glossary/information-ratio/\">information ratio</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>It is a sample moment.</strong> A short window, or a window that happens to contain one regime, moves the ratio a lot. It does not carry a promise about the next window.</li>\n<li><strong>Volatility is not the risk you may care about.</strong> Two series with the same Sharpe can have very different <a href=\"/glossary/max-drawdown/\">drawdowns</a> and tail losses. See also <a href=\"/glossary/var-expected-shortfall/\">VaR and expected shortfall</a>.</li>\n<li><strong>Illiquid and smoothed returns look better.</strong> A series that only updates occasionally understates standard deviation and overstates Sharpe. The same is true of a backtest that ignores costs.</li>\n<li><strong>Annualising assumes i.i.d. periods.</strong> Strong autocorrelation makes sqrt(P) the wrong scaling. The function still multiplies by sqrt(P); the assumption is yours to check.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef sharpe_ratio(returns, rf_annual=0.0, periods=252) -> float:\n    \"\"\"Annualised Sharpe ratio.\n\n    rf_annual is compounded to a per-period rate: (1 + rf_annual) ** (1/periods) - 1.\n    Volatility is the sample standard deviation of excess returns. Zero volatility\n    returns NaN. This matches /tools/performance-analytics/.\n    \"\"\"\n    r = np.asarray(returns, dtype=float)\n    r = r[np.isfinite(r)]\n    if r.size < 2:\n        raise ValueError(\"need at least two finite returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    rf = (1.0 + rf_annual) ** (1.0 / periods) - 1.0\n    excess = r - rf\n    sd = float(excess.std(ddof=1))\n    if sd == 0.0:\n        return float(\"nan\")\n    return float(excess.mean() / sd * np.sqrt(periods))\n",
+    "faq": [
+      {
+        "question": "Why compound the risk-free rate instead of dividing by 252?",
+        "answer": "An annual rate of 2 percent is not 2/252 per day under compound interest. The per-period rate that compounds back to 2 percent is (1.02)^(1/252) − 1, which is slightly less than 2/252. The difference is small at low rates and is the convention the performance calculator on this site uses."
+      },
+      {
+        "question": "Is a Sharpe ratio of 1 good?",
+        "answer": "It means the sample's mean excess return equalled its annualised volatility. Whether that is attractive depends on the sample, the costs that were left out, and the drawdowns. The ratio is not a threshold for taking a position."
+      }
+    ],
+    "related": [
+      "sortino-ratio",
+      "information-ratio",
+      "max-drawdown",
+      "var-expected-shortfall"
+    ],
+    "test": "\nimport numpy as np\nr = np.array([0.01, 0.03])\nassert abs(sharpe_ratio(r) - 0.02 / np.sqrt(0.0002) * np.sqrt(252)) < 1e-12\nrf = (1.02) ** (1 / 252) - 1\nex = r - rf\nassert abs(sharpe_ratio(r, rf_annual=0.02) - ex.mean() / ex.std(ddof=1) * np.sqrt(252)) < 1e-12\nassert np.isnan(sharpe_ratio([0.01, 0.01]))\nassert sharpe_ratio([0.0, 0.0]) != sharpe_ratio([0.0, 0.0]) or np.isnan(sharpe_ratio([0.0, 0.0]))\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "sortino-ratio",
+    "name": "Sortino Ratio",
+    "short": "Sortino Ratio",
+    "category": "Performance & Risk Metrics",
+    "summary": "Mean return above a minimum acceptable return, divided by downside deviation and annualised. Upside variation does not enter the denominator.",
+    "definition": "The Sortino ratio replaces the Sharpe denominator with downside deviation: the root-mean-square of returns that fall short of a target, with shortfalls of zero on periods that meet the target still included in the average. The target used here is an annual minimum acceptable return, converted to a per-period rate the same way the risk-free rate is converted for the Sharpe ratio. The result is annualised by sqrt(P). It penalises missing the target. It does not penalise beating it.",
+    "formula": "MAR_period = (1 + MAR_annual) ^ (1/P) − 1\nd_t = min(R_t − MAR_period, 0)\nDD  = sqrt( mean(d_t²) )                 average over every period, not only the negative ones\n\nSortino = (mean(R) − MAR_period) / DD · sqrt(P)\n\nDD = 0 → undefined (NaN). Using only the negative periods in the mean would be a different statistic.",
+    "sections": [
+      {
+        "heading": "Why the denominator ignores upside",
+        "html": "<ul>\n<li>Two strategies can share a volatility and a <a href=\"/glossary/sharpe-ratio/\">Sharpe ratio</a> while one of them makes its volatility on the upside. Sortino treats those as different.</li>\n<li>The target is not automatically the risk-free rate. It is whatever minimum acceptable return you pass in. Zero means \"negative periodic returns count against the strategy\".</li>\n<li>The <a href=\"/tools/performance-analytics/\">performance calculator</a> uses this downside definition (root-mean-square over all periods) and the same annualisation.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>A sample with no down period is undefined, not infinite.</strong> The function returns NaN. Reporting a huge Sortino from a handful of up days is a presentation choice the code refuses.</li>\n<li><strong>The mean in the square root is over n, not n − 1.</strong> That matches the calculator. Mixing it with a sample-standard-deviation downside changes the number.</li>\n<li><strong>It still does not see path.</strong> A slow grind below the target and a crash with the same squared shortfalls can share a Sortino. Look at <a href=\"/glossary/max-drawdown/\">maximum drawdown</a> as well.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef sortino_ratio(returns, mar_annual=0.0, periods=252) -> float:\n    \"\"\"Annualised Sortino ratio.\n\n    Downside deviation is the root-mean-square of min(r - MAR, 0) over all\n    periods. MAR is an annual rate, compounded to a per-period rate.\n    No downside variation returns NaN. Matches /tools/performance-analytics/.\n    \"\"\"\n    r = np.asarray(returns, dtype=float)\n    r = r[np.isfinite(r)]\n    if r.size < 2:\n        raise ValueError(\"need at least two finite returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    mar = (1.0 + mar_annual) ** (1.0 / periods) - 1.0\n    downside = float(np.sqrt(np.mean(np.minimum(r - mar, 0.0) ** 2)))\n    if downside == 0.0:\n        return float(\"nan\")\n    return float((r.mean() - mar) / downside * np.sqrt(periods))\n",
+    "faq": [
+      {
+        "question": "Why average the squared shortfalls over periods that were not shortfalls?",
+        "answer": "Those periods contribute a zero, so they dilute the root-mean-square. Dropping them would divide by the number of bad periods only and would make a rare crash look like a small downside. The version that keeps the zeros is the one the performance calculator uses."
+      },
+      {
+        "question": "Should the target be the risk-free rate?",
+        "answer": "Only if that is the return you have decided is the minimum you care about. The parameter is a minimum acceptable return, not a funding rate. Leaving it at zero scores any negative periodic return as downside."
+      }
+    ],
+    "related": [
+      "sharpe-ratio",
+      "max-drawdown",
+      "calmar-ratio"
+    ],
+    "test": "\nimport numpy as np\nr = np.array([0.02, -0.01, 0.0])\ndd = np.sqrt(np.mean(np.minimum(r, 0.0) ** 2))\nassert abs(sortino_ratio(r) - (r.mean() / dd * np.sqrt(252))) < 1e-12\nassert np.isnan(sortino_ratio([0.01, 0.02]))\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "information-ratio",
+    "name": "Information Ratio",
+    "short": "Information Ratio",
+    "category": "Performance & Risk Metrics",
+    "summary": "Mean active return versus a benchmark, divided by the tracking error of that active return, and annualised. It scores how large and how steady the gap versus the benchmark was.",
+    "definition": "Active return is the portfolio's periodic return minus the benchmark's periodic return over the same periods. The information ratio is the mean of that difference divided by its sample standard deviation, multiplied by sqrt(P). It is the Sharpe ratio of the active returns, with the benchmark playing the role of the risk-free asset and no extra cash rate. A positive ratio means the portfolio's sample average was above the benchmark. It does not say the average will stay there.",
+    "formula": "a_t = R_port,t − R_bench,t\nIR  = mean(a) / std(a, ddof=1) · sqrt(P)\n\nTracking error is the denominator before dividing into the mean: TE = std(a) · sqrt(P).\nIR = mean(a) · sqrt(P) / TE, with TE in annualised units.\nstd(a) = 0 → NaN (the portfolio matched the benchmark exactly in-sample).",
+    "sections": [
+      {
+        "heading": "Relation to other ratios",
+        "html": "<ul>\n<li><a href=\"/glossary/tracking-error/\">Tracking error</a> is the annualised standard deviation alone. The information ratio puts the mean active return on top of it.</li>\n<li>The <a href=\"/glossary/information-coefficient/\">information coefficient</a> is a cross-sectional correlation between a signal and later returns, not this time-series ratio. Grinold's approximation IR ≈ IC · sqrt(breadth) is a model that links them, not an identity in the data.</li>\n<li>A <a href=\"/glossary/sharpe-ratio/\">Sharpe ratio</a> uses excess return over cash. An information ratio uses excess return over the benchmark you were hired to beat, or chose to compare with.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The benchmark has to be the one that was investable on that timing.</strong> Comparing a close-to-close portfolio with a benchmark that includes a return the portfolio could not have earned inflates the ratio.</li>\n<li><strong>Alignment.</strong> Missing dates, dividends in one series only, or a different currency, all land in the active return. The function subtracts the two arrays as given.</li>\n<li><strong>A high IR on a tiny active risk</strong> can be a few basis points of average difference and a tracking error that is mostly noise. Report the tracking error beside the ratio.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef information_ratio(port, bench, periods=252) -> float:\n    \"\"\"Annualised information ratio of port minus bench.\n\n    Sample standard deviation. Identical series return NaN.\n    \"\"\"\n    active = np.asarray(port, dtype=float) - np.asarray(bench, dtype=float)\n    if active.ndim != 1 or active.size < 2 or not np.all(np.isfinite(active)):\n        raise ValueError(\"need at least two finite paired returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    sd = float(active.std(ddof=1))\n    if sd == 0.0:\n        return float(\"nan\")\n    return float(active.mean() / sd * np.sqrt(periods))\n",
+    "faq": [
+      {
+        "question": "How is this different from the information coefficient?",
+        "answer": "The information coefficient correlates a cross-section of forecasts with a cross-section of outcomes on one date. The information ratio divides a time series of active returns by their standard deviation. Similar names, different objects."
+      },
+      {
+        "question": "Should the active return include fees?",
+        "answer": "If the question is what the investor kept versus the benchmark, yes. If the question is whether the holdings differed from the benchmark before costs, no. The function uses the two return series you pass in, so the choice of fees happens before the call."
+      }
+    ],
+    "related": [
+      "tracking-error",
+      "sharpe-ratio",
+      "information-coefficient",
+      "beta"
+    ],
+    "test": "\nimport numpy as np\nport = np.array([0.02, 0.00, 0.01, -0.01])\nbench = np.array([0.01, 0.01, 0.00, -0.02])\na = port - bench\nassert abs(information_ratio(port, bench) - a.mean() / a.std(ddof=1) * np.sqrt(252)) < 1e-12\nassert np.isnan(information_ratio(bench, bench))\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "tracking-error",
+    "name": "Tracking Error",
+    "short": "Tracking Error",
+    "category": "Performance & Risk Metrics",
+    "summary": "The annualised sample standard deviation of portfolio return minus benchmark return. It measures how far the two series wandered from each other, not whether one ended ahead.",
+    "definition": "Tracking error is the volatility of active returns. A portfolio that beats its benchmark by exactly one basis point every period has a positive average active return and a tracking error of zero. A portfolio that oscillates around the benchmark has tracking error and, possibly, a zero average. The implementation is the sample standard deviation of the paired difference, times sqrt(P).",
+    "formula": "a_t = R_port,t − R_bench,t\nTE  = std(a, ddof=1) · sqrt(P)\n\nP defaults to 252. Reported as a decimal (0.02 means 2 percent annualised), not in basis points.\nThe information ratio is mean(a) / std(a) · sqrt(P), so IR = annualised mean active return / TE.",
+    "sections": [
+      {
+        "heading": "Where it shows up",
+        "html": "<ul>\n<li>Index tracking and closet indexing. A mandate that says \"stay within 2 percent tracking error\" is a constraint on this number, usually estimated on an ex-ante covariance as well as measured ex post. This function is the ex-post measurement.</li>\n<li>Next to the <a href=\"/glossary/information-ratio/\">information ratio</a>, which is undefined when tracking error is zero.</li>\n<li><a href=\"/glossary/beta/\">Beta</a> is a different summary of the same pair of series: a slope, not the volatility of the residual gap. Two portfolios can share a beta and have very different tracking errors.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Ex post is not ex ante.</strong> The standard deviation of realised active returns is not the tracking error a covariance model would predict for the current holdings.</li>\n<li><strong>Annualisation.</strong> Multiplying a daily active-return standard deviation by sqrt(252) assumes uncorrelated active returns. A persistent active bet (a permanent sector tilt) has a tracking error that does not scale that way if you change the sampling interval without care. Be consistent about P.</li>\n<li><strong>Levels versus returns.</strong> Tracking error is defined on returns. A price spread between an ETF and its basket is a different measurement.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef tracking_error(port, bench, periods=252) -> float:\n    \"\"\"Annualised sample standard deviation of port minus bench.\"\"\"\n    active = np.asarray(port, dtype=float) - np.asarray(bench, dtype=float)\n    if active.ndim != 1 or active.size < 2 or not np.all(np.isfinite(active)):\n        raise ValueError(\"need at least two finite paired returns\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    return float(active.std(ddof=1) * np.sqrt(periods))\n",
+    "faq": [
+      {
+        "question": "Can tracking error be zero while the portfolio differs from the benchmark?",
+        "answer": "Yes, if the difference in returns is constant. Standard deviation does not see the mean. A constant lag of one basis point per day is a large cumulative gap and a zero tracking error."
+      },
+      {
+        "question": "Is tracking error the same as active risk?",
+        "answer": "In mandate language, active risk usually means this volatility of active returns, sometimes the ex-ante forecast of it. Quote whether the number is realised or predicted. This function is realised."
+      }
+    ],
+    "related": [
+      "information-ratio",
+      "beta",
+      "sharpe-ratio"
+    ],
+    "test": "\nimport numpy as np\nport = np.array([0.02, 0.00, 0.01])\nbench = np.array([0.01, 0.01, 0.00])\na = port - bench\nassert abs(tracking_error(port, bench) - a.std(ddof=1) * np.sqrt(252)) < 1e-12\nassert tracking_error([0.25, 0.5, 0.75], [0.0, 0.25, 0.5]) == 0.0\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "max-drawdown",
+    "name": "Maximum Drawdown",
+    "short": "Max Drawdown",
+    "category": "Performance & Risk Metrics",
+    "summary": "The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.",
+    "definition": "Drawdown at each point is the equity divided by the highest equity seen so far, minus one. The maximum drawdown is the smallest of those numbers (the deepest loss from a peak). It is path dependent: the order of returns matters, not only their mean and variance. The function expects a positive equity curve, not a return series.",
+    "formula": "DD_t = E_t / max_{s ≤ t} E_s − 1\nMDD  = min_t DD_t\n\nMDD ≤ 0. MDD = 0 means the equity curve never fell below a peak it had already set.\nRecovery and the length of the drawdown are not part of this number.",
+    "sections": [
+      {
+        "heading": "Using it next to a return ratio",
+        "html": "<ul>\n<li>Sharpe and Sortino compress the path into moments. Maximum drawdown keeps one fact about the path: the worst decline from a high-water mark. Report both.</li>\n<li>The <a href=\"/tools/performance-analytics/\">performance calculator</a> uses this definition and also reports how long the longest drawdown lasted. Duration is not in the function on this page.</li>\n<li><a href=\"/glossary/calmar-ratio/\">Calmar</a> divides annualised growth by the absolute value of this number.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Sign.</strong> The function returns a non-positive fraction. Taking abs is the caller's job when a report wants \"25 percent drawdown\" as a positive phrase. Calmar does that internally.</li>\n<li><strong>Equity, not returns.</strong> Passing returns produces a meaningless ratio of small numbers. Compound the returns to equity first. The first point is a peak by definition, so a curve that falls immediately draws down from the starting level.</li>\n<li><strong>Sample length.</strong> A longer window can only make the maximum worse or leave it unchanged, if it contains the shorter window. Comparing a one-year MDD with a ten-year MDD as if they were the same statistic favours the short window.</li>\n<li><strong>Mark-to-market frequency.</strong> Daily equity and monthly equity do not share a maximum drawdown. Intra-month peaks are invisible on a monthly curve.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef max_drawdown(equity) -> float:\n    \"\"\"Most negative peak-to-trough decline of a positive equity curve.\n\n    Returns a fraction in [-1, 0]. A 25% decline is -0.25.\n    \"\"\"\n    equity = np.asarray(equity, dtype=float)\n    if equity.size == 0 or not np.all(np.isfinite(equity)) or np.any(equity <= 0):\n        raise ValueError(\"equity must be non-empty, finite and positive\")\n    peak = np.maximum.accumulate(equity)\n    return float((equity / peak - 1.0).min())\n",
+    "faq": [
+      {
+        "question": "Does the maximum drawdown say when it happened?",
+        "answer": "No. It is a single fraction. The performance calculator on this site also reports the peak and trough dates and the longest time spent below a peak. Those need the whole drawdown path, not only its minimum."
+      },
+      {
+        "question": "What if the curve ends at its low?",
+        "answer": "The unrecovered decline is included. Maximum drawdown does not require the equity to have made a new high afterwards. A strategy that fell 40 percent and never recovered has a maximum drawdown of at least 40 percent."
+      }
+    ],
+    "related": [
+      "calmar-ratio",
+      "sharpe-ratio",
+      "var-expected-shortfall"
+    ],
+    "test": "\nimport numpy as np\nassert abs(max_drawdown([100, 120, 90, 130]) - (90 / 120 - 1)) < 1e-15\nassert max_drawdown([100, 101, 102]) == 0.0\ntry:\n    max_drawdown([100, 0, 110])\n    raise SystemExit(\"non-positive equity should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "calmar-ratio",
+    "name": "Calmar Ratio",
+    "short": "Calmar Ratio",
+    "category": "Performance & Risk Metrics",
+    "summary": "Compound annual growth of an equity curve divided by the absolute value of its maximum drawdown. This implementation uses the whole sample, not a trailing 36-month window.",
+    "definition": "Calmar divides a growth rate by the worst peak-to-trough loss over the window you care about. Here the growth rate is the compound annual growth that takes the first equity point to the last, using P periods per year, and the loss is the maximum drawdown of the same points. A curve that never falls has an undefined Calmar, returned as NaN, rather than an infinite one. The original published ratio used a trailing three-year window. Using the whole sample is what the performance calculator on this site does, and it will not match a 36-month Calmar when the sample is a different length.",
+    "formula": "n = number of returns = (number of equity points) − 1\nCAGR = (E_last / E_first) ^ (P / n) − 1\nMDD  = min_t (E_t / max_{s≤t} E_s − 1)          MDD ≤ 0\n\nCalmar = CAGR / |MDD|     if MDD < 0, else undefined\n\nP defaults to 252. The same equity series should be used for the numerator and the denominator.",
+    "sections": [
+      {
+        "heading": "Reading it",
+        "html": "<ul>\n<li>A Calmar of 0.5 means the compound annual growth was half the size of the worst decline, on this sample and this annualisation. It is not a forecast of either input.</li>\n<li>The pieces are on their own pages: growth uses the same exponent as the <a href=\"/tools/performance-analytics/\">performance calculator</a>, and the denominator is <a href=\"/glossary/max-drawdown/\">maximum drawdown</a>.</li>\n<li>Sharpe uses a typical deviation. Calmar uses a single worst episode. One deep drawdown dominates it, which is the point of the ratio and also its instability.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Window.</strong> Young (1991) described a three-year lookback. A ten-year Calmar and a three-year Calmar of the same fund are different statistics. This function uses every point you pass.</li>\n<li><strong>Start and end dates are part of the answer.</strong> CAGR depends on the first and last equity. MDD depends on the path between them. Dropping a crash from the sample changes the denominator; ending on a peak changes the numerator.</li>\n<li><strong>Frequency.</strong> P has to match the spacing of the equity points. Passing daily equity with P = 12 treats a year of days as twelve periods.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef calmar_ratio(equity, periods=252) -> float:\n    \"\"\"CAGR / |maximum drawdown| over the whole sample.\n\n    CAGR uses (E_last / E_first) ** (periods / n_returns) - 1.\n    A curve with no drawdown returns NaN. Matches the full-sample convention\n    of /tools/performance-analytics/, not a trailing 36-month window.\n    \"\"\"\n    equity = np.asarray(equity, dtype=float)\n    if equity.size < 2 or not np.all(np.isfinite(equity)) or np.any(equity <= 0):\n        raise ValueError(\"need at least two positive finite equity points\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    n = equity.size - 1\n    cagr = (equity[-1] / equity[0]) ** (periods / n) - 1.0\n    mdd = float((equity / np.maximum.accumulate(equity) - 1.0).min())\n    if mdd == 0.0:\n        return float(\"nan\")\n    return float(cagr / abs(mdd))\n",
+    "faq": [
+      {
+        "question": "Why not use a 36-month window?",
+        "answer": "The original Calmar ratio did. This site's performance calculator divides full-sample CAGR by full-sample maximum drawdown, and the glossary function matches that so the two do not disagree. For a 36-month figure, pass only those points."
+      },
+      {
+        "question": "What does NaN mean here?",
+        "answer": "The equity curve made no new low relative to a peak, so the denominator would be zero. That includes a curve that only rises. It is not an infinite reward-to-risk ratio."
+      }
+    ],
+    "related": [
+      "max-drawdown",
+      "sharpe-ratio",
+      "sortino-ratio"
+    ],
+    "test": "\nimport numpy as np\neq = np.array([4.0, 2.0, 8.0])\n# periods=2: CAGR = 8/4 - 1 = 1, |MDD| = 0.5, Calmar = 2\nassert abs(calmar_ratio(eq, periods=2) - 2.0) < 1e-12\nassert np.isnan(calmar_ratio([100.0, 110.0, 120.0]))\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "kelly-criterion",
+    "name": "Kelly Criterion",
+    "short": "Kelly Criterion",
+    "category": "Position Sizing",
+    "summary": "The bet size that maximises expected logarithmic growth. For a binary bet it is an exact fraction of wealth. For a continuous return it is approximately mean over variance. It is a sizing formula, not advice to use it.",
+    "definition": "A log-utility investor who can repeat the same bet wants the fraction of wealth that maximises the expected log of wealth after the bet. For a binary outcome that pays net odds b with probability p, that fraction is p − (1 − p) / b. For a continuous excess return with mean μ and variance σ², the corresponding unconstrained fraction is approximately μ / σ² when the higher moments are ignored. Estimated μ and σ² are noisy, and the full fraction is aggressive when the estimate is wrong, so practitioners who use the idea often scale it down. Nothing on this page says that an investor should.",
+    "formula": "Binary bet, win probability p, net odds b (win b for each 1 staked):\n  f* = p − (1 − p) / b = (b p − (1 − p)) / b\n\nContinuous approximation, excess mean μ and variance σ² over the same horizon:\n  f* ≈ μ / σ²\n\nf* < 0 means the edge is negative: the formula says stake nothing on that side.\nf* > 1 means the approximation wants leverage. The binary formula assumes you cannot stake more than wealth if you cap it; this function does not cap.",
+    "sections": [
+      {
+        "heading": "What the two formulas assume",
+        "html": "<ul>\n<li>The binary formula is exact for one repeated i.i.d. bet with known p and b, and for an objective that only cares about expected log wealth. Change the objective and the fraction changes.</li>\n<li>The continuous formula is a small-bet or diffusion approximation. It ignores skew and the chance of a loss large enough to make the log argument non-positive. A return distribution with a fat left tail is exactly where that matters.</li>\n<li>Volatility in the denominator is the same object as in the <a href=\"/glossary/sharpe-ratio/\">Sharpe ratio</a>, but the Kelly fraction is not a Sharpe ratio. Sharpe divides by standard deviation and annualises. Kelly divides by variance and is a weight.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The inputs are estimates.</strong> Full Kelly computed from a sample mean is famous for suggesting large weights that were an artefact of the sample. A fraction of the estimate (half Kelly, quarter Kelly) is a common ad-hoc shrink. This code does not apply one.</li>\n<li><strong>No drawdown constraint.</strong> Log growth can coexist with deep <a href=\"/glossary/max-drawdown/\">drawdowns</a>. The formula does not know your limit.</li>\n<li><strong>Odds b are net odds.</strong> Even money is b = 1, not 2. Passing the decimal payout instead of the net profit doubles-counts the stake and shrinks f*.</li>\n<li><strong>Not a recommendation.</strong> The function returns a number from an objective. It does not say the bet is worth making.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "def kelly_fraction(p, b) -> float:\n    \"\"\"Fraction of wealth for a binary bet. p = win probability, b = net odds.\n\n    f* = p - (1 - p) / b. Does not cap at 0 or 1. Not a recommendation to bet.\n    \"\"\"\n    p, b = float(p), float(b)\n    if not 0.0 <= p <= 1.0:\n        raise ValueError(\"p must be in [0, 1]\")\n    if b <= 0:\n        raise ValueError(\"b, the net odds, must be positive\")\n    return p - (1.0 - p) / b\n\ndef kelly_continuous(mu, variance) -> float:\n    \"\"\"Approximate Kelly fraction mu / variance for a continuous excess return.\n\n    Ignores higher moments. Not a position-sizing recommendation.\n    \"\"\"\n    mu, variance = float(mu), float(variance)\n    if variance <= 0:\n        raise ValueError(\"variance must be positive\")\n    return mu / variance\n",
+    "faq": [
+      {
+        "question": "Why do people use half Kelly?",
+        "answer": "Because p, b, μ and σ² plugged into the formula are estimates, and the expected log growth falls off slowly just below the optimum and steeply above it. Betting less than the estimated full fraction gives up a little growth on the estimated edge and hurts less when the edge was overstated. Half is a convention, not a theorem, and this page does not apply it."
+      },
+      {
+        "question": "What does a negative fraction mean?",
+        "answer": "For the binary bet, the probability and the odds do not compensate each other: expected log wealth is higher at a stake of zero than at a long stake. It is not an instruction to take the other side unless that side is a bet you can actually price with its own p and b."
+      }
+    ],
+    "related": [
+      "sharpe-ratio",
+      "max-drawdown"
+    ],
+    "test": "\nassert abs(kelly_fraction(0.6, 1.0) - 0.2) < 1e-15\nassert kelly_fraction(0.4, 1.0) < 0\nassert abs(kelly_continuous(0.01, 0.04) - 0.25) < 1e-15\ntry:\n    kelly_fraction(0.6, 0)\n    raise SystemExit(\"zero odds should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "beta",
+    "name": "Beta",
+    "short": "Beta",
+    "category": "Portfolio & Factor Models",
+    "summary": "The OLS slope of an asset's returns on a market's returns: covariance divided by the market's variance. It is the CAPM coefficient on the sample you pass in, not a forecast.",
+    "definition": "Beta measures how much an asset's return tended to move with the market return in a sample. It is Cov(R_i, R_m) / Var(R_m), which is also the slope of a regression of the asset on the market with an intercept. A beta of 1 means the asset moved one-for-one with the market on average, after the intercept absorbed the mean difference. It says nothing, by itself, about residual risk or about whether the sample will repeat.",
+    "formula": "β = Cov(R_i, R_m) / Var(R_m)\n\nSample covariance and variance, ddof = 1 (the OLS slope).\nThe intercept α = mean(R_i) − β · mean(R_m) is not returned.\nVar(R_m) = 0 → undefined; the function raises.\n\nCAPM uses a beta against the market excess return. This function uses the two series you pass. If they are excess returns, β is the CAPM slope; if they are raw returns, it is a raw-return slope.",
+    "sections": [
+      {
+        "heading": "What it is not",
+        "html": "<ul>\n<li>It is not correlation. Correlation divides by both standard deviations and lies in [−1, 1]. Beta is in the units of \"asset return per unit of market return\" and can sit far outside that interval.</li>\n<li>It is not <a href=\"/glossary/tracking-error/\">tracking error</a>. Tracking error is the volatility of the gap. Beta is the slope. An index fund should have a beta near 1 and a small tracking error; a leveraged index fund can have a beta near 2 and still a small residual.</li>\n<li>It is not the <a href=\"/glossary/sharpe-ratio/\">Sharpe ratio</a>. Sharpe has no benchmark series other than cash.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Unstable in short samples.</strong> A 60-day beta and a five-year beta of the same name often disagree. The function does not shrink toward 1. If you want a shrunk beta, do it after the call and say so.</li>\n<li><strong>The market series is the definition of the beta.</strong> A national equity index, a futures excess return and a global market portfolio produce three different numbers. The symbol β does not record which one you used.</li>\n<li><strong>Changing composition.</strong> Beta of a portfolio computed from the portfolio's past returns describes the portfolio as it was, including positions it no longer holds.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef beta(asset, market) -> float:\n    \"\"\"OLS slope Cov(asset, market) / Var(market), sample moments (ddof=1).\"\"\"\n    a = np.asarray(asset, dtype=float)\n    m = np.asarray(market, dtype=float)\n    if a.shape != m.shape or a.ndim != 1 or a.size < 2:\n        raise ValueError(\"need at least two aligned returns\")\n    if not np.all(np.isfinite(a)) or not np.all(np.isfinite(m)):\n        raise ValueError(\"returns must be finite\")\n    var_m = float(np.var(m, ddof=1))\n    if var_m <= 0:\n        raise ValueError(\"market variance is zero\")\n    cov = float(np.cov(a, m, ddof=1)[0, 1])\n    return cov / var_m\n",
+    "faq": [
+      {
+        "question": "Does beta include an intercept?",
+        "answer": "The slope from Cov/Var is exactly the OLS slope when an intercept is allowed. The intercept is the average return not explained by the market in that sample. This function returns only the slope."
+      },
+      {
+        "question": "Why did I get a beta far from my broker's beta?",
+        "answer": "The window, the frequency, the market series and whether returns are excess or raw all change the slope. Two betas are comparable when those choices match. This function documents none of them except the arithmetic, which is sample covariance over sample variance."
+      }
+    ],
+    "related": [
+      "tracking-error",
+      "information-ratio",
+      "sharpe-ratio"
+    ],
+    "test": "\nimport numpy as np\nrng = np.random.default_rng(7)\nm = rng.normal(0, 0.01, 500)\na = 0.002 + 1.5 * m + rng.normal(0, 0.001, 500)\nassert abs(beta(a, m) - 1.5) < 0.05\nexact = np.array([0.01, -0.02, 0.015, 0.005])\nassert abs(beta(1.5 * exact + 0.001, exact) - 1.5) < 1e-10\ntry:\n    beta([0.01, 0.02], [0.01, 0.01])\n    raise SystemExit(\"flat market should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "realized-volatility",
+    "name": "Realized Volatility",
+    "short": "Realized Volatility",
+    "category": "Volatility Modeling",
+    "summary": "The square root of the sum of squared log returns inside one window, optionally scaled to a year. For a single day of intraday prices, multiplying by 252 annualises that day's realized variance. Do not do that to a stack of many days.",
+    "definition": "Realized variance over a window is the sum of squared logarithmic returns of the prices inside it. Realized volatility is its square root. Under a diffusion with no jumps, that sum estimates the integrated variance of the window, and finer sampling makes the estimate tighter until microstructure noise dominates. The function annualises by multiplying the sum by a periods-per-year factor before the square root. That factor is correct when the sum is one period's variance (one day, if the factor is 252). Applied to a year of already-daily returns it multiplies a yearly total by 252 and overstates volatility by about sqrt(252).",
+    "formula": "r_i = ln(P_i / P_{i−1})\nRV  = sqrt( (Σ_i r_i²) · P )\n\nP = periods per year used to annualise THIS window.\nOne day of intraday returns → P = 252 (or 242) gives an annualised number from that day.\nA window you do not want to annualise → P = 1, which returns sqrt(Σ r_i²).\n\nThe sum of squares, not the square of the sum. Signs of returns do not matter.",
+    "sections": [
+      {
+        "heading": "What the window is",
+        "html": "<ul>\n<li>Pass the prices of one period. A session of one-minute prices in, an annualised volatility for that session out, if you set the factor to the number of sessions in a year.</li>\n<li>To describe a year, compute each day's sum of squares and then average the daily realized variances, and only then scale. This function does not do that average. It scales whatever sum you hand it.</li>\n<li>Close-to-close volatility is the ordinary standard deviation of daily log returns, a different estimator. Range estimators such as <a href=\"/glossary/parkinson-volatility/\">Parkinson</a> use high and low. A conditional model is <a href=\"/glossary/garch/\">GARCH</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Annualisation is the easy mistake.</strong> Σ r² over 252 daily returns is already a year of variance. Multiplying by another 252 is wrong. Use P = 1 for a pre-aggregated sum you do not want scaled.</li>\n<li><strong>Microstructure.</strong> Bid-ask bounce biases the sum of squares up as the sampling gets finer. One-second returns on a wide spread mostly measure the spread.</li>\n<li><strong>Jumps and overnight.</strong> A close-to-open jump is one large r_i if you include it, and is invisible if you only pass the cash session. Neither choice is free.</li>\n<li><strong>Zeros and negative prices.</strong> Log returns require positive prices. The function rejects the rest.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef realized_vol(prices, periods_per_year=252) -> float:\n    \"\"\"Square root of summed squared log returns, scaled by periods_per_year.\n\n    periods_per_year annualises a SINGLE window. Use 1 to return the\n    un-annualised sqrt(sum of squares). Prices must be positive.\n    \"\"\"\n    px = np.asarray(prices, dtype=float)\n    if px.size < 2 or not np.all(np.isfinite(px)) or np.any(px <= 0):\n        raise ValueError(\"need at least two positive finite prices\")\n    if periods_per_year <= 0:\n        raise ValueError(\"periods_per_year must be positive\")\n    r = np.diff(np.log(px))\n    return float(np.sqrt(np.sum(r * r) * periods_per_year))\n",
+    "faq": [
+      {
+        "question": "How do I annualise a year of daily realized variances?",
+        "answer": "Average the daily sums of squared intraday returns first (that average estimates average daily variance), then multiply by the number of sessions in a year and take the square root. Passing every intraday price of the year into this function with periods_per_year=252 multiplies a year of variance by 252."
+      },
+      {
+        "question": "Why log returns?",
+        "answer": "Squared log returns add up to integrated variance for a diffusion. Squared simple returns are close when the moves are small and are a different estimator when they are not. The function uses logs."
+      }
+    ],
+    "related": [
+      "parkinson-volatility",
+      "garch",
+      "implied-volatility"
+    ],
+    "test": "\nimport numpy as np\npx = np.array([100.0, 100.0 * np.exp(0.01), 100.0 * np.exp(0.01)])\nassert abs(realized_vol(px, 252) - 0.01 * np.sqrt(252)) < 1e-12\nassert abs(realized_vol(px, 1) - 0.01) < 1e-12\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "parkinson-volatility",
+    "name": "Parkinson Volatility",
+    "short": "Parkinson Volatility",
+    "category": "Volatility Modeling",
+    "summary": "A volatility estimator that uses each period's high and low instead of the close-to-close move. Under a driftless Brownian motion it is more efficient than the close-to-close estimator. With drift, jumps or a close that is not the whole story, that efficiency result does not apply.",
+    "definition": "Parkinson (1980) replaces the squared close-to-close return with the squared log range. The scaling 1 / (4 ln 2) makes the average of those squared ranges an estimate of the variance per period, for a Brownian motion with no drift. Multiplying by the number of periods in a year and taking the square root annualises it. The estimator never sees the open or the close. A day that gaps and then trades in a narrow range looks quiet.",
+    "formula": "σ²_period = (1 / (4 N ln 2)) · Σ_{t=1..N} (ln(H_t / L_t))²\nσ_annual  = σ_period · sqrt(P)\n\nH_t ≥ L_t > 0.  N is the number of ranges you pass.\n4 ln 2 ≈ 2.7726, so a day whose high is about 1.7% above its low\n(ln(H/L) ≈ 0.0166, squared ≈ 2.77e-4) contributes about 1e-4 of daily variance\nbefore annualisation, i.e. 1 percent daily, before the average.\n\nP defaults to 252 and scales the mean daily variance, which is the right\nshape when each row is one session.",
+    "sections": [
+      {
+        "heading": "Why a range",
+        "html": "<ul>\n<li>The high and the low summarise the whole path, not only the two endpoints. For a driftless Brownian motion the range estimator has a lower variance than the close-to-close estimator on the same number of days.</li>\n<li>It is a natural check on <a href=\"/glossary/realized-volatility/\">realized volatility</a> when you have bars but not a full trade tape: daily high and low are enough.</li>\n<li>It is still a historical number. An option-implied number is <a href=\"/glossary/implied-volatility/\">implied volatility</a>, and a recursive filter is <a href=\"/glossary/garch/\">GARCH</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Drift.</strong> A strong trend widens the range for a reason other than diffusion variance. Parkinson is derived at zero drift. Rogers-Satchell and Yang-Zhang exist because of that; this page does not implement them.</li>\n<li><strong>Overnight gaps.</strong> If high and low are the cash-session extrema, the gap from yesterday's close is invisible. The estimator then misses a piece of the day's variance that a close-to-close number includes.</li>\n<li><strong>Bad prints.</strong> One erroneous high dominates a squared range. The average does not trim it.</li>\n<li><strong>Do not feed intraday bars and also multiply by 252</strong> unless each row is one session. The function annualises the mean of the rows you pass.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef parkinson_vol(high, low, periods=252) -> float:\n    \"\"\"Annualised Parkinson volatility from high and low arrays.\n\n    Each pair is one period. `periods` is how many such periods make a year.\n    Requires 0 < low <= high.\n    \"\"\"\n    h = np.asarray(high, dtype=float)\n    lo = np.asarray(low, dtype=float)\n    if h.shape != lo.shape or h.ndim != 1 or h.size == 0:\n        raise ValueError(\"high and low must be non-empty and aligned\")\n    if not np.all(np.isfinite(h)) or not np.all(np.isfinite(lo)):\n        raise ValueError(\"high and low must be finite\")\n    if np.any(lo <= 0) or np.any(h < lo):\n        raise ValueError(\"require 0 < low <= high\")\n    if periods <= 0:\n        raise ValueError(\"periods must be positive\")\n    x = np.log(h / lo)\n    return float(np.sqrt(np.mean(x * x) / (4.0 * np.log(2.0)) * periods))\n",
+    "faq": [
+      {
+        "question": "Why is the divisor 4 ln 2?",
+        "answer": "It is the expected value of the squared log range of a standard Brownian motion over one unit of time. Dividing by it converts an average squared range into a variance estimate. The derivation assumes no drift and no jumps."
+      },
+      {
+        "question": "Is Parkinson always better than close-to-close?",
+        "answer": "No. It is more efficient in the zero-drift diffusion it was derived for. A large overnight gap, a trading halt, or a bad high print can make it worse than a close-to-close estimator that at least uses the official closes."
+      }
+    ],
+    "related": [
+      "realized-volatility",
+      "garch",
+      "implied-volatility"
+    ],
+    "test": "\nimport numpy as np\nhigh = np.exp(0.02) * np.ones(10)\nlow = np.ones(10)\nexpect = np.sqrt((0.02 ** 2) / (4 * np.log(2)) * 252)\nassert abs(parkinson_vol(high, low, 252) - expect) < 1e-12\ntry:\n    parkinson_vol([10, 10], [11, 9])\n    raise SystemExit(\"high < low should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "garch",
+    "name": "GARCH(1,1)",
+    "short": "GARCH(1,1)",
+    "category": "Volatility Modeling",
+    "summary": "A conditional variance that is a constant plus a weight on yesterday's squared shock plus a weight on yesterday's variance. This page filters a series with given parameters. It does not estimate them.",
+    "definition": "GARCH(1,1), Bollerslev (1986), says today's variance depends on a long-run piece, on how large yesterday's surprise was, and on yesterday's variance. Clusters of large moves follow because a large shock raises the next variance, which keeps later variances high until the β term decays. The function below runs that recursion. ω, α and β are inputs. Fitting them by maximum likelihood is a numerical problem this page does not solve. The variance at step 0 is the first squared return, so the filter does not use later data to start itself.",
+    "formula": "σ²_t = ω + α ε²_{t−1} + β σ²_{t−1}\n\nσ²_0 = ε_0²          (a one-point start; not the sample variance of the whole series)\nUnconditional variance, when α ≥ 0, β ≥ 0 and α + β < 1:\n  σ²_∞ = ω / (1 − α − β)\n\nα + β is the persistence. α + β ≥ 1 means there is no finite unconditional variance.\nThe filter still runs. Half-life of a shock to variance is about ln(2) / −ln(α+β) periods when α+β < 1.\n\nEWMA is the case ω = 0, α + β = 1, with α = 1−λ and β = λ. See the Numba EWMA page.",
+    "sections": [
+      {
+        "heading": "Filter versus estimate",
+        "html": "<ul>\n<li>Given parameters, the recursion is a one-pass filter. That is what <code>garch11_variance</code> does, and what the tests check.</li>\n<li>The parameters themselves are usually estimated by maximising a Gaussian or Student-t likelihood. Different likelihoods, different estimates. Publishing a 20-line fitter here would hide that choice.</li>\n<li>Compare the path with <a href=\"/glossary/realized-volatility/\">realized volatility</a> (a sum of squares, no parameters) and with <a href=\"/code/numba-ewma-volatility/\">EWMA</a> (persistence fixed at 1).</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The shock is the return only if the mean is zero.</strong> The recursion treats the series you pass as ε. If you meant a demeaned residual, demean first. A large mean inside ε² looks like volatility.</li>\n<li><strong>Starting value.</strong> ε_0² can be a wild first day. An alternative is the unconditional variance, which depends on the parameters and, if those were fit on this same sample, uses the whole sample. This filter does not do that.</li>\n<li><strong>α + β close to 1</strong> makes the unconditional variance huge and the filter slow to forget. Integrated GARCH (α + β = 1) never forgets a shock in the level of variance.</li>\n<li><strong>No leverage term.</strong> Plain GARCH treats an up move and a down move of the same size identically. GJR and EGARCH exist because equity returns usually do not.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef garch11_variance(returns, omega, alpha, beta):\n    \"\"\"GARCH(1,1) variance path. Parameters are inputs, not estimates.\n\n    var[0] = returns[0] ** 2. Later terms use the previous return and the\n    previous variance only. omega, alpha, beta must be non-negative.\n    \"\"\"\n    r = np.asarray(returns, dtype=float)\n    if r.ndim != 1 or not np.all(np.isfinite(r)):\n        raise ValueError(\"returns must be a finite 1-d array\")\n    if omega < 0 or alpha < 0 or beta < 0:\n        raise ValueError(\"omega, alpha and beta must be non-negative\")\n    var = np.empty(r.shape, dtype=float)\n    if r.size == 0:\n        return var\n    var[0] = r[0] * r[0]\n    for t in range(1, r.size):\n        var[t] = omega + alpha * r[t - 1] * r[t - 1] + beta * var[t - 1]\n    return var\n\ndef garch11_unconditional(omega, alpha, beta) -> float:\n    \"\"\"ω / (1 − α − β). Inf when α + β ≥ 1.\"\"\"\n    if omega < 0 or alpha < 0 or beta < 0:\n        raise ValueError(\"omega, alpha and beta must be non-negative\")\n    if alpha + beta >= 1.0:\n        return float(\"inf\")\n    return float(omega / (1.0 - alpha - beta))\n",
+    "faq": [
+      {
+        "question": "Why not fit the parameters on this page?",
+        "answer": "A Gaussian likelihood, a Student-t likelihood and a robust estimator do not return the same (ω, α, β), and the optimiser needs constraints so that variances stay positive. The recursion itself is the part that can be checked exactly. Bring parameters from a fit you trust."
+      },
+      {
+        "question": "Is the variance at t allowed to use the return at t?",
+        "answer": "Not in this filter. σ²_t is the variance assigned before ε_t is treated as realised, which is what you want if the next step is to standardise ε_t by σ_t. The update that includes ε_t² lands in σ²_{t+1}."
+      }
+    ],
+    "related": [
+      "numba-ewma-volatility",
+      "realized-volatility",
+      "parkinson-volatility",
+      "implied-volatility"
+    ],
+    "test": "\nimport numpy as np\nr = np.array([0.01, -0.02, 0.015])\nw, a, b = 1e-6, 0.1, 0.8\nvar = garch11_variance(r, w, a, b)\nassert abs(var[0] - 0.01 ** 2) < 1e-15\nassert abs(var[1] - (w + a * 0.01 ** 2 + b * var[0])) < 1e-15\nassert abs(var[2] - (w + a * (-0.02) ** 2 + b * var[1])) < 1e-15\nassert abs(garch11_unconditional(w, a, b) - w / (1 - a - b)) < 1e-15\nassert garch11_unconditional(w, 0.2, 0.8) == float(\"inf\")\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "implied-volatility",
+    "name": "Implied Volatility",
+    "short": "Implied Volatility",
+    "category": "Options & Derivatives",
+    "summary": "The volatility that makes a Black-Scholes-Merton price match an observed option premium. It is solved numerically. There is no closed form for the call price inverted in volatility.",
+    "definition": "Implied volatility is defined by an equation, not by a formula you can rearrange. Given a market premium, a spot, a strike, a time to expiry, a rate and a dividend yield, it is the σ that sets the Black-Scholes-Merton price equal to that premium. This page solves it with Brent's method on a bracket. The same inversion, across strikes and expiries, is what the smile tool on this site plots. A single number always belongs to one contract and one set of inputs.",
+    "formula": "C_BSM(S, K, T, r, q, σ_imp) = C_market\n\nd1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T)\nd2 = d1 − σ √T\nC  = S e^{−qT} N(d1) − K e^{−rT} N(d2)\n\nNo-arbitrage range for a European call, before the solve:\n  max(S e^{−qT} − K e^{−rT}, 0) ≤ C ≤ S e^{−qT}\nA premium outside that range has no real implied volatility.",
+    "sections": [
+      {
+        "heading": "Solving it",
+        "html": "<ul>\n<li>The call price increases in σ, so the root is unique when it exists. Brent's method needs a bracket. The code starts at 0.000001 and 5 (500 percent) and widens to 20 if the premium is still above the model at 5.</li>\n<li>A premium that sits on intrinsic value returns 0. A premium outside the no-arbitrage bounds raises, rather than returning a quiet NaN that looks like a failed fit.</li>\n<li>The <a href=\"/tools/iv-smile/\">implied-volatility smile</a> tool solves the same inversion across a grid and fits a slope. One contract's σ_imp is the building block. <a href=\"/glossary/vega/\">Vega</a> is how the price moves when that input moves.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The model is part of the answer.</strong> A Black-Scholes implied volatility and a Black-76 implied volatility on the same premium are not the same number. This page is Black-Scholes-Merton with a continuous dividend yield q. Set q = 0 for the textbook no-dividend call.</li>\n<li><strong>European, one expiry, constant inputs.</strong> American early exercise, discrete dividends and a volatility that depends on the strike are all outside the inverter. The smile is exactly the evidence that one σ does not price every strike.</li>\n<li><strong>Deep, short-dated options.</strong> Vega collapses and many volatilities map to almost the same premium. The root is mathematically there and practically poorly identified. Trust the price residual, not just the σ.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp, log, sqrt\nfrom scipy.optimize import brentq\nfrom scipy.stats import norm\n\ndef bs_call(S, K, T, r, sigma, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton European call. sigma is a decimal volatility.\"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    sT = sigma * sqrt(T)\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / sT\n    d2 = d1 - sT\n    return S * exp(-q * T) * norm.cdf(d1) - K * exp(-r * T) * norm.cdf(d2)\n\ndef implied_vol(price, S, K, T, r, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton implied volatility of a European call premium.\n\n    Returns 0 when the premium is at intrinsic value. Raises when the premium\n    is outside the no-arbitrage bounds or the root is above 2000 percent.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0:\n        raise ValueError(\"S, K and T must be positive\")\n    lower = max(S * exp(-q * T) - K * exp(-r * T), 0.0)\n    upper = S * exp(-q * T)\n    if price < lower - 1e-8 or price > upper + 1e-8:\n        raise ValueError(\"price is outside no-arbitrage bounds\")\n    if price <= lower + 1e-12:\n        return 0.0\n\n    def gap(sigma):\n        return bs_call(S, K, T, r, sigma, q) - price\n\n    hi = 5.0\n    if gap(hi) < 0:\n        hi = 20.0\n        if gap(hi) < 0:\n            raise ValueError(\"implied volatility is above 20; check the premium\")\n    return float(brentq(gap, 1e-6, hi))\n",
+    "faq": [
+      {
+        "question": "Why is there no formula for implied volatility?",
+        "answer": "The cumulative normal of d1 and d2 depends on σ in a way that does not invert in closed form. Series approximations exist. A bracketed root find on a monotone function is the straightforward exact method, and it is what this page tests."
+      },
+      {
+        "question": "Does a higher implied volatility mean the option is expensive?",
+        "answer": "It means the premium is high relative to this model's other inputs. Whether that is expensive depends on the volatility you believe the underlying will actually realise, on the smile, and on costs. The number itself is a restatement of the premium."
+      }
+    ],
+    "related": [
+      "vega",
+      "realized-volatility",
+      "garch",
+      "put-call-parity"
+    ],
+    "test": "\nprice = bs_call(100, 100, 1.0, 0.05, 0.2, 0.0)\nassert abs(price - 10.450583572185565) < 1e-9\nassert abs(implied_vol(price, 100, 100, 1.0, 0.05) - 0.2) < 1e-8\nassert implied_vol(0.0, 100, 100, 1.0, 0.0) == 0.0\ntry:\n    implied_vol(101, 100, 100, 1.0, 0.0)\n    raise SystemExit(\"price above spot should fail\")\nexcept ValueError:\n    pass\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "delta",
+    "name": "Delta",
+    "short": "Delta",
+    "category": "Options & Derivatives",
+    "summary": "The derivative of a European option's Black-Scholes-Merton value with respect to the spot. A call delta is e^{−qT} N(d1). A put delta is that quantity minus e^{−qT}.",
+    "definition": "Delta is how much the model value changes for a small move in the underlying, holding the other inputs fixed. In Black-Scholes-Merton it is a closed form. For a call it lies between 0 and e^{−qT}; for a put it lies between −e^{−qT} and 0. With no dividend yield those bounds are 0 and 1, and −1 and 0. The figure is a model sensitivity. Hedging with it leaves everything the model left out, including jumps and the fact that volatility is not a constant.",
+    "formula": "d1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T)\n\nΔ_call = e^{−qT} N(d1)\nΔ_put  = e^{−qT} (N(d1) − 1) = −e^{−qT} N(−d1)\n\nΔ_call − Δ_put = e^{−qT}\n\nq = 0 is the no-dividend textbook case: Δ_call = N(d1), Δ_put = N(d1) − 1.\nThe on-site calculator uses the same expressions, including q.",
+    "sections": [
+      {
+        "heading": "How to read the number",
+        "html": "<ul>\n<li>A call delta of 0.50 is not automatically at-the-money once rates or dividends are nonzero. It is the model slope at those inputs. N(d1) equals a half when d1 is zero, which is not the same as S = K.</li>\n<li>Delta of a position is the sum of signed deltas times the multiplier. The function returns the per-unit derivative, not a share count for a book.</li>\n<li>The slope changes as spot moves. That second derivative is <a href=\"/glossary/gamma/\">gamma</a>. The slope also depends on the volatility you typed in, which is where <a href=\"/glossary/implied-volatility/\">implied volatility</a> enters.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>European Black-Scholes-Merton only.</strong> American puts, barriers and anything path dependent do not have this delta. At expiry the slope becomes a step. The <a href=\"/option-greeks-calc/\">Greeks calculator</a> spells out that limit; this function requires T &gt; 0 and σ &gt; 0 so the formula stays the smooth one.</li>\n<li><strong>Spot delta versus forward delta.</strong> The derivative here is with respect to spot, and it includes the dividend discount e^{−qT}. A forward delta omits that discount. Mixing them mis-hedges by that factor.</li>\n<li><strong>A hedge ratio is not a hedge result.</strong> Replacing the option with −Δ shares cancels the first-order spot term in this model, at this instant. Gamma, vega and discrete rebalancing remain.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_delta(S, K, T, r, sigma, call=True, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton spot delta. call=False returns the put delta.\n\n    Requires positive S, K, T and sigma. q is a continuous dividend yield.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    disc = exp(-q * T)\n    return float(disc * norm.cdf(d1) if call else disc * (norm.cdf(d1) - 1.0))\n",
+    "faq": [
+      {
+        "question": "Why is call delta not exactly N(d1)?",
+        "answer": "N(d1) is the no-dividend formula. With a continuous yield q the spot delta of a European call is e^{−qT} N(d1). The two agree when q is 0, which is the default of this function."
+      },
+      {
+        "question": "Does delta tell me the probability the option finishes in the money?",
+        "answer": "No. Under the stock-numeraire measure, N(d1) is a probability related to the share, and N(d2) is the risk-neutral probability that a European call finishes in the money, in this model, with no dividends changing that statement. Neither one is a real-world probability, and neither one is a trading instruction."
+      }
+    ],
+    "related": [
+      "gamma",
+      "vega",
+      "implied-volatility",
+      "put-call-parity"
+    ],
+    "test": "\nfrom math import exp\nd_call = bs_delta(100, 100, 1.0, 0.05, 0.2, True, 0.0)\nd_put = bs_delta(100, 100, 1.0, 0.05, 0.2, False, 0.0)\nassert abs(d_call - 0.6368306511756191) < 1e-9\nassert abs(d_put - (-0.3631693488243809)) < 1e-9\nassert abs(d_call - d_put - 1.0) < 1e-12\nq = 0.01\nassert abs(bs_delta(100, 100, 1, 0.05, 0.2, True, q) - bs_delta(100, 100, 1, 0.05, 0.2, False, q) - exp(-q)) < 1e-12\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "gamma",
+    "name": "Gamma",
+    "short": "Gamma",
+    "category": "Options & Derivatives",
+    "summary": "The second derivative of a European option's value with respect to the spot, and the derivative of delta. In Black-Scholes-Merton the call and the put of the same strike and expiry have the same gamma.",
+    "definition": "Gamma tells you how fast delta changes as the spot moves. It is largest near the strike and near expiry, where the distribution of finishing in or out of the money is most sensitive to the current spot. Because a European call and put that share strike and expiry differ by a forward (put-call parity), and a forward has no gamma, their gammas are equal. The formula below is that common value.",
+    "formula": "Γ = e^{−qT} φ(d1) / (S σ √T)\n\nφ is the standard normal density.\nd1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T)\n\nSame number for the European call and the European put.\nUnits: change in delta per 1 point of spot. Not a percent.",
+    "sections": [
+      {
+        "heading": "Why the call and the put match",
+        "html": "<ul>\n<li><a href=\"/glossary/put-call-parity/\">Put-call parity</a> says the call minus the put equals a discounted forward. Differentiating twice in S kills the forward and leaves Γ_call = Γ_put.</li>\n<li>Delta does not match. The call delta and the put delta differ by e^{−qT}. See <a href=\"/glossary/delta/\">delta</a>.</li>\n<li>The <a href=\"/option-greeks-calc/\">Greeks calculator</a> reports this gamma for both sides.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>It blows up as expiry approaches</strong> for an option sitting on the strike, because of the √T in the denominator, and it goes to 0 for an option far from the strike. A gamma number with no spot, strike and expiry attached is not interpretable.</li>\n<li><strong>P&amp;L is not gamma times the move.</strong> The second-order Taylor term is ½ Γ (ΔS)², and it is a model term. Realised moves, hedges and vega P&amp;L are all still there.</li>\n<li><strong>Spot gamma.</strong> As with delta, this differentiates with respect to spot and includes e^{−qT}. Divide by that discount if you wanted a forward gamma and you meant to.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_gamma(S, K, T, r, sigma, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton gamma. Identical for the European call and put.\"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    return float(exp(-q * T) * norm.pdf(d1) / (S * sigma * sqrt(T)))\n",
+    "faq": [
+      {
+        "question": "Why does gamma not depend on whether the option is a call or a put?",
+        "answer": "Call minus put is a forward under put-call parity, and a forward's second derivative with respect to spot is zero. Whatever curvature the call has, the put has the same curvature."
+      },
+      {
+        "question": "Is a high gamma good?",
+        "answer": "It means delta will move quickly if the spot moves, which is a property of that contract in this model. Long gamma and short gamma describe a position. The page does not score either as an advantage."
+      }
+    ],
+    "related": [
+      "delta",
+      "theta",
+      "vega"
+    ],
+    "test": "\nfrom math import exp, log, sqrt\nfrom scipy.stats import norm\ng = bs_gamma(100, 100, 1.0, 0.05, 0.2, 0.0)\nassert abs(g - 0.018762017345846895) < 1e-9\n\ndef call_delta(S):\n    T, r, sigma, q, K = 1.0, 0.05, 0.2, 0.0, 100.0\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    return exp(-q * T) * norm.cdf(d1)\n\neps = 1e-2\nfd = (call_delta(100 + eps) - call_delta(100 - eps)) / (2 * eps)\nassert abs(g - fd) / g < 1e-6\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "vega",
+    "name": "Vega",
+    "short": "Vega",
+    "category": "Options & Derivatives",
+    "summary": "The sensitivity of a European option's Black-Scholes-Merton value to volatility, quoted per volatility point (one percentage point of σ). Call and put vegas of the same contract are equal.",
+    "definition": "Vega is the derivative of the model price with respect to the volatility input. A raw derivative is per 1.00 of σ, that is, per 100 volatility points, which is an awkward unit. Dividing by 100 quotes the change in premium for a one-point move in volatility, the convention used by the Greeks calculator on this site. Because of put-call parity, a European call and put with the same strike and expiry have the same vega: the forward that separates them does not depend on σ.",
+    "formula": "ν_raw = S e^{−qT} φ(d1) √T          per 1.00 of volatility\nν     = ν_raw / 100                  per 1 volatility point\n\nd1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T)\nSame value for the European call and the European put.\nφ is the standard normal density.",
+    "sections": [
+      {
+        "heading": "Units",
+        "html": "<ul>\n<li>If the model price rises by 0.375 when volatility goes from 20 percent to 21 percent, vega per point is about 0.375. The raw derivative ∂V/∂σ is about 37.5. This function returns the per-point number.</li>\n<li>The <a href=\"/option-greeks-calc/\">Greeks calculator</a> divides by 100 in the same place. <a href=\"/glossary/implied-volatility/\">Implied volatility</a> is the σ that the premium implies; vega is how the premium would change if that input changed.</li>\n<li>Call and put share vega for the same reason they share <a href=\"/glossary/gamma/\">gamma</a>: their difference is a forward.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Volatility point means 0.01 in decimal σ.</strong> Moving σ from 0.20 to 0.21 is one point. Moving it from 0.20 to 1.20 is one hundred points.</li>\n<li><strong>Sticky strike, sticky delta, and the smile.</strong> The derivative holds every other input fixed, including a single σ. On a smile, a spot move often comes with a different implied volatility. Model vega does not include that.</li>\n<li><strong>Near expiry, deep in or out of the money, vega is small.</strong> Many vols then fit almost the same premium, which is the same fact as a flat price-versus-σ curve.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_vega(S, K, T, r, sigma, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton vega per 1 volatility point (dPrice / dσ / 100).\n\n    Same value for a European call and put. S, K, T, sigma must be positive.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    return float(S * exp(-q * T) * norm.pdf(d1) * sqrt(T) / 100.0)\n",
+    "faq": [
+      {
+        "question": "Why divide by 100?",
+        "answer": "The calculus derivative is the change in price for a change of 1.00 in σ, i.e. from 20 percent to 120 percent. Desks quote the change for one point, from 20 percent to 21 percent, which is that derivative divided by 100. The calculator on this site does the same."
+      },
+      {
+        "question": "Do calls and puts have the same vega?",
+        "answer": "European calls and puts with the same strike and expiry do, in Black-Scholes-Merton. Put-call parity says their difference does not depend on volatility, so the volatility derivatives match."
+      }
+    ],
+    "related": [
+      "implied-volatility",
+      "delta",
+      "gamma"
+    ],
+    "test": "\nfrom math import exp, log, sqrt\nfrom scipy.stats import norm\nv = bs_vega(100, 100, 1.0, 0.05, 0.2, 0.0)\nassert abs(v - 0.3752403469169379) < 1e-9\n\ndef call(sigma):\n    S, K, T, r, q = 100.0, 100.0, 1.0, 0.05, 0.0\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    d2 = d1 - sigma * sqrt(T)\n    return S * exp(-q * T) * norm.cdf(d1) - K * exp(-r * T) * norm.cdf(d2)\n\nfd = (call(0.21) - call(0.19)) / 2\nassert abs(v - fd) < 1e-3\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "theta",
+    "name": "Theta",
+    "short": "Theta",
+    "category": "Options & Derivatives",
+    "summary": "The sensitivity of a European option's Black-Scholes-Merton value to the passage of calendar time, quoted per day. The annual derivative is divided by 365.",
+    "definition": "Theta is the derivative of the model value with respect to calendar time, holding spot, volatility, rates and yield fixed. Time to expiry shrinks as calendar time advances, so the formula is minus the derivative with respect to T, then divided by 365 to quote a per-day number. Long options usually have negative theta: the premium decays as expiry approaches, all else equal. That \"all else equal\" is the catch. Spot and implied volatility do not stay still so that theta can be observed on its own.",
+    "formula": "Let φ(d1) be the standard normal density, and\nd1 = [ln(S/K) + (r − q + σ²/2) T] / (σ √T),   d2 = d1 − σ √T.\n\nΘ_call = [ −S e^{−qT} φ(d1) σ / (2√T) − r K e^{−rT} N(d2) + q S e^{−qT} N(d1) ] / 365\nΘ_put  = [ −S e^{−qT} φ(d1) σ / (2√T) + r K e^{−rT} N(−d2) − q S e^{−qT} N(−d1) ] / 365\n\nBoth are per calendar day. A trading-day theta divides the annual derivative by 252 instead;\nmultiply the value here by 365/252 to convert. q = 0 drops the last term in each bracket.\nThe Greeks calculator on this site uses these expressions.",
+    "sections": [
+      {
+        "heading": "What the sign means",
+        "html": "<ul>\n<li>Negative theta means the model value falls as the clock runs, with every other input frozen. That is the usual case for a long option away from unusual rate and dividend combinations.</li>\n<li>The decay term −S e^{−qT} φ(d1) σ / (2√T) is shared. The rate and dividend terms differ for calls and puts, which is why a call theta and a put theta are not equal, unlike <a href=\"/glossary/gamma/\">gamma</a> and <a href=\"/glossary/vega/\">vega</a>.</li>\n<li>See <a href=\"/glossary/delta/\">delta</a> for the d1 that enters, and the <a href=\"/option-greeks-calc/\">Greeks calculator</a> for the same per-day convention.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>365 versus 252.</strong> This function divides by 365, calendar days, matching the calculator. A desk that marks theta per trading day wants the other divisor. The two numbers differ by 365/252.</li>\n<li><strong>One day is not infinitesimal.</strong> The derivative times 1/365 approximates the change from losing one calendar day of expiry. Very short-dated options have a theta that changes a lot over that same day, so the approximation is rougher.</li>\n<li><strong>Frozen volatility.</strong> The derivative does not include a change in implied volatility as expiry approaches. Real premiums move for that reason too.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_theta(S, K, T, r, sigma, call=True, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton theta per calendar day (annual derivative / 365).\n\n    call=False returns the put. Multiply by 365/252 for a trading-day theta.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    sT = sigma * sqrt(T)\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / sT\n    d2 = d1 - sT\n    decay = -S * exp(-q * T) * norm.pdf(d1) * sigma / (2.0 * sqrt(T))\n    if call:\n        annual = decay - r * K * exp(-r * T) * norm.cdf(d2) + q * S * exp(-q * T) * norm.cdf(d1)\n    else:\n        annual = decay + r * K * exp(-r * T) * norm.cdf(-d2) - q * S * exp(-q * T) * norm.cdf(-d1)\n    return float(annual / 365.0)\n",
+    "faq": [
+      {
+        "question": "Why is theta usually negative for a long option?",
+        "answer": "With the other inputs held fixed, less time means less chance of a large move and, for a call, less time for the prepaid forward to earn its rates. The model premium of a long option therefore usually falls as expiry gets closer. A short option has the opposite sign. This is a partial derivative, not a prediction of tomorrow's premium."
+      },
+      {
+        "question": "Does the function use trading days or calendar days?",
+        "answer": "Calendar days. The annual Black-Scholes derivative is divided by 365, which is what the Greeks calculator on this site displays. Multiply by 365/252 if you want a per-trading-day figure."
+      }
+    ],
+    "related": [
+      "delta",
+      "gamma",
+      "vega"
+    ],
+    "test": "\nfrom math import exp, log, sqrt\nfrom scipy.stats import norm\nth = bs_theta(100, 100, 1.0, 0.05, 0.2, True, 0.0)\nassert abs(th - (-0.01757267820941972)) < 1e-9\n\ndef call(T):\n    S, K, r, sigma, q = 100.0, 100.0, 0.05, 0.2, 0.0\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    d2 = d1 - sigma * sqrt(T)\n    return S * exp(-q * T) * norm.cdf(d1) - K * exp(-r * T) * norm.cdf(d2)\n\nassert abs((call(1 - 1 / 365) - call(1.0)) - th) < 1e-4\nassert bs_theta(100, 100, 1.0, 0.05, 0.2, False, 0.0) != th\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "rho",
+    "name": "Rho",
+    "short": "Rho",
+    "category": "Options & Derivatives",
+    "summary": "The sensitivity of a European option's Black-Scholes-Merton value to the continuous risk-free rate, quoted per one percentage point of rate.",
+    "definition": "Rho is the derivative of the model price with respect to the interest rate, holding spot, strike, time, volatility and dividend yield fixed. Dividing by 100 quotes it per one percentage point (from 5 percent to 6 percent, for example), matching the Greeks calculator on this site. A European call's rho is positive: a higher rate lowers the present value of the strike you might pay. A European put's rho is negative. Dividend yield q is a different input and is not what this derivative moves.",
+    "formula": "ρ_call = K T e^{−rT} N(d2) / 100\nρ_put  = −K T e^{−rT} N(−d2) / 100\n\nd2 = [ln(S/K) + (r − q − σ²/2) T] / (σ √T)\n\nPer 1 percentage point of r. The raw derivative ∂V/∂r is 100 times larger.\nq enters d2. It does not appear as its own discount in the rho formula;\n∂V/∂q is a different Greek.",
+    "sections": [
+      {
+        "heading": "Sign",
+        "html": "<ul>\n<li>Call rho is greater than or equal to zero in this model. Put rho is less than or equal to zero. A book that is long calls and short puts of the same strike picks up both.</li>\n<li>The rate inside Black-Scholes is the continuous risk-free rate used to discount the strike, not a credit spread and not the dividend. Changing q instead is not rho.</li>\n<li>The <a href=\"/option-greeks-calc/\">Greeks calculator</a> reports rho per 1 percent with the formulas above. <a href=\"/glossary/put-call-parity/\">Put-call parity</a> is where that discount shows up as K e^{−rT}.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>One point of rate, not one point of volatility.</strong> The /100 here is the same kind of unit choice as <a href=\"/glossary/vega/\">vega</a>, applied to r rather than to σ.</li>\n<li><strong>Short-dated options have small rho</strong> because of the factor T. A one-week option barely changes when the rate moves by a point. A five-year option moves much more, in the model.</li>\n<li><strong>The rate is flat and constant.</strong> A real curve has many rates. One rho cannot describe a shift of a single tenor, a slope change, and a parallel move as three different risks.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp, log, sqrt\nfrom scipy.stats import norm\n\ndef bs_rho(S, K, T, r, sigma, call=True, q=0.0) -> float:\n    \"\"\"Black-Scholes-Merton rho per 1 percentage point of the risk-free rate.\n\n    call=False returns the put rho, which is negative or zero.\n    \"\"\"\n    if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:\n        raise ValueError(\"S, K, T and sigma must be positive\")\n    d2 = (log(S / K) + (r - q - 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    if call:\n        return float(K * T * exp(-r * T) * norm.cdf(d2) / 100.0)\n    return float(-K * T * exp(-r * T) * norm.cdf(-d2) / 100.0)\n",
+    "faq": [
+      {
+        "question": "Why is put rho negative?",
+        "answer": "A higher risk-free rate reduces the present value of the strike the put might receive, and it raises the forward. Both hurt the model value of a European put, so the derivative is negative. A European call is helped by the same two facts."
+      },
+      {
+        "question": "Does rho include dividend sensitivity?",
+        "answer": "No. q is held fixed. Rho moves only r. The dividend yield changes d2, so a different q produces a different rho, but the derivative itself is with respect to the interest rate."
+      }
+    ],
+    "related": [
+      "delta",
+      "put-call-parity",
+      "theta"
+    ],
+    "test": "\nfrom math import exp, log, sqrt\nfrom scipy.stats import norm\nrc = bs_rho(100, 100, 1.0, 0.05, 0.2, True, 0.0)\nrp = bs_rho(100, 100, 1.0, 0.05, 0.2, False, 0.0)\nassert abs(rc - 0.5323248154537634) < 1e-9\nassert rp < 0\n\ndef call(r):\n    S, K, T, sigma, q = 100.0, 100.0, 1.0, 0.2, 0.0\n    d1 = (log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrt(T))\n    d2 = d1 - sigma * sqrt(T)\n    return S * norm.cdf(d1) - K * exp(-r * T) * norm.cdf(d2)\n\nassert abs((call(0.06) - call(0.04)) / 2 - rc) < 1e-3\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "put-call-parity",
+    "name": "Put-Call Parity",
+    "short": "Put-Call Parity",
+    "category": "Options & Derivatives",
+    "summary": "A model-free relation between European call and put prices that share a strike and an expiry. With a continuous dividend yield, the call minus the put equals the prepaid forward minus the discounted strike.",
+    "definition": "Put-call parity says that a long European call and a short European put, same strike and expiry, replicate a long forward position struck at K. Rearranged, the call premium minus the put premium equals the spot discounted by the dividend yield, minus the strike discounted by the interest rate. No volatility, no distribution of returns and no pricing model enters. If the two premiums violate the equation by more than transaction costs, the packages are different prices for the same payoff. The function returns the gap, which is zero when parity holds.",
+    "formula": "C − P = S e^{−qT} − K e^{−rT}\n\nq = 0 (no dividends):   C − P = S − K e^{−rT}\ngap = (C − P) − (S e^{−qT} − K e^{−rT})\n\ngap = 0  → parity holds at these inputs\ngap > 0  → the call is rich to the put, or the forward is cheap, relative to this identity\nThe identity is for European options. American options do not obey it as an equality.",
+    "sections": [
+      {
+        "heading": "What it constrains",
+        "html": "<ul>\n<li>You can back a forward out of the two premiums, which is what the <a href=\"/tools/iv-smile/\">smile tool</a> does before it reads a smile off strikes. A bad forward makes every implied volatility look skewed.</li>\n<li>It forces several Greeks into pairs. Differentiating in S gives Δ_call − Δ_put = e^{−qT} (<a href=\"/glossary/delta/\">delta</a>). Differentiating in σ gives equal <a href=\"/glossary/vega/\">vegas</a>. Differentiating twice in S gives equal <a href=\"/glossary/gamma/\">gammas</a>.</li>\n<li><a href=\"/glossary/rho/\">Rho</a> is the sensitivity to the r that discounts K in this identity.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>European, same strike, same expiry, same underlying.</strong> An American put can be worth more than parity allows, because early exercise has value. A gap on American prices is not automatically an arbitrage.</li>\n<li><strong>Dividends have to be in q, or the identity is the wrong one.</strong> A discrete cash dividend is not a continuous yield. Using q = 0 on a stock that pays a dividend shows a gap that is just the dividend.</li>\n<li><strong>Costs.</strong> A gap smaller than the round-trip spread, fees and borrow is not a trade. The function returns a price difference, not an executable profit.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "from math import exp\n\ndef parity_gap(call, put, S, K, T, r, q=0.0) -> float:\n    \"\"\"Call minus put, minus the European forward value S*exp(-qT) - K*exp(-rT).\n\n    Zero when put-call parity holds. Not defined as an equality for American options.\n    \"\"\"\n    if S <= 0 or K <= 0 or T < 0:\n        raise ValueError(\"S and K must be positive and T non-negative\")\n    return float((call - put) - (S * exp(-q * T) - K * exp(-r * T)))\n",
+    "faq": [
+      {
+        "question": "Why does parity not mention volatility?",
+        "answer": "The call-minus-put package pays S_T − K at expiry no matter what path volatility takes. Its present value is the prepaid forward minus the discounted strike. Volatility changes the call and the put by the same amount, so it drops out of the difference."
+      },
+      {
+        "question": "What does a non-zero gap mean?",
+        "answer": "At these inputs the two premiums are not consistent with one forward. Causes include a dividend yield you left at zero, American early exercise, stale quotes, or a genuine dislocation larger than the cost of putting the package on. The sign says which side is rich relative to the identity. It does not by itself say there is a trade."
+      }
+    ],
+    "related": [
+      "implied-volatility",
+      "delta",
+      "rho"
+    ],
+    "test": "\nassert abs(parity_gap(10.450583572185565, 5.573526022256971, 100, 100, 1.0, 0.05)) < 1e-9\nassert abs(parity_gap(10, 10, 100, 100, 1.0, 0.0)) < 1e-12\n# A one-point richer call shows up as a gap of 1.\nassert abs(parity_gap(11.450583572185565, 5.573526022256971, 100, 100, 1.0, 0.05) - 1) < 1e-9\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "half-life-mean-reversion",
+    "name": "Half-Life of Mean Reversion",
+    "short": "Half-Life",
+    "category": "Time Series & Stat-Arb",
+    "summary": "How many periods an AR(1) deviation takes to decay halfway, read off the slope of a regression of changes on lagged levels. The same discrete definition as the half-life on the ADF page.",
+    "definition": "Fit the regression Δy_t = a + g y_{t−1} + ε_t. The autoregressive level coefficient is φ = 1 + g. When g is between −1 and 0, the series pulls back toward its mean, and the number of periods required for a deviation to fall by half is ln 2 / −ln(1 + g). That is the discrete half-life. The continuous approximation −ln 2 / g is close only when g is near zero; at φ = 0.9 it is already about 5 percent longer than the discrete number. If g is not negative, the series is not mean-reverting on this regression and the half-life is infinite.",
+    "formula": "Δy_t = a + g · y_{t−1} + ε_t\nφ = 1 + g\n\nhalf-life = ln(2) / −ln(1 + g)     if −1 < g < 0\n          = ∞                       if g ≥ 0\n          undefined (NaN)           if g ≤ −1  (oscillatory or explosive)\n\nContinuous approximation, small g:  ln(2) / −g\nExample: φ = 0.9 → g = −0.1 → half-life = ln(2) / −ln(0.9) ≈ 6.58 periods.\nThe ADF page uses this discrete definition, not ln(2) / −g.",
+    "sections": [
+      {
+        "heading": "Where the number is used",
+        "html": "<ul>\n<li>As a holding-period scale for a spread that has already passed a stationarity check. See <a href=\"/glossary/adf-test/\">ADF</a> and <a href=\"/glossary/cointegration/\">cointegration</a>. A half-life of six days and a half-life of six months are different research problems.</li>\n<li>As a way to set the window on a <a href=\"/code/pairs-zscore-signal/\">rolling z-score</a>. A window much shorter than the half-life mostly fits noise; a window of many half-lives averages different regimes.</li>\n<li><a href=\"/glossary/hurst-exponent/\">Hurst</a> is a related but different summary of the same wish: H below one half suggests anti-persistence. It is not a half-life.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Use the discrete form.</strong> Dividing ln 2 by −g treats g as a continuous-time speed. The regression you just ran is discrete. This function matches the half-life already published on the ADF page, ln 2 / −ln(1+g).</li>\n<li><strong>The regression is not a proof of mean reversion.</strong> A short sample of a random walk often produces a slightly negative g. Pair the half-life with an ADF or cointegration test, and expect the estimate to move when you add data.</li>\n<li><strong>An intercept is included.</strong> The mean that the series reverts to is −a/g, not necessarily zero. Forcing the regression through the origin changes g.</li>\n<li><strong>Not a trading rule.</strong> A finite half-life is a sample statistic. It does not say the spread will keep reverting, or that a position sized to it is desirable.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef half_life(spread) -> float:\n    \"\"\"Discrete mean-reversion half-life, ln(2) / -ln(1+g), from Δy = a + g y_lag.\n\n    Infinite when g >= 0 (no mean reversion). NaN when g <= -1.\n    Same definition as half_life on the ADF page.\n    \"\"\"\n    y = np.asarray(spread, dtype=float)\n    if y.ndim != 1 or y.size < 3 or not np.all(np.isfinite(y)):\n        raise ValueError(\"need at least three finite observations\")\n    lag = y[:-1]\n    if float(np.var(lag)) == 0.0:\n        return float(\"inf\")\n    X = np.column_stack([np.ones(lag.size), lag])\n    g = float(np.linalg.lstsq(X, np.diff(y), rcond=None)[0][1])\n    if g >= -1e-12:\n        return float(\"inf\")\n    if g <= -1.0:\n        return float(\"nan\")\n    return float(np.log(2.0) / -np.log1p(g))\n",
+    "faq": [
+      {
+        "question": "Why not use −ln(2) / g, which is the formula many notes quote?",
+        "answer": "That is the continuous-time limit. The regression Δy_t = a + g y_{t−1} implies a discrete autoregressive coefficient φ = 1 + g, and a deviation multiplies by φ each period. Halving means φ^h = 1/2, so h = ln(2) / −ln(φ). At φ = 0.9 the continuous shortcut is about 6.93 periods and the discrete half-life is about 6.58."
+      },
+      {
+        "question": "What half-life should a pairs trade use?",
+        "answer": "This page does not pick one. It estimates a half-life from the series you pass. Whether the residual is stationary, whether both legs can be traded, and what it costs are separate questions; a finite estimate is not a signal to trade the spread."
+      }
+    ],
+    "related": [
+      "adf-test",
+      "cointegration",
+      "hurst-exponent",
+      "pairs-zscore-signal"
+    ],
+    "test": "\nimport numpy as np\nx = 0.9 ** np.arange(40, dtype=float)\nassert abs(half_life(x) - np.log(2) / -np.log(0.9)) < 1e-8\nassert half_life(np.ones(20)) == float(\"inf\")\n# Continuous shortcut is the wrong number at phi = 0.9.\nassert abs((-np.log(2) / -0.1) - np.log(2) / -np.log(0.9)) > 0.3\n",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "cython-rolling-mean",
+    "name": "O(n) Rolling Mean (Cython Memoryview Recurrence)",
+    "short": "Cython Rolling Mean",
+    "category": "High-Performance Python",
+    "summary": "The expanding-then-fixed rolling mean from a boundscheck-free Cython memoryview loop, implemented here with a NumPy prefix sum so the generator can re-execute it. The Cython source is included for compilation on a machine with a C toolchain.",
+    "definition": "A rolling mean can be updated by adding the new observation and subtracting the one that left the window, which is a single pass. Before the window is full the same sum is divided by the number of observations seen so far. The Cython form types the buffer as a double memoryview and turns bounds checks off. This page publishes that recurrence as a tested NumPy function, plus the Cython source as a string, because this site's generator executes every snippet with CPython and cannot compile cimport.",
+    "formula": "Let s_−1 = 0. For i = 0..n−1:\n  s_i = s_{i−1} + x_i − x_{i−w} · 1{i ≥ w}\n  m_i = s_i / w            if i ≥ w\n      = s_i / (i+1)        if i < w\n\nPrefix-sum form (same values):\n  m_i = (c_i − c_{i−w}) / w    for i ≥ w,   c_i = Σ_{k=0..i} x_k,  c_{<0} = 0\n  m_i = c_i / (i+1)            for i < w\n\nCython sketch (compile with cythonize; not executed by the generator):\n  @cython.boundscheck(False)\n  @cython.wraparound(False)\n  def fast_rolling_mean(double[:] arr, int window): ...",
+    "sections": [
+      {
+        "heading": "When to use it",
+        "html": "<ul>\n<li>One rolling mean over a long tick or bar array, where a Python per-window loop is the cost and a C compiler is available for the memoryview version.</li>\n<li>As a readable specification of the partial-window convention (divide by <code>i+1</code> until the window is full, then by <code>w</code>). The NumPy function is what the tests lock in.</li>\n<li>For several rolling statistics at once, or for prices with a large level, the centred running sums in <a href=\"/code/rolling-window-numba/\">rolling-window-numba</a> are a better fit. They need no compiler and lose less precision.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>This page does not compile Cython.</strong> <code>cimport</code> is not valid Python, so shipping only the memoryview function would fail the rebuild test. <code>CYTHON_SOURCE</code> is the compiled form; <code>fast_rolling_mean</code> is the reference.</li>\n<li><strong>Cancellation.</strong> A raw running sum of prices near 10,000 loses digits in the variance, and even the mean drifts once the sum is huge. Re-centre, or use the Numba operators, if the level is large relative to the variation inside the window.</li>\n<li><strong>NaNs.</strong> One NaN stays inside the prefix sum from that index onward. Drop or fill gaps first.</li>\n<li><strong>Window edges.</strong> Index <code>i = w−1</code> is still the mean of the first <code>w</code> points. Index <code>i = w</code> drops <code>x_0</code>. Callers who want NaN during the warm-up should mask <code>i &lt; w−1</code> themselves.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\n# Same recurrence as a Cython loop over a double memoryview. Compile CYTHON_SOURCE\n# with Cython (boundscheck and wraparound off) when a C compiler is available.\n# The function below is the tested reference: CPython cannot execute cimport.\nCYTHON_SOURCE = \"\"\"\ncimport cython\nimport numpy as np\n\n@cython.boundscheck(False)\n@cython.wraparound(False)\ndef fast_rolling_mean(double[:] arr, int window):\n    cdef int n = arr.shape[0]\n    cdef double[:] res = np.empty(n)\n    cdef double s = 0.0\n    cdef int i\n    for i in range(n):\n        s += arr[i]\n        if i >= window:\n            s -= arr[i - window]\n            res[i] = s / window\n        else:\n            res[i] = s / (i + 1)\n    return np.asarray(res)\n\"\"\"\n\ndef fast_rolling_mean(arr, window: int) -> np.ndarray:\n    \"\"\"Rolling mean. Partial windows divide by the number of points seen so far.\n\n    For i >= window the result is the mean of x[i-window+1 : i+1].\n    Equivalent to the memoryview loop in CYTHON_SOURCE.\n    \"\"\"\n    x = np.ascontiguousarray(arr, dtype=np.float64).reshape(-1)\n    window = int(window)\n    if window < 1:\n        raise ValueError(\"window must be a positive integer\")\n    n = x.size\n    out = np.empty(n, dtype=np.float64)\n    if n == 0:\n        return out\n    csum = np.cumsum(x)\n    np.divide(csum, np.arange(1, n + 1, dtype=np.float64), out=out)\n    if n > window:\n        out[window:] = (csum[window:] - csum[:-window]) / window\n    return out\n",
+    "faq": [
+      {
+        "question": "Why is the published function NumPy rather than Cython?",
+        "answer": "The site rebuilds by executing every snippet with Python. Cython syntax such as cimport and cdef does not run there, and a C compiler is not part of the rebuild. The NumPy prefix sum matches the memoryview loop value for value; the Cython source is in the same file for when you compile it locally."
+      },
+      {
+        "question": "How is this different from the Numba rolling operators?",
+        "answer": "This recurrence is a single mean, including a defined value on the warm-up samples. The Numba snippet computes mean, sample standard deviation, rolling beta and a 2-D z-score, re-centres to protect precision, and leaves the warm-up as NaN."
+      }
+    ],
+    "related": [
+      "rolling-window-numba",
+      "numpy-strided-rolling"
+    ],
+    "test": "\nimport numpy as np\n\ndef _loop(arr, window):\n    x = np.asarray(arr, float)\n    n = x.size\n    res = np.empty(n)\n    s = 0.0\n    for i in range(n):\n        s += x[i]\n        if i >= window:\n            s -= x[i - window]\n            res[i] = s / window\n        else:\n            res[i] = s / (i + 1)\n    return res\n\nrng = np.random.default_rng(3)\nx = rng.normal(0, 1, 10000)\nfor w in (1, 2, 7, 250):\n    assert np.allclose(fast_rolling_mean(x, w), _loop(x, w))\nassert np.allclose(fast_rolling_mean([1.0, 2.0, 3.0], 5), [1.0, 1.5, 2.0])\nassert fast_rolling_mean([], 3).size == 0\nassert \"cimport cython\" in CYTHON_SOURCE and \"boundscheck\" in CYTHON_SOURCE\ntry:\n    fast_rolling_mean([1.0], 0)\n    raise SystemExit(\"window 0 should fail\")\nexcept ValueError:\n    pass\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "duckdb-parquet-loader",
+    "name": "Load Hive-Partitioned Parquet Ticks with Bound Parameters",
+    "short": "DuckDB Parquet Loader",
+    "category": "Data Engineering for Quants",
+    "summary": "Read a date slice of tick Parquet through DuckDB. The file glob and the date are bound parameters, so a path or a date string cannot change the SQL.",
+    "definition": "DuckDB queries Parquet in place. With Hive layout (one folder per day), a predicate on the partition column skips other days. The glob passed to read_parquet and the date in the WHERE clause are both placeholders. Building either value into the SQL text with an f-string would let a quote in a path, or a crafted date, close the string and append another statement. Binding them does not.",
+    "formula": "Layout:  ticks/date=YYYY-MM-DD/part-*.parquet\nColumns: timestamp, symbol, price, volume\n\nSELECT symbol, timestamp, price, volume\nFROM read_parquet(?, hive_partitioning = true)   -- ? = glob, not an interpolated path\nWHERE date = ?                                   -- ? = the date\n  AND volume > 0\nORDER BY timestamp",
+    "sections": [
+      {
+        "heading": "Why bind every value",
+        "html": "<ul>\n<li>The date filter is what makes a Hive layout useful: folders outside the day are not opened. It only stays a filter if it is a value, not a piece of SQL text.</li>\n<li>Paths from a config file, a request, or a folder name with a quote are data. <code>read_parquet(?)</code> passes them through DuckDB's parameter API.</li>\n<li>For minute bars, VWAP and code filters on the same layout, see <a href=\"/code/duckdb-parquet-ticks/\">duckdb-parquet-ticks</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Partition type.</strong> Hive values are parsed from folder names. <code>date=2024-03-01</code> usually arrives as a date. Compare it to a date or an ISO date string, and check with <code>DESCRIBE</code> if a filter suddenly matches nothing.</li>\n<li><strong>Zero-size prints.</strong> The query drops <code>volume &lt;= 0</code>. Those rows are not trades. Decide separately whether auction prints belong in the extract.</li>\n<li><strong>Glob, not a Python path join inside SQL.</strong> Pass the glob from Python (<code>dir/**/*.parquet</code>). Do not concatenate it into the query string.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import duckdb\n\ndef query_ticks_by_date(parquet_glob: str, target_date: str):\n    \"\"\"Ticks for one Hive date partition.\n\n    parquet_glob and target_date are bound parameters. They are never\n    interpolated into the SQL text.\n    \"\"\"\n    if not isinstance(parquet_glob, str) or not isinstance(target_date, str):\n        raise TypeError(\"parquet_glob and target_date must be strings\")\n    if parquet_glob == \"\" or target_date == \"\":\n        raise ValueError(\"parquet_glob and target_date must be non-empty\")\n    con = duckdb.connect()\n    return con.execute(\n        \"\"\"\n        SELECT symbol, timestamp, price, volume\n        FROM read_parquet(?, hive_partitioning = true)\n        WHERE date = ?\n          AND volume > 0\n        ORDER BY timestamp\n        \"\"\",\n        [parquet_glob, target_date],\n    ).df()\n",
+    "faq": [
+      {
+        "question": "Why not use an f-string for the path?",
+        "answer": "read_parquet needs a path, and an f-string is the obvious way to supply it, but the path then becomes SQL syntax. A directory name containing a quote breaks the query or changes it. A bound parameter keeps the path as a value. The same applies to the date."
+      },
+      {
+        "question": "Does this load the whole dataset into memory?",
+        "answer": "DuckDB reads the Parquet row groups required by the query. A selective date predicate on a Hive partition avoids opening other days. The result of this particular query is still a pandas DataFrame of every matching tick, so aggregate in SQL when the day is large. See the minute-bar query on the DuckDB ticks page."
+      }
+    ],
+    "related": [
+      "duckdb-parquet-ticks",
+      "duckdb-asof-vwap",
+      "pandas-tick-to-ohlcv"
+    ],
+    "test": "\nimport os, tempfile\nfrom pathlib import Path\nimport pandas as pd\n\nroot = tempfile.mkdtemp(prefix=\"o'hare \")\nday = Path(root) / \"date=2024-03-01\"\nother = Path(root) / \"date=2024-03-04\"\nday.mkdir(); other.mkdir()\npd.DataFrame({\n    \"timestamp\": pd.to_datetime([\"2024-03-01 09:31:10\", \"2024-03-01 09:30:00\", \"2024-03-01 09:30:30\"]),\n    \"symbol\": [\"BBB\", \"AAA\", \"AAA\"],\n    \"price\": [20.0, 10.0, 11.0],\n    \"volume\": [7, 5, 0],\n}).to_parquet(day / \"part.parquet\", index=False)\npd.DataFrame({\n    \"timestamp\": pd.to_datetime([\"2024-03-04 09:30:00\"]),\n    \"symbol\": [\"AAA\"], \"price\": [12.0], \"volume\": [3],\n}).to_parquet(other / \"part.parquet\", index=False)\nglob = str(Path(root) / \"**\" / \"*.parquet\")\nout = query_ticks_by_date(glob, \"2024-03-01\")\nassert out[\"symbol\"].tolist() == [\"AAA\", \"BBB\"]\nassert out[\"volume\"].tolist() == [5, 7]\nassert out[\"price\"].tolist() == [10.0, 20.0]\nassert query_ticks_by_date(glob, \"2024-03-05\").empty\nassert \"'\" in glob  # path would break an f-string literal\ntry:\n    query_ticks_by_date(glob, \"\")\n    raise SystemExit(\"empty date should fail\")\nexcept ValueError:\n    pass\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "polars-vectorized-backtest",
+    "name": "Polars Moving-Average Crossover, Lagged One Bar",
+    "short": "Polars MA Backtest",
+    "category": "Backtesting",
+    "summary": "A moving-average crossover in Polars lazy expressions. The position is shifted one bar so it cannot earn the return that formed the signal, and a cost is charged when the position changes. Educational example only.",
+    "definition": "The signal is long when the fast mean of close is above the slow mean, and flat otherwise. That decision is delayed by one bar before it multiplies returns, which is the minimum delay that removes same-bar look-ahead on a close-to-close return. Turnover is the absolute change in position. Cost is turnover times a constant in basis points. This is a single-series illustration, not a portfolio backtest and not a trading recommendation.",
+    "formula": "ret_t     = C_t / C_{t−1} − 1\nsignal_t  = 1{ MA_fast(C)_t > MA_slow(C)_t }     (0 while either mean is null)\npos_t     = signal_{t−1}                         (0 at t = 0)\ncost_t    = |pos_t − pos_{t−1}| · cost_bps / 10^4\nstrat_t   = pos_t · ret_t − cost_t\nequity_t  = Π_{s≤t} (1 + strat_s)\n\nWarm-up bars, where a mean is missing, contribute signal 0.",
+    "sections": [
+      {
+        "heading": "What the lag does",
+        "html": "<ul>\n<li>The means at bar t use the close of bar t. The return of bar t is the move from t−1 to t, which is already in that close. Multiplying them on the same row would book a fill at a price the signal has already used.</li>\n<li><code>shift(1)</code> applies the decision from bar t to the return of bar t+1: the earliest close-to-close return that starts after the signal.</li>\n<li>For a dates × stocks book with suspensions and limit-up or limit-down flags, use <a href=\"/code/vectorized-backtest/\">vectorized-backtest</a>. This page is one series and no trading constraints.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Costs are a flat bps charge.</strong> There is no spread, no impact and no borrow. A crossover that looks fine here can be negative once those are added.</li>\n<li><strong>One position, all or nothing.</strong> The position is 0 or 1. It does not size by volatility or cap turnover.</li>\n<li><strong>Adjusted prices.</strong> Splits and dividends have to be in the close series already. A raw close series invents returns on corporate actions.</li>\n<li><strong>This is not a forecast.</strong> A historical equity curve of a moving-average rule is a description of that sample. It is not evidence that the rule will make money on the next sample.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import polars as pl\n\ndef ma_crossover_backtest(df: pl.DataFrame, fast: int = 20, slow: int = 100, cost_bps: float = 1.0) -> pl.DataFrame:\n    \"\"\"Moving-average crossover on columns timestamp, close.\n\n    The position implied by bar t is applied to the return of bar t+1.\n    cost_bps is charged on the absolute change in position.\n    Educational example only; not a trading strategy.\n    \"\"\"\n    if fast < 1 or slow < 1:\n        raise ValueError(\"fast and slow windows must be positive\")\n    if cost_bps < 0:\n        raise ValueError(\"cost_bps must be non-negative\")\n    ready = pl.col(\"fast_ma\").is_not_null() & pl.col(\"slow_ma\").is_not_null()\n    signal = pl.when(ready & (pl.col(\"fast_ma\") > pl.col(\"slow_ma\"))).then(1.0).otherwise(0.0)\n    return (\n        df.lazy()\n        .sort(\"timestamp\")\n        .with_columns(\n            ret=pl.col(\"close\").pct_change(),\n            fast_ma=pl.col(\"close\").rolling_mean(fast),\n            slow_ma=pl.col(\"close\").rolling_mean(slow),\n        )\n        .with_columns(pos=signal.shift(1).fill_null(0.0))\n        .with_columns(cost=pl.col(\"pos\").diff().abs().fill_null(0.0) * cost_bps / 1e4)\n        .with_columns(strat_ret=pl.col(\"pos\") * pl.col(\"ret\").fill_null(0.0) - pl.col(\"cost\"))\n        .with_columns(equity=(1 + pl.col(\"strat_ret\")).cum_prod())\n        .collect()\n    )\n",
+    "faq": [
+      {
+        "question": "Why is the position shifted by one bar?",
+        "answer": "The close that updates the moving averages is the same close that ends the bar's return. Using the signal on that same return treats the bar as both the information and the fill. The shift makes the signal wait for the next return."
+      },
+      {
+        "question": "Does a higher equity curve mean the rule works?",
+        "answer": "No. The curve is the result of this rule, this cost and this sample, with no market impact. Use it to check the code. Judging whether a rule is worth trading needs a later sample, realistic costs and a risk report."
+      }
+    ],
+    "related": [
+      "vectorized-backtest",
+      "sharpe-ratio",
+      "max-drawdown"
+    ],
+    "test": "\nimport numpy as np\nimport polars as pl\n\nclose = np.array([10.0, 10, 10, 11, 12, 13, 12, 11, 10, 11], dtype=float)\ndf = pl.DataFrame({\"timestamp\": list(range(len(close))), \"close\": close})\nout = ma_crossover_backtest(df, fast=2, slow=3, cost_bps=10.0)\n\n# Independent loop with the same timing.\nfast = np.full(len(close), np.nan)\nslow = np.full(len(close), np.nan)\nc = np.cumsum(close)\nfor i in range(len(close)):\n    if i >= 1:\n        fast[i] = (c[i] - (c[i - 2] if i >= 2 else 0.0)) / 2\n    if i >= 2:\n        slow[i] = (c[i] - (c[i - 3] if i >= 3 else 0.0)) / 3\nsignal = np.where(np.isnan(fast) | np.isnan(slow) | ~(fast > slow), 0.0, 1.0)\npos = np.zeros(len(close))\npos[1:] = signal[:-1]\nret = np.zeros(len(close))\nret[1:] = close[1:] / close[:-1] - 1\ncost = np.zeros(len(close))\ncost[0] = abs(pos[0]) * 10 / 1e4\ncost[1:] = np.abs(np.diff(pos)) * 10 / 1e4\nstrat = pos * ret - cost\nassert np.allclose(out[\"pos\"].to_numpy(), pos)\nassert np.allclose(out[\"strat_ret\"].to_numpy(), strat)\nassert np.allclose(out[\"equity\"].to_numpy(), np.cumprod(1 + strat))\n# First bar is flat: the signal cannot earn ret[0].\nassert out[\"pos\"][0] == 0.0 and out[\"strat_ret\"][0] == 0.0\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "numba-ewma-volatility",
+    "name": "RiskMetrics EWMA Volatility in Numba",
+    "short": "Numba EWMA Vol",
+    "category": "High-Performance Python",
+    "summary": "Exponentially weighted variance compiled with Numba. The variance at t uses returns only through t−1, so the latest shock is not included in the volatility assigned to that same index.",
+    "definition": "RiskMetrics writes today's variance as a blend of yesterday's variance and yesterday's squared return. The weight on the previous variance is λ, often 0.94 for daily data. The square root of that variance is the EWMA volatility. The loop is a prefix recursion, which Numba compiles to a tight machine-code pass. It is a smoother with a fixed λ, not a fitted GARCH model.",
+    "formula": "σ²_0 = r_0²\nσ²_t = λ σ²_{t−1} + (1 − λ) r_{t−1}²     t = 1..n−1\nσ_t  = sqrt(σ²_t)\n\nσ_t depends on r_0 .. r_{t−1} only.\n0 ≤ λ ≤ 1.  λ = 1 repeats σ²_0.  λ = 0 gives σ²_t = r_{t−1}².",
+    "sections": [
+      {
+        "heading": "When to use it",
+        "html": "<ul>\n<li>A causal volatility estimate on a long return series, for scaling positions or for comparing with <a href=\"/glossary/realized-volatility/\">realized volatility</a>.</li>\n<li>Inside another <code>@njit</code> loop. A Python EWMA over millions of bars spends its time in the interpreter; this one does not, after the first compile.</li>\n<li>For a variance that also reacts to a long-run level and is estimated rather than set, see <a href=\"/glossary/garch/\">GARCH(1,1)</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Initial value.</strong> σ²_0 = r_0² is one observation. A large first return leaves a long tail when λ is close to 1. Some desks seed the recursion with a sample variance of an earlier window instead.</li>\n<li><strong>Look-ahead.</strong> Using r_t² inside σ_t would mix the return you are about to score with the volatility you score it by. This recursion does not do that. Do not \"fix\" the index.</li>\n<li><strong>λ is not estimated here.</strong> 0.94 is the RiskMetrics daily convention, not a maximum-likelihood estimate for your sample. The half-life of a shock is about ln(0.5)/ln(λ) periods (about 11 days at 0.94).</li>\n<li><strong>NaNs and the first call.</strong> A NaN poisons every later value. The first call compiles; <code>cache=True</code> reuses the compiled code afterwards.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nfrom numba import njit\n\n@njit(cache=True)\ndef ewma_vol(returns, lam=0.94):\n    \"\"\"EWMA volatility. var[t] uses returns[:t] only (r[t] is excluded).\n\n    lam is the weight on the previous variance (RiskMetrics daily default 0.94).\n    \"\"\"\n    if lam < 0.0 or lam > 1.0:\n        raise ValueError(\"lam must be in [0, 1]\")\n    r = returns\n    n = r.shape[0]\n    var = np.empty(n, dtype=np.float64)\n    if n == 0:\n        return var\n    var[0] = r[0] * r[0]\n    one = 1.0 - lam\n    for t in range(1, n):\n        prev = r[t - 1]\n        var[t] = lam * var[t - 1] + one * prev * prev\n    return np.sqrt(var)\n",
+    "faq": [
+      {
+        "question": "Why does the variance at t use the return at t−1?",
+        "answer": "So that the volatility sitting on row t was knowable before r_t was. That is the RiskMetrics recursion. Putting r_t into var[t] would make any later Sharpe-style scaling use information from the return it is scaling."
+      },
+      {
+        "question": "Is this GARCH?",
+        "answer": "No. GARCH(1,1) has a constant term and the two slopes are estimated. EWMA is the special case ω = 0 and α + β = 1, with λ chosen rather than fitted. It has no finite unconditional variance."
+      }
+    ],
+    "related": [
+      "garch",
+      "realized-volatility",
+      "rolling-window-numba"
+    ],
+    "test": "\nimport numpy as np\nr = np.array([0.01, -0.02, 0.015])\nvol = ewma_vol(r, 0.94)\n# var0 = 0.01**2\n# var1 = 0.94*var0 + 0.06*0.01**2 = var0\n# var2 = 0.94*var0 + 0.06*(-0.02)**2\nvar0 = 0.01 ** 2\nvar2 = 0.94 * var0 + 0.06 * (0.02 ** 2)\nassert np.allclose(vol, np.sqrt([var0, var0, var2]))\nassert np.allclose(ewma_vol(r, 1.0), np.full(3, 0.01))\nassert np.allclose(ewma_vol(r, 0.0), np.array([0.01, 0.01, 0.02]))\nassert ewma_vol(np.array([]), 0.94).size == 0\n# row t ignores r[t]: changing the last return leaves earlier vols unchanged\nr2 = r.copy(); r2[-1] = 5.0\nassert np.allclose(ewma_vol(r2, 0.94)[:-1], vol[:-1])\ntry:\n    ewma_vol(r, 1.1)\n    raise SystemExit(\"lam out of range should fail\")\nexcept ValueError:\n    pass\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "pandas-tick-to-ohlcv",
+    "name": "Resample Trade Ticks to OHLCV and VWAP Bars",
+    "short": "Tick to OHLCV",
+    "category": "Data Engineering for Quants",
+    "summary": "Turn a trade tape with a timestamp index into regular time bars: open, high, low, close, volume, VWAP and trade count. Empty bins are dropped.",
+    "definition": "Time bars group irregular trades into fixed clock buckets. Open and close are the first and last trade prices in the bucket, high and low are the extrema, and volume and trade count are sums and counts. VWAP is the volume-weighted average of the trade prices inside the bucket, which is the trade-level VWAP rather than a typical-price approximation from the bar.",
+    "formula": "For the trades in a clock bin of width Δ:\n  open  = price of the earliest trade\n  high  = max price,   low = min price\n  close = price of the latest trade\n  volume = Σ volume,   trades = count\n  VWAP  = Σ price·volume / Σ volume     (undefined if volume is 0)\n\nBins with no trades are omitted.",
+    "sections": [
+      {
+        "heading": "When to use it",
+        "html": "<ul>\n<li>Building a research bar from a trade tape before a backtest or a volatility estimate.</li>\n<li>Checking a SQL aggregation. The same VWAP is computed in <a href=\"/code/duckdb-asof-vwap/\">duckdb-asof-vwap</a> without loading the tape into pandas.</li>\n<li>Session VWAP across a whole day, as a benchmark rather than a bar feature, is the <a href=\"/glossary/vwap/\">VWAP</a> term.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Timestamp ties.</strong> <code>resample</code> uses the index order. Two trades with the same timestamp keep whatever order the frame has, and that order decides open and close. Sort by <code>(timestamp, sequence)</code> before setting the index. The DuckDB ticks page shows the same trap.</li>\n<li><strong>Empty minutes.</strong> They are removed, so the result is not a regular grid. Reindex against a full calendar if a model needs missing bars as gaps.</li>\n<li><strong>Zero volume.</strong> A bucket whose volumes sum to zero gets a missing VWAP rather than a divide-by-zero. Those prints are not a price discovery event.</li>\n<li><strong>Auctions and sessions.</strong> The resampler does not know the cash-session clock. Filter the tape to the session you mean before calling it.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import pandas as pd\n\ndef ticks_to_bars(ticks: pd.DataFrame, freq: str = \"1min\") -> pd.DataFrame:\n    \"\"\"OHLCV, VWAP and trade count from a trade tape.\n\n    ticks: DatetimeIndex, columns price and volume, sorted by time.\n    Empty bins are dropped. VWAP is missing when the bin volume is 0.\n    \"\"\"\n    if not isinstance(ticks.index, pd.DatetimeIndex):\n        raise TypeError(\"ticks must be indexed by a DatetimeIndex\")\n    if not {\"price\", \"volume\"}.issubset(ticks.columns):\n        raise ValueError(\"ticks need price and volume columns\")\n    ticks = ticks.sort_index()\n    grouped = ticks.resample(freq)\n    bars = grouped[\"price\"].ohlc()\n    bars[\"volume\"] = grouped[\"volume\"].sum()\n    traded_value = (ticks[\"price\"] * ticks[\"volume\"]).resample(freq).sum()\n    bars[\"vwap\"] = traded_value / bars[\"volume\"].where(bars[\"volume\"] > 0)\n    bars[\"trades\"] = grouped[\"price\"].count()\n    return bars.dropna(subset=[\"open\"])\n",
+    "faq": [
+      {
+        "question": "Why can VWAP differ from a typical-price bar VWAP?",
+        "answer": "Typical price (high + low + close) / 3 times bar volume only approximates the trades. This function weights each trade by its own size, which is the VWAP used as an execution benchmark."
+      },
+      {
+        "question": "What happens to a minute with no trades?",
+        "answer": "It is omitted. The clock bin exists inside resample as an empty row and is then dropped, so you can join the result back onto a complete calendar if you need an explicit gap."
+      }
+    ],
+    "related": [
+      "vwap",
+      "duckdb-asof-vwap",
+      "pandas-volume-bars"
+    ],
+    "test": "\nimport pandas as pd\nidx = pd.to_datetime([\"2024-01-01 09:30:01\", \"2024-01-01 09:30:40\", \"2024-01-01 09:31:05\", \"2024-01-01 09:33:00\"])\nticks = pd.DataFrame({\"price\": [10.0, 12.0, 11.0, 9.0], \"volume\": [1, 3, 2, 0]}, index=idx)\nbars = ticks_to_bars(ticks, \"1min\")\nassert list(bars.index) == list(pd.to_datetime([\"2024-01-01 09:30\", \"2024-01-01 09:31\", \"2024-01-01 09:33\"]))\nassert bars.loc[\"2024-01-01 09:30\", [\"open\", \"high\", \"low\", \"close\", \"volume\", \"trades\"]].tolist() == [10.0, 12.0, 10.0, 12.0, 4, 2]\nassert abs(bars.loc[\"2024-01-01 09:30\", \"vwap\"] - (10 * 1 + 12 * 3) / 4) < 1e-12\nassert bars.loc[\"2024-01-01 09:31\", \"vwap\"] == 11.0\nassert pd.isna(bars.loc[\"2024-01-01 09:33\", \"vwap\"]) and bars.loc[\"2024-01-01 09:33\", \"volume\"] == 0\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "pandas-volume-bars",
+    "name": "Equal-Volume Bars from a Trade Tape",
+    "short": "Volume Bars",
+    "category": "Data Engineering for Quants",
+    "summary": "Group trades into bars that each contain about the same traded volume. The trade that crosses the threshold stays in the bar it completes. A single trade larger than the threshold is not split.",
+    "definition": "Volume bars sample the tape by quantity instead of by clock time. Walking the trades in order, a bar closes on the trade that makes cumulative volume reach the next multiple of the threshold. Bars therefore hold roughly constant information in the sense of traded size, and the time between bars shrinks when the market is active. The last bar is returned even if it has not reached the threshold.",
+    "formula": "Threshold V > 0. Trades in time order, volumes v_i ≥ 0.\nLet C_i = Σ_{k≤i} v_k and C_0-side = 0 before trade i (C_{i−1}).\n  bar(i) = floor( C_{i−1} / V )\n\nThe trade that pushes C_i across a multiple of V stays in the bar that was open.\nA trade with v_i > V is kept whole, so that bar's volume can exceed V.\nOHLC and the bar's end timestamp come from the trades in the group.",
+    "sections": [
+      {
+        "heading": "Why sample by volume",
+        "html": "<ul>\n<li>Clock bars mix quiet minutes, which are almost empty, with auction and news minutes that contain a large share of the day's volume. Volume bars put a similar amount of trading in each row.</li>\n<li>López de Prado argues that sampling by volume (or by information) produces return series closer to i.i.d. than sampling by the clock. That is a modelling convenience, not a source of returns by itself.</li>\n<li>Bars like these are the input to bucket measures such as <a href=\"/glossary/vpin/\">VPIN</a>, which wants equal-volume buckets rather than equal-time buckets.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Do not split prints.</strong> A block trade larger than V becomes one oversized bar. Splitting it would invent prices.</li>\n<li><strong>The closing print is included.</strong> Floor of the cumulative volume <em>before</em> the trade is what keeps the crossing trade in the bar that fills. Floor of the cumulative volume <em>after</em> the trade pushes that trade into the next bar and leaves the earlier bar short of V.</li>\n<li><strong>Incomplete tail.</strong> The last bar is whatever remains. Drop it before estimating a statistic that assumes every bar has volume near V.</li>\n<li><strong>Sort order is the sampling order.</strong> A DatetimeIndex is sorted. Any other index is used as given, which is wrong if the frame is not already in exchange order.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef volume_bars(ticks: pd.DataFrame, bar_volume: float) -> pd.DataFrame:\n    \"\"\"OHLCV bars of about `bar_volume` traded units.\n\n    The trade that crosses each multiple of bar_volume stays in the bar it\n    completes. Trades are not split. The final, possibly short, bar is kept.\n    \"\"\"\n    if bar_volume <= 0:\n        raise ValueError(\"bar_volume must be positive\")\n    if not {\"price\", \"volume\"}.issubset(ticks.columns):\n        raise ValueError(\"ticks need price and volume columns\")\n    if isinstance(ticks.index, pd.DatetimeIndex):\n        ticks = ticks.sort_index()\n    vol = ticks[\"volume\"].to_numpy(dtype=np.float64)\n    if vol.size and np.any(vol < 0):\n        raise ValueError(\"volume must be non-negative\")\n    if vol.size == 0:\n        return pd.DataFrame(columns=[\"end_time\", \"open\", \"high\", \"low\", \"close\", \"volume\"])\n    bar_id = np.floor(np.cumsum(vol) - vol) // bar_volume\n    bar_id = pd.Series(bar_id.astype(np.int64), index=ticks.index)\n    grouped = ticks.groupby(bar_id, sort=True)\n    out = grouped.agg(\n        open=(\"price\", \"first\"),\n        high=(\"price\", \"max\"),\n        low=(\"price\", \"min\"),\n        close=(\"price\", \"last\"),\n        volume=(\"volume\", \"sum\"),\n    )\n    out.insert(0, \"end_time\", grouped.tail(1).index.to_numpy())\n    out.index.name = \"bar_id\"\n    return out\n",
+    "faq": [
+      {
+        "question": "Why not use cumsum(volume) // bar_volume as the bar id?",
+        "answer": "That assigns the trade which crosses the threshold to the next bar, so the bar you just closed is systematically short of the threshold. Using the cumulative volume before the trade keeps the crossing trade in the bar that fills."
+      },
+      {
+        "question": "How should I pick the threshold?",
+        "answer": "A common research choice is a fraction of average daily volume, so a typical day produces a similar number of bars across names. The threshold is a sampling parameter. It is not an execution instruction."
+      }
+    ],
+    "related": [
+      "pandas-tick-to-ohlcv",
+      "vpin",
+      "realized-volatility"
+    ],
+    "test": "\nimport pandas as pd\nidx = pd.to_datetime([\"2024-01-01 09:30:01\", \"2024-01-01 09:30:02\", \"2024-01-01 09:30:03\", \"2024-01-01 09:31:00\"])\nticks = pd.DataFrame({\"price\": [10.0, 11.0, 12.0, 9.0], \"volume\": [40, 30, 50, 100]}, index=idx)\nbars = volume_bars(ticks, 100)\nassert bars[\"volume\"].tolist() == [120, 100]\nassert bars[\"open\"].tolist() == [10.0, 9.0]\nassert bars[\"close\"].tolist() == [12.0, 9.0]\nassert list(bars[\"end_time\"]) == [idx[2], idx[3]]\n# Crossing trade stays in the bar: 40+30+50, not 40+30.\nassert bars[\"high\"].tolist() == [12.0, 9.0]\nassert volume_bars(ticks.iloc[0:0], 100).empty\ntry:\n    volume_bars(ticks, 0)\n    raise SystemExit(\"bar_volume 0 should fail\")\nexcept ValueError:\n    pass\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "pairs-zscore-signal",
+    "name": "Rolling Hedge Ratio and Spread Z-Score",
+    "short": "Pair Z-Score",
+    "category": "Time Series & Stat-Arb",
+    "summary": "A rolling OLS hedge ratio between two price series, the spread y − βx, and a rolling z-score of that spread. The z-score uses a second window on an already rolling spread, so it is defined later than β. Illustrative only; not a trading signal.",
+    "definition": "The hedge ratio at each date is the slope of y on x over the trailing window, cov(y, x) / var(x). The spread is the residual of that slope with no intercept, y − βx. Its z-score subtracts a trailing mean and divides by a trailing sample standard deviation, both taken over the same window length. A large absolute z-score means the spread is far from its recent average. That is a description of the series, not a recommendation to trade it.",
+    "formula": "β_t     = Cov_w(y, x)_t / Var_w(x)_t          (pandas sample cov and var, ddof = 1)\nspread_t = y_t − β_t x_t\nz_t      = (spread_t − mean_w(spread)_t) / std_w(spread)_t\n\nβ_t is defined once `window` observations exist.\nz_t needs a further `window` finite spreads, so it starts about 2·window observations in.\nstd = 0 → z is missing, not infinite.",
+    "sections": [
+      {
+        "heading": "How it sits next to cointegration",
+        "html": "<ul>\n<li>A hedge ratio is only interesting as a mean-reverting spread if the series are <a href=\"/glossary/cointegration/\">cointegrated</a>, or at least if the spread rejects a unit root. See the <a href=\"/glossary/adf-test/\">ADF</a> page.</li>\n<li>The <a href=\"/glossary/half-life-mean-reversion/\">half-life</a> of the spread is the usual way to choose the window that standardises z, rather than picking 60 because it is round.</li>\n<li>The same rolling slope, compiled and re-centred, is <code>rolling_beta</code> in <a href=\"/code/rolling-window-numba/\">rolling-window-numba</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>No intercept.</strong> The spread is y − βx, not y − a − βx. If the two prices differ by a level, that level sits inside the spread and the z-score spends a long time absorbing it. Engle-Granger includes an intercept.</li>\n<li><strong>Nested windows.</strong> z_t standardises a spread that already used a window to estimate β. Early z values are noisier than a z-score of a fixed-β residual.</li>\n<li><strong>Look-ahead is not in the formulas, but it is easy to add.</strong> β_t uses prices through t. A position decided from z_t must not trade at the close of t. Lag the position by at least one bar, as on the Polars backtest page.</li>\n<li><strong>Not a signal to trade.</strong> A z-score of 2 is two recent standard deviations. It is not an expected return and it is not a suggestion to buy or sell the spread.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import pandas as pd\n\ndef pair_zscore(y: pd.Series, x: pd.Series, window: int = 60) -> pd.DataFrame:\n    \"\"\"Rolling slope of y on x, the residual spread, and its rolling z-score.\n\n    Sample covariance and variance (ddof=1), so the ratio matches OLS with an\n    intercept-free slope. Illustrative only; not a trading signal.\n    \"\"\"\n    if window < 2:\n        raise ValueError(\"window must be at least 2\")\n    y, x = y.align(x, join=\"inner\")\n    beta = y.rolling(window).cov(x) / x.rolling(window).var()\n    spread = y - beta * x\n    sd = spread.rolling(window).std()\n    z = (spread - spread.rolling(window).mean()) / sd.where(sd > 0)\n    return pd.DataFrame({\"beta\": beta, \"spread\": spread, \"zscore\": z})\n",
+    "faq": [
+      {
+        "question": "Why does the z-score start so late?",
+        "answer": "The slope needs `window` rows, and the mean and standard deviation of the spread need another `window` finite spreads. With a window of 60 the z-score becomes available about 120 rows in, not 60."
+      },
+      {
+        "question": "Can I trade the sign of the z-score?",
+        "answer": "This function only standardises a spread. Whether the spread mean-reverts, whether both legs can be traded, and what it costs are separate questions. The output is not an order."
+      }
+    ],
+    "related": [
+      "cointegration",
+      "half-life-mean-reversion",
+      "adf-test",
+      "rolling-window-numba"
+    ],
+    "test": "\nimport numpy as np\nimport pandas as pd\nrng = np.random.default_rng(2)\nx = pd.Series(np.cumsum(rng.normal(0, 1, 400)) + 50.0)\ny = 3.0 + 1.8 * x + rng.normal(0, 0.4, 400)\nout = pair_zscore(y, x, 80)\ni = 200\nsl = slice(i - 79, i + 1)\nslope = np.polyfit(x.iloc[sl], y.iloc[sl], 1)[0]\nassert abs(out[\"beta\"].iloc[i] - slope) < 1e-8\nspread = (y - out[\"beta\"] * x).iloc[sl]\nz = (spread.iloc[-1] - spread.mean()) / spread.std(ddof=1)\nassert abs(out[\"zscore\"].iloc[i] - z) < 1e-8\nassert out[\"zscore\"].iloc[:100].isna().all()\nflat = pair_zscore(pd.Series([1.0, 1, 1, 1, 1.0]), pd.Series([2.0, 2, 2, 2, 2.0]), 3)\nassert flat[\"zscore\"].isna().all()\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "numpy-strided-rolling",
+    "name": "Rolling Z-Score from a Zero-Copy Sliding Window",
+    "short": "NumPy Strided Rolling",
+    "category": "High-Performance Python",
+    "summary": "Build each rolling window as a view with sliding_window_view and reduce it in NumPy. The view shares memory with the input. Sample standard deviation of zero becomes a missing z-score, not an infinity.",
+    "definition": "sliding_window_view reshapes a 1-D array into overlapping windows of length w without copying the values. The row means and sample standard deviations are then ordinary NumPy reductions along the window axis. The z-score at the right edge of each window is (x − mean) / std. Positions before the first full window are missing. This is a convenient form when the reduction is a NumPy ufunc. It is not always faster than a single running-sum pass, because each overlapping row still reads w elements.",
+    "formula": "W = sliding_window_view(x, w)          shape (n − w + 1, w), a view\nμ = mean(W, axis=1)                    population mean of the window\ns = std(W, axis=1, ddof=1)             sample standard deviation\nz_{w−1+i} = (x_{w−1+i} − μ_i) / s_i     if s_i > 0, else missing\n\nMemory: W.base is x. Changing W would change x.",
+    "sections": [
+      {
+        "heading": "When to use it",
+        "html": "<ul>\n<li>A one-off rolling reduction that NumPy already implements (mean, quantile, median), where writing a running-sum update is not worth it.</li>\n<li>Teaching or testing a window statistic against an obvious definition. The view makes the window explicit.</li>\n<li>For mean, variance and beta on long series, a running sum does one pass and less memory traffic. See <a href=\"/code/rolling-window-numba/\">rolling-window-numba</a> and <a href=\"/code/cython-rolling-mean/\">cython-rolling-mean</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>It is a view.</strong> Do not write into the window array. The write lands in the original series.</li>\n<li><strong>The view is O(n·w) to reduce</strong> even though it is O(1) extra memory to build. A rolling mean this way is slower than a prefix sum for large w.</li>\n<li><strong>ddof.</strong> Sample standard deviation (divide by w−1) matches pandas <code>rolling.std</code>. Population standard deviation does not. w must be at least 2.</li>\n<li><strong>Zero variation.</strong> A window of identical values has sample std 0. Division is skipped and the z-score is missing.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nfrom numpy.lib.stride_tricks import sliding_window_view\n\ndef rolling_zscore(x, window: int) -> np.ndarray:\n    \"\"\"Rolling z-score using a zero-copy sliding window.\n\n    Sample standard deviation (ddof=1). Warm-up and zero-std windows are NaN.\n    The window view is not writable from the caller's point of view: this\n    function only reads it.\n    \"\"\"\n    x = np.asarray(x, dtype=np.float64).reshape(-1)\n    window = int(window)\n    if window < 2:\n        raise ValueError(\"window must be at least 2\")\n    out = np.full(x.shape, np.nan)\n    if x.size < window:\n        return out\n    view = sliding_window_view(x, window)\n    mu = view.mean(axis=1)\n    sd = view.std(axis=1, ddof=1)\n    z = np.full(mu.shape, np.nan)\n    np.divide(x[window - 1:] - mu, sd, out=z, where=sd > 0)\n    out[window - 1:] = z\n    return out\n",
+    "faq": [
+      {
+        "question": "Does sliding_window_view copy the data?",
+        "answer": "No. It returns a view with modified strides. The extra memory is a small array header, not n times w floats. The subsequent mean and std do read each window, so the compute is not free."
+      },
+      {
+        "question": "Why not use this for every rolling statistic?",
+        "answer": "Reductions that have an O(1) update, such as a sum, are faster and kinder to the cache as a single pass. The strided view is the right tool when the statistic is awkward to update, for example a rolling median or quantile."
+      }
+    ],
+    "related": [
+      "rolling-window-numba",
+      "cython-rolling-mean"
+    ],
+    "test": "\nimport numpy as np\nimport pandas as pd\nrng = np.random.default_rng(4)\nx = rng.normal(size=500)\nz = rolling_zscore(x, 20)\nref = pd.Series(x)\nexpect = ((ref - ref.rolling(20).mean()) / ref.rolling(20).std()).to_numpy()\nassert np.allclose(z, expect, equal_nan=True)\nassert np.isnan(z[:19]).all() and np.isfinite(z[19])\nflat = rolling_zscore(np.ones(10), 4)\nassert np.isnan(flat).all()\nbase = np.arange(6, dtype=float)\nview = np.lib.stride_tricks.sliding_window_view(base, 3)\nassert np.shares_memory(view, base)\ntry:\n    rolling_zscore(x, 1)\n    raise SystemExit(\"window 1 should fail\")\nexcept ValueError:\n    pass\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "numba-order-book-replay",
+    "name": "Top-of-Book Queue Imbalance while Replaying Quotes",
+    "short": "Numba Book Imbalance",
+    "category": "High-Performance Python",
+    "summary": "Walk a tape of best-bid and best-ask sizes in a compiled loop and emit the queue imbalance at each update. A locked or empty touch, where the two sizes sum to zero, is recorded as zero rather than as a division by zero.",
+    "definition": "Queue imbalance at the touch is the bid size minus the ask size, divided by the sum of the two. It is positive when more size is displayed on the bid than on the ask. Replaying the top-of-book tape means evaluating that ratio at every update, in order, without building an intermediate DataFrame. The function does not reconstruct price levels and it does not infer trade direction. It is the size ratio only.",
+    "formula": "I_t = (q^b_t − q^a_t) / (q^b_t + q^a_t)    if q^b_t + q^a_t > 0\n    = 0                                         otherwise\n\n−1 ≤ I_t ≤ 1\nI_t = 1  → all displayed touch size is on the bid\nI_t = −1 → all of it is on the ask\nSizes must be ≥ 0. This is not Cont–Kukanov–Stoikov order-flow imbalance.",
+    "sections": [
+      {
+        "heading": "Where it fits",
+        "html": "<ul>\n<li>A feature on a quote tape: one number per book update, cheap enough to compute inside a compiled replay of millions of rows.</li>\n<li>As a simpler cousin of <a href=\"/glossary/ofi/\">order-flow imbalance</a>. OFI uses price changes and the size that was added or removed. Queue imbalance uses only the sizes currently displayed.</li>\n<li>Trade-sign toxicity measures such as <a href=\"/glossary/vpin/\">VPIN</a> need trades, not this quote ratio.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Displayed size is not the true queue.</strong> Iceberg orders, hidden liquidity and fleeting quotes mean the ratio is a picture of what was shown, not of demand.</li>\n<li><strong>Crossed or zero sizes.</strong> A feed glitch can report a zero or negative size. Negative sizes raise. A zero total returns 0 so one bad print does not poison a later reduction with NaN, but you should still count how often that branch hits.</li>\n<li><strong>Not comparable across names without care.</strong> The ratio is already scale-free. Its variance still depends on how often the touch flips, which differs between a thick future and a thin stock.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nfrom numba import njit\n\n@njit(cache=True)\ndef queue_imbalance(bid_sz, ask_sz):\n    \"\"\"Queue imbalance (bid_sz - ask_sz) / (bid_sz + ask_sz) at each update.\n\n    Replay order is the array order. Total size of 0 yields 0. Negative sizes raise.\n    \"\"\"\n    n = bid_sz.shape[0]\n    if ask_sz.shape[0] != n:\n        raise ValueError(\"bid_sz and ask_sz must have the same length\")\n    out = np.empty(n, dtype=np.float64)\n    for i in range(n):\n        b = bid_sz[i]\n        a = ask_sz[i]\n        if b < 0.0 or a < 0.0:\n            raise ValueError(\"sizes must be non-negative\")\n        tot = b + a\n        out[i] = (b - a) / tot if tot > 0.0 else 0.0\n    return out\n",
+    "faq": [
+      {
+        "question": "How is this different from order-flow imbalance?",
+        "answer": "Order-flow imbalance adds up changes at the best quotes: size added on the bid is buying pressure, size added on the ask is selling pressure. Queue imbalance ignores the change and only looks at the sizes currently sitting at the touch."
+      },
+      {
+        "question": "Why return 0 when both sizes are 0?",
+        "answer": "There is no queue to compare. Returning NaN is also defensible; 0 keeps a compiled reduction from turning the rest of a session into NaN when a single empty update appears. Check the rate of empty updates separately."
+      }
+    ],
+    "related": [
+      "ofi",
+      "vpin"
+    ],
+    "test": "\nimport numpy as np\nbid = np.array([300.0, 100.0, 0.0, 5.0])\nask = np.array([100.0, 100.0, 0.0, 15.0])\nout = queue_imbalance(bid, ask)\nassert np.allclose(out, [0.5, 0.0, 0.0, -0.5])\nassert queue_imbalance(np.array([1.0]), np.array([0.0]))[0] == 1.0\nassert queue_imbalance(np.zeros(0), np.zeros(0)).size == 0\ntry:\n    queue_imbalance(np.array([1.0]), np.array([-1.0]))\n    raise SystemExit(\"negative size should fail\")\nexcept ValueError:\n    pass\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "polars-asof-join-quotes",
+    "name": "Attach the Prevailing Quote to Each Trade",
+    "short": "Polars As-Of Quotes",
+    "category": "Data Engineering for Quants",
+    "summary": "Backward as-of join, per symbol, from trades to the latest quote at or before the trade. Trade side is then +1 above the mid, −1 below it, 0 at the mid, and missing when no quote has printed yet.",
+    "definition": "An as-of join matches each trade to the most recent quote that was already on the book, rather than to a quote with the same timestamp only. Doing it by symbol keeps one name's quote from attaching to another name's trade. The side rule compares the trade price to the matched mid-price. It is a labelling convention for research, not the exchange's aggressor flag.",
+    "formula": "For each trade (symbol s, time t), choose the quote of s with the greatest t_q ≤ t.\n  mid = (bid + ask) / 2\n  side =  1  if price > mid\n       = −1  if price < mid\n       =  0  if price = mid\n       = missing if no quote has t_q ≤ t\n\nBoth frames are sorted by time before the join. Exact timestamp matches are allowed.",
+    "sections": [
+      {
+        "heading": "Why backward, and by symbol",
+        "html": "<ul>\n<li>A trade can only be labelled with a quote the matching engine had already published. A forward as-of join would use a future quote. That is look-ahead.</li>\n<li><code>by=\"symbol\"</code> is the difference between a usable tape and a join that pastes the wrong book onto a print whenever two names trade at close times.</li>\n<li>The labelled tape is an input to signed-volume measures such as <a href=\"/glossary/kyles-lambda/\">Kyle's lambda</a> and to the buy and sell buckets in <a href=\"/glossary/vpin/\">VPIN</a>.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>No tolerance by default.</strong> The latest quote might be hours old, or from the previous session. Pass a tolerance if a stale quote should not label a trade.</li>\n<li><strong>Quote rule is not Lee-Ready.</strong> The full tick test also looks at whether the quote itself moved. A price above the mid is only a clue about the aggressor.</li>\n<li><strong>Sort both sides.</strong> <code>join_asof</code> requires the time key to be sorted. This function sorts by time. A secondary sequence number should already have broken ties in the frame you pass in, or two events in the same timestamp keep their original relative order only if the sort is stable, which Polars' default sort is.</li>\n<li><strong>Missing quote is not side 0.</strong> Side 0 means the trade printed at the mid. A trade before the first quote has a missing side. Collapsing both to 0 hides a join failure.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import polars as pl\n\ndef tag_trades_with_quotes(trades: pl.DataFrame, quotes: pl.DataFrame, tolerance=None) -> pl.DataFrame:\n    \"\"\"Backward as-of join of quotes onto trades, per symbol, plus a mid rule.\n\n    side is +1 above the mid, -1 below, 0 at the mid, and null if no quote\n    is available at or before the trade. tolerance drops quotes older than that.\n    \"\"\"\n    need_t = {\"symbol\", \"ts\", \"price\"}\n    need_q = {\"symbol\", \"ts\", \"bid\", \"ask\"}\n    if not need_t.issubset(trades.columns) or not need_q.issubset(quotes.columns):\n        raise ValueError(\"trades need symbol, ts, price; quotes need symbol, ts, bid, ask\")\n    out = (\n        trades.sort(\"ts\")\n        .join_asof(\n            quotes.sort(\"ts\"),\n            on=\"ts\",\n            by=\"symbol\",\n            strategy=\"backward\",\n            tolerance=tolerance,\n            check_sortedness=False,\n        )\n    )\n    mid = (pl.col(\"bid\") + pl.col(\"ask\")) / 2\n    known = mid.is_not_null()\n    return out.with_columns(\n        side=pl.when(known & (pl.col(\"price\") > mid)).then(pl.lit(1))\n        .when(known & (pl.col(\"price\") < mid)).then(pl.lit(-1))\n        .when(known).then(pl.lit(0))\n        .otherwise(pl.lit(None))\n    )\n",
+    "faq": [
+      {
+        "question": "Why not join on an equal timestamp?",
+        "answer": "Quotes and trades rarely share a timestamp. An inner join on ts drops almost every trade. An as-of join keeps the quote that was current, which is the one a labelling rule can actually use."
+      },
+      {
+        "question": "What does a missing side mean?",
+        "answer": "No quote for that symbol had a timestamp at or before the trade, or the matched quote was older than the tolerance. It does not mean the trade was at the mid. At-mid trades have side 0."
+      }
+    ],
+    "related": [
+      "kyles-lambda",
+      "vpin",
+      "ofi"
+    ],
+    "test": "\nimport polars as pl\ntrades = pl.DataFrame({\n    \"symbol\": [\"A\", \"A\", \"A\", \"B\"],\n    \"ts\": [1, 3, 0, 5],\n    \"price\": [10.6, 10.0, 9.0, 4.5],\n})\nquotes = pl.DataFrame({\n    \"symbol\": [\"A\", \"A\", \"B\"],\n    \"ts\": [1, 2, 5],\n    \"bid\": [10.0, 9.5, 4.0],\n    \"ask\": [11.0, 10.5, 6.0],\n})\nout = tag_trades_with_quotes(trades, quotes).sort(\"ts\")\n# trade at t=0 has no quote yet; t=1 uses the t=1 quote; t=3 uses the t=2 quote\na = out.filter(pl.col(\"symbol\") == \"A\").sort(\"ts\")\n# t=1 price 10.6 vs mid 10.5 → buy; t=3 price 10.0 vs mid 10.0 → at mid\nassert a[\"side\"].to_list() == [None, 1, 0]\nassert a[\"bid\"].to_list()[1:] == [10.0, 9.5]\nb = out.filter(pl.col(\"symbol\") == \"B\")\nassert b[\"side\"].to_list() == [-1]\n# A quote exactly at the trade is used (backward includes equality).\nstale = tag_trades_with_quotes(trades, quotes, tolerance=0)\n# tolerance 0 keeps only exact ts matches: A's t=1 and B's t=5\nassert stale.filter(pl.col(\"ts\") == 3)[\"side\"].to_list() == [None]\nassert stale.filter(pl.col(\"ts\") == 1)[\"side\"].to_list() == [1]\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
+  },
+  {
+    "term_id": "duckdb-asof-vwap",
+    "name": "Per-Symbol Minute VWAP in DuckDB",
+    "short": "DuckDB Minute VWAP",
+    "category": "Data Engineering for Quants",
+    "summary": "Aggregate a Parquet trade tape to one VWAP and one volume per symbol per minute, in a single DuckDB query. The file path is a bound parameter. Despite the page slug, this is a time-bucket aggregation, not an as-of join.",
+    "definition": "Minute VWAP is the traded value in that minute divided by the traded volume, computed separately for each symbol. DuckDB's time_bucket assigns each timestamp to the start of its minute, and GROUP BY ALL groups by the selected symbol and minute columns. Division uses NULLIF so a minute whose volume sums to zero gets a missing VWAP instead of an error or an infinity. The path to the Parquet files is passed as a parameter.",
+    "formula": "minute = time_bucket(INTERVAL 1 MINUTE, timestamp)\nVWAP   = Σ(price · volume) / Σ volume     within (symbol, minute)\nvolume = Σ volume\n\nSELECT symbol, minute, VWAP, volume\nFROM read_parquet(?)          -- path is bound, not concatenated\nGROUP BY ALL\nORDER BY symbol, minute",
+    "sections": [
+      {
+        "heading": "When to use it",
+        "html": "<ul>\n<li>You want minute bars from a large tape and you do not want to materialise every tick as a DataFrame. The aggregation runs in DuckDB and only the bars come back.</li>\n<li>The same VWAP, computed after loading the ticks, is <a href=\"/code/pandas-tick-to-ohlcv/\">pandas-tick-to-ohlcv</a>. Session VWAP as an execution benchmark is the <a href=\"/glossary/vwap/\">VWAP</a> term.</li>\n<li>Attaching quotes to trades is a different operation. That as-of join is <a href=\"/code/polars-asof-join-quotes/\">polars-asof-join-quotes</a>. This query does not look at quotes.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>The slug says asof.</strong> The query is a group-by on a time bucket. There is no ASOF JOIN in it. Keeping the slug stable matters more than renaming the page to match the SQL keyword.</li>\n<li><strong>Timestamp ties and order.</strong> VWAP does not care which trade came first. Open and close would. Do not extend this query with an unordered <code>first(price)</code> and call it the open.</li>\n<li><strong>Zero volume.</strong> <code>NULLIF</code> makes VWAP null when the minute's volume is 0. The row is still returned, so a caller can see the empty minute. Filter it if you want only real bars.</li>\n<li><strong>Clock and time zone.</strong> <code>time_bucket</code> uses the timestamp as stored. Naive and timezone-aware columns must not be mixed across files.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import duckdb\n\ndef minute_vwap(parquet_glob: str):\n    \"\"\"Minute VWAP and volume per symbol from Parquet trades.\n\n    parquet_glob is a bound parameter (a file path or a glob). The query is an\n    aggregation on time_bucket, not an as-of join.\n    \"\"\"\n    if not isinstance(parquet_glob, str) or parquet_glob == \"\":\n        raise ValueError(\"parquet_glob must be a non-empty string\")\n    con = duckdb.connect()\n    return con.execute(\n        \"\"\"\n        SELECT symbol,\n               time_bucket(INTERVAL 1 MINUTE, timestamp) AS minute,\n               SUM(price * volume) / NULLIF(SUM(volume), 0) AS vwap,\n               SUM(volume) AS volume\n        FROM read_parquet(?)\n        GROUP BY ALL\n        ORDER BY symbol, minute\n        \"\"\",\n        [parquet_glob],\n    ).df()\n",
+    "faq": [
+      {
+        "question": "Why is this not an as-of join?",
+        "answer": "VWAP needs every trade in the minute, weighted by size. An as-of join would keep a single neighbouring row. The page id was fixed by the batch that added it; the SQL matches the definition above, and the as-of join lives on the Polars quotes page."
+      },
+      {
+        "question": "Why bind the path?",
+        "answer": "The glob is data. Concatenating it into the query string turns a peculiar folder name into SQL syntax. read_parquet(?) keeps it a parameter, including globs."
+      }
+    ],
+    "related": [
+      "vwap",
+      "duckdb-parquet-ticks",
+      "pandas-tick-to-ohlcv",
+      "polars-asof-join-quotes"
+    ],
+    "test": "\nimport tempfile\nfrom pathlib import Path\nimport pandas as pd\np = Path(tempfile.mkdtemp(prefix=\"vwap \")) / \"ticks.parquet\"\npd.DataFrame({\n    \"symbol\": [\"BBB\", \"AAA\", \"AAA\", \"AAA\"],\n    \"timestamp\": pd.to_datetime([\n        \"2024-03-01 09:31:10\", \"2024-03-01 09:30:10\", \"2024-03-01 09:30:40\", \"2024-03-01 09:32:00\",\n    ]),\n    \"price\": [20.0, 10.0, 12.0, 9.0],\n    \"volume\": [7, 1, 3, 0],\n}).to_parquet(p, index=False)\nout = minute_vwap(str(p))\nassert out[\"symbol\"].tolist() == [\"AAA\", \"AAA\", \"BBB\"]\nassert abs(out.loc[0, \"vwap\"] - (10 * 1 + 12 * 3) / 4) < 1e-12\nassert out.loc[0, \"volume\"] == 4\nassert pd.isna(out.loc[1, \"vwap\"]) and out.loc[1, \"volume\"] == 0\nassert abs(out.loc[2, \"vwap\"] - 20.0) < 1e-12\nassert \" \" in str(p.parent)\n",
+    "kind": "snippet",
+    "date_published": "2026-11-08T08:30:00-05:00",
+    "date_modified": "2026-11-08T08:30:00-05:00"
   }
 ]

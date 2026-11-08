@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maximum Drawdown: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/max-drawdown/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Maximum Drawdown: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/max-drawdown/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/max-drawdown/#term",
+      "name": "Maximum Drawdown",
+      "termCode": "max-drawdown",
+      "description": "Drawdown at each point is the equity divided by the highest equity seen so far, minus one. The maximum drawdown is the smallest of those numbers (the deepest loss from a peak). It is path dependent: the order of returns matters, not only their mean and variance. The function expects a positive equity curve, not a return series.",
+      "url": "https://quantcore-labs.com/glossary/max-drawdown/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/max-drawdown/#article",
+      "headline": "Maximum Drawdown: Definition, Formula and Python",
+      "description": "The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/max-drawdown/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/max-drawdown/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/max-drawdown/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/max-drawdown/#code",
+      "name": "Max Drawdown in Python",
+      "description": "Tested Python reference implementation: The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/max-drawdown/",
+      "contentUrl": "https://quantcore-labs.com/glossary/max-drawdown/max-drawdown.py",
+      "text": "import numpy as np\n\ndef max_drawdown(equity) -> float:\n    \"\"\"Most negative peak-to-trough decline of a positive equity curve.\n\n    Returns a fraction in [-1, 0]. A 25% decline is -0.25.\n    \"\"\"\n    equity = np.asarray(equity, dtype=float)\n    if equity.size == 0 or not np.all(np.isfinite(equity)) or np.any(equity <= 0):\n        raise ValueError(\"equity must be non-empty, finite and positive\")\n    peak = np.maximum.accumulate(equity)\n    return float((equity / peak - 1.0).min())\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/max-drawdown/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does the maximum drawdown say when it happened?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It is a single fraction. The performance calculator on this site also reports the peak and trough dates and the longest time spent below a peak. Those need the whole drawdown path, not only its minimum."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if the curve ends at its low?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The unrecovered decline is included. Maximum drawdown does not require the equity to have made a new high afterwards. A strategy that fell 40 percent and never recovered has a maximum drawdown of at least 40 percent."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Max Drawdown",
+          "item": "https://quantcore-labs.com/glossary/max-drawdown/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">max-drawdown</span></nav><div class="tag">GLOSSARY · MAX DRAWDOWN</div></div></header>
+<main>
+<article>
+<h1>Maximum Drawdown</h1>
+<p class="lede">Performance &amp; Risk Metrics · Term ID: <code>max-drawdown</code></p>
+<p class="def"><strong>Definition.</strong> Drawdown at each point is the equity divided by the highest equity seen so far, minus one. The maximum drawdown is the smallest of those numbers (the deepest loss from a peak). It is path dependent: the order of returns matters, not only their mean and variance. The function expects a positive equity curve, not a return series.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">DD_t = E_t / max_{s ≤ t} E_s − 1
+MDD  = min_t DD_t
+
+MDD ≤ 0. MDD = 0 means the equity curve never fell below a peak it had already set.
+Recovery and the length of the drawdown are not part of this number.</pre></section>
+
+<section><h2>Using it next to a return ratio</h2>
+<ul>
+<li>Sharpe and Sortino compress the path into moments. Maximum drawdown keeps one fact about the path: the worst decline from a high-water mark. Report both.</li>
+<li>The <a href="/tools/performance-analytics/">performance calculator</a> uses this definition and also reports how long the longest drawdown lasted. Duration is not in the function on this page.</li>
+<li><a href="/glossary/calmar-ratio/">Calmar</a> divides annualised growth by the absolute value of this number.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Sign.</strong> The function returns a non-positive fraction. Taking abs is the caller's job when a report wants "25 percent drawdown" as a positive phrase. Calmar does that internally.</li>
+<li><strong>Equity, not returns.</strong> Passing returns produces a meaningless ratio of small numbers. Compound the returns to equity first. The first point is a peak by definition, so a curve that falls immediately draws down from the starting level.</li>
+<li><strong>Sample length.</strong> A longer window can only make the maximum worse or leave it unchanged, if it contains the shorter window. Comparing a one-year MDD with a ten-year MDD as if they were the same statistic favours the short window.</li>
+<li><strong>Mark-to-market frequency.</strong> Daily equity and monthly equity do not share a maximum drawdown. Intra-month peaks are invisible on a monthly curve.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/max-drawdown/max-drawdown.py">Download max-drawdown.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def max_drawdown(equity) -&gt; float:
+    &quot;&quot;&quot;Most negative peak-to-trough decline of a positive equity curve.
+
+    Returns a fraction in [-1, 0]. A 25% decline is -0.25.
+    &quot;&quot;&quot;
+    equity = np.asarray(equity, dtype=float)
+    if equity.size == 0 or not np.all(np.isfinite(equity)) or np.any(equity &lt;= 0):
+        raise ValueError(&quot;equity must be non-empty, finite and positive&quot;)
+    peak = np.maximum.accumulate(equity)
+    return float((equity / peak - 1.0).min())
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Does the maximum drawdown say when it happened?</h3><p>No. It is a single fraction. The performance calculator on this site also reports the peak and trough dates and the longest time spent below a peak. Those need the whole drawdown path, not only its minimum.</p><h3>What if the curve ends at its low?</h3><p>The unrecovered decline is included. Maximum drawdown does not require the equity to have made a new high afterwards. A strategy that fell 40 percent and never recovered has a maximum drawdown of at least 40 percent.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Maximum Drawdown</p>
+<p>&gt; The most negative peak-to-trough decline of an equity curve. A 25 percent decline is returned as −0.25, not as 0.25.</p>
+<p>- Category: Performance &amp; Risk Metrics</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/max-drawdown/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/max-drawdown/max-drawdown.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/calmar-ratio/">Calmar Ratio</a> <a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> <a href="/glossary/var-expected-shortfall/">Value at Risk (VaR) and Expected Shortfall (ES)</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kyle&#x27;s Lambda: Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/kyles-lambda/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Kyle&#x27;s Lambda: Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/kyles-lambda/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#term",
+      "name": "Kyle's Lambda",
+      "termCode": "kyles-lambda",
+      "description": "In Kyle's 1985 model, competitive market makers set price impact so that the price is the conditional expectation of value given the net order flow. The impact coefficient is lambda. Empirically, lambda is estimated as the OLS slope of a price change on signed volume over a chosen interval. The intercept absorbs drift. This page is that regression, not a maximum-likelihood estimate of the structural model.",
+      "url": "https://quantcore-labs.com/glossary/kyles-lambda/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#article",
+      "headline": "Kyle's Lambda: Definition, Formula and Python",
+      "description": "The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-08T08:30:00-05:00",
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/kyles-lambda/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#code",
+      "name": "Kyle's Lambda in Python",
+      "description": "Tested Python reference implementation: The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/kyles-lambda/",
+      "contentUrl": "https://quantcore-labs.com/glossary/kyles-lambda/kyles-lambda.py",
+      "text": "import numpy as np\n\ndef kyles_lambda(price_changes, signed_volume) -> float:\n    \"\"\"OLS slope of price changes on signed volume, with an intercept.\"\"\"\n    x = np.asarray(signed_volume, dtype=float)\n    y = np.asarray(price_changes, dtype=float)\n    if x.shape != y.shape or x.ndim != 1 or x.size < 2:\n        raise ValueError(\"need at least two aligned observations\")\n    xc = x - x.mean()\n    var = float(xc @ xc)\n    if var <= 0:\n        raise ValueError(\"signed volume has zero variance\")\n    yc = y - y.mean()\n    return float((xc @ yc) / var)\n",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-08T08:30:00-05:00",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/kyles-lambda/#term"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why include an intercept?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The price can drift over the sample for reasons other than the signed flow in the regression. Without an intercept, that drift is forced into the slope. OLS with an intercept is also what np.polyfit of degree 1 estimates."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can lambda be negative?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In the model, no: informed buying pushes the price up. In a sample, yes, if the signs are noisy or the window is short. A negative estimate is a warning about the regression, not a negative liquidity."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Kyle's Lambda",
+          "item": "https://quantcore-labs.com/glossary/kyles-lambda/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">kyles-lambda</span></nav><div class="tag">GLOSSARY · KYLE&#x27;S LAMBDA</div></div></header>
+<main>
+<article>
+<h1>Kyle&#x27;s Lambda</h1>
+<p class="lede">Market Microstructure &amp; Order Flow · Term ID: <code>kyles-lambda</code></p>
+<p class="def"><strong>Definition.</strong> In Kyle&#x27;s 1985 model, competitive market makers set price impact so that the price is the conditional expectation of value given the net order flow. The impact coefficient is lambda. Empirically, lambda is estimated as the OLS slope of a price change on signed volume over a chosen interval. The intercept absorbs drift. This page is that regression, not a maximum-likelihood estimate of the structural model.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">ΔP_t = α + λ · SignedVolume_t + ε_t
+
+λ = Cov(ΔP, SignedVolume) / Var(SignedVolume)
+
+SignedVolume &gt; 0 means net buying. The sign convention has to match ΔP:
+a buy-driven uptick is positive volume with a positive price change.
+Units of λ are price per unit of volume.</pre></section>
+
+<section><h2>What the slope is used for</h2>
+<ul>
+<li>Comparing liquidity across names or across time: a higher λ is more impact per unit of signed volume. Scale volume before comparing a high-priced name with a low-priced one, or work in returns and turnover instead of raw price and shares.</li>
+<li>As a cost input. A parent order of signed size Q has an impact term on the order of λ·Q in this linear model, before temporary spread and fees. That is a sketch, not a cost forecast.</li>
+<li>Related tape measures: <a href="/glossary/vpin/">VPIN</a> (volume imbalance), <a href="/glossary/ofi/">OFI</a> (quote updates) and <a href="/glossary/amihud-illiquidity/">Amihud</a> (daily |return| over value).</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Trade signs.</strong> A wrong aggressor flag flips the slope's sign. Quote-rule labels from an <a href="/code/polars-asof-join-quotes/">as-of join</a> are an estimate of the sign, not the exchange flag.</li>
+<li><strong>Horizon.</strong> Lambda on one-second bins and lambda on daily bins are different parameters. Impact decays; a longer bin lets some of it come back and the slope falls.</li>
+<li><strong>Endogeneity.</strong> Signed volume and the price change are determined together. OLS is the reduced form people report. It is not, by itself, the structural Kyle lambda.</li>
+<li><strong>Zero flow variance.</strong> A window with no variation in signed volume has no slope. The function raises rather than returning a silent NaN from a degenerate fit.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/kyles-lambda/kyles-lambda.py">Download kyles-lambda.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+
+def kyles_lambda(price_changes, signed_volume) -&gt; float:
+    &quot;&quot;&quot;OLS slope of price changes on signed volume, with an intercept.&quot;&quot;&quot;
+    x = np.asarray(signed_volume, dtype=float)
+    y = np.asarray(price_changes, dtype=float)
+    if x.shape != y.shape or x.ndim != 1 or x.size &lt; 2:
+        raise ValueError(&quot;need at least two aligned observations&quot;)
+    xc = x - x.mean()
+    var = float(xc @ xc)
+    if var &lt;= 0:
+        raise ValueError(&quot;signed volume has zero variance&quot;)
+    yc = y - y.mean()
+    return float((xc @ yc) / var)
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>Why include an intercept?</h3><p>The price can drift over the sample for reasons other than the signed flow in the regression. Without an intercept, that drift is forced into the slope. OLS with an intercept is also what np.polyfit of degree 1 estimates.</p><h3>Can lambda be negative?</h3><p>In the model, no: informed buying pushes the price up. In a sample, yes, if the signs are noisy or the window is short. A negative estimate is a warning about the regression, not a negative liquidity.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Kyle&#x27;s Lambda</p>
+<p>&gt; The slope of price changes on signed order flow. A larger lambda means the same signed volume moves the price more, which is the usual reduced-form reading of a less liquid market.</p>
+<p>- Category: Market Microstructure &amp; Order Flow</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/kyles-lambda/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/kyles-lambda/kyles-lambda.py</p>
+</section>
+
+<section class="related"><h2>Related</h2><a href="/glossary/vpin/">Volume-Synchronized Probability of Informed Trading (VPIN)</a> <a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/amihud-illiquidity/">Amihud Illiquidity Measure (ILLIQ)</a> <a href="/code/polars-asof-join-quotes/">Attach the Prevailing Quote to Each Trade</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>
