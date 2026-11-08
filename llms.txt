@@ -13,9 +13,9 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 ## Glossary
 
 - [Glossary index](https://quantcore-labs.com/glossary/): all terms
-- [Volume-Weighted Average Price (VWAP)](https://quantcore-labs.com/glossary/vwap/): definition, formula, execution-cost vs VWAP, Python implementation
-- [Order Flow Imbalance (OFI)](https://quantcore-labs.com/glossary/ofi/): Cont-Kukanov-Stoikov top-of-book OFI, price-impact relation, Python implementation
-- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/): R/S and lagged-difference estimators, mean-reversion interpretation, small-sample bias, Python implementation
+- [Volume-Weighted Average Price (VWAP)](https://quantcore-labs.com/glossary/vwap/): The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.
+- [Order Flow Imbalance (OFI)](https://quantcore-labs.com/glossary/ofi/): Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.
+- [Hurst Exponent (H)](https://quantcore-labs.com/glossary/hurst-exponent/): A scaling exponent that measures long-range dependence in a time series. H < 0.5 indicates mean reversion, H = 0.5 a random walk, and H > 0.5 a persistent, trending series.
 
 ## Optional
 

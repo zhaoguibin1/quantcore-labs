@@ -1,0 +1,94 @@
+[
+  {
+    "term_id": "vwap",
+    "name": "Volume-Weighted Average Price (VWAP)",
+    "short": "VWAP",
+    "category": "Execution & Market Microstructure",
+    "summary": "The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.",
+    "definition": "VWAP is the average price of all trades over a period, with each trade weighted by its size. It equals total traded value divided by total traded volume.",
+    "formula": "VWAP = Σᵢ pᵢ·vᵢ / Σᵢ vᵢ\n\npᵢ : price of trade i        (bar data: typical price (H + L + C) / 3)\nvᵢ : volume of trade i\nΣ  : over all trades in the horizon (usually one session, reset at the open)\n\nExecution cost vs. VWAP (bps) = side × (P̄_fill − VWAP) / VWAP × 10⁴\nside = +1 for buys, −1 for sells; positive = worse than benchmark",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Execution benchmark.</strong> Brokers and buy-side trading desks report slippage against interval VWAP. Beating VWAP on a buy means the average fill came in below it.</li>\n<li><strong>VWAP algorithms.</strong> These split a parent order across the day in proportion to a forecast intraday volume profile, so the fills track the market's own VWAP. The main risk is a bad volume forecast.</li>\n<li><strong>Intraday signal.</strong> Price relative to running VWAP is a common mean-reversion and trend filter. Anchored VWAP measures from a chosen event, such as earnings or a gap.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li>Bar-based VWAP built from typical price only approximates trade-level VWAP. Use tick data when the result is used for cost attribution.</li>\n<li>Decide whether opening and closing auctions are included. On A-share markets the 09:15–09:25 call auction and the 14:57–15:00 closing auction can carry significant volume.</li>\n<li>A large order is part of the VWAP it is measured against. Participation above roughly 10–20% of volume makes the benchmark easy to \"beat\" and less informative; compare with arrival price as well.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef vwap(price: pd.Series, volume: pd.Series) -> float:\n    \"\"\"Session VWAP: sum(p * v) / sum(v).\"\"\"\n    v = volume.astype(float)\n    return float((price * v).sum() / v.sum())\n\ndef intraday_vwap(bars: pd.DataFrame) -> pd.Series:\n    \"\"\"Running VWAP that resets each trading day.\n    bars: DatetimeIndex, columns high, low, close, volume.\"\"\"\n    tp = (bars[\"high\"] + bars[\"low\"] + bars[\"close\"]) / 3.0  # typical price\n    pv = tp * bars[\"volume\"]\n    day = bars.index.normalize()\n    return pv.groupby(day).cumsum() / bars[\"volume\"].groupby(day).cumsum()\n\ndef slippage_bps(avg_fill: float, bench_vwap: float, side: int) -> float:\n    \"\"\"Execution cost vs VWAP in basis points. side=+1 buy, -1 sell.\n    Positive = worse than VWAP.\"\"\"\n    return side * (avg_fill - bench_vwap) / bench_vwap * 1e4\n",
+    "faq": [
+      {
+        "question": "Is VWAP the same as TWAP?",
+        "answer": "No. TWAP weights every time interval equally; VWAP weights by traded volume, so it follows the market's intraday volume curve."
+      }
+    ],
+    "related": [
+      "ofi"
+    ]
+  },
+  {
+    "term_id": "ofi",
+    "name": "Order Flow Imbalance (OFI)",
+    "short": "OFI",
+    "category": "HFT & Order Book Dynamics",
+    "summary": "Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.",
+    "definition": "Order Flow Imbalance aggregates every event at the best quotes (limit orders, cancellations and market orders) into one signed number. Demand added at the bid or supply removed from the ask counts as positive; supply added at the ask or demand removed from the bid counts as negative.",
+    "formula": "Per-event contribution (Cont, Kukanov & Stoikov, 2014):\n\neₙ =  1{Pᴮₙ ≥ Pᴮₙ₋₁}·qᴮₙ − 1{Pᴮₙ ≤ Pᴮₙ₋₁}·qᴮₙ₋₁\n    − 1{Pᴬₙ ≤ Pᴬₙ₋₁}·qᴬₙ + 1{Pᴬₙ ≥ Pᴬₙ₋₁}·qᴬₙ₋₁\n\nOFIₖ = Σ eₙ   over events n in interval k\n\nPrice impact:  ΔPₖ ≈ βₖ · OFIₖ + εₖ,   βₖ ∝ 1 / average depth\n\nPᴮ, qᴮ : best bid price and size     Pᴬ, qᴬ : best ask price and size",
+    "sections": [
+      {
+        "heading": "Interpretation",
+        "html": "<ul>\n<li>When the bid price is unchanged, the bid term reduces to the change in bid size. A rising bid counts the full new size, and a falling bid subtracts the full old size. The ask side mirrors this with the sign flipped.</li>\n<li>The original study on US equities reports that a single linear OFI regression explains a large share of short-interval mid-price variance. It also finds that the impact coefficient scales inversely with market depth.</li>\n</ul>"
+      },
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li>Short-horizon alpha and quote-skewing signals for market makers.</li>\n<li>Execution: pausing or accelerating child orders when OFI runs against the order.</li>\n<li>Multi-level OFI, computed over the top N levels, adds information beyond level 1 in deeper books.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li>Snapshot data such as the 3-second L2 snapshots common in A-share feeds hides intermediate events, so OFI computed from snapshots is a coarse approximation.</li>\n<li>Normalise by average depth or volume before comparing OFI across stocks.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef ofi(book: pd.DataFrame) -> pd.Series:\n    \"\"\"Per-event order flow imbalance e_n (Cont, Kukanov & Stoikov, 2014).\n    book: rows are successive top-of-book snapshots with columns\n          bid_px, bid_sz, ask_px, ask_sz.\n    Sum e_n over a time window to get OFI for that window.\"\"\"\n    bp, bq = book[\"bid_px\"], book[\"bid_sz\"]\n    ap, aq = book[\"ask_px\"], book[\"ask_sz\"]\n    bp0, bq0, ap0, aq0 = bp.shift(), bq.shift(), ap.shift(), aq.shift()\n    e = (np.where(bp >= bp0, bq, 0.0) - np.where(bp <= bp0, bq0, 0.0)\n         - np.where(ap <= ap0, aq, 0.0) + np.where(ap >= ap0, aq0, 0.0))\n    e = pd.Series(e, index=book.index)\n    e.iloc[0] = 0.0  # no previous snapshot\n    return e\n\n# Window OFI, e.g. 10-second buckets:\n# ofi_10s = ofi(book).resample(\"10s\").sum()\n",
+    "faq": [
+      {
+        "question": "Can OFI be computed from trade data alone?",
+        "answer": "No. OFI needs best bid/ask prices and sizes. Trade-only data gives trade-sign imbalance (buy volume minus sell volume), a related but different measure."
+      }
+    ],
+    "related": [
+      "vwap",
+      "hurst-exponent"
+    ]
+  },
+  {
+    "term_id": "hurst-exponent",
+    "name": "Hurst Exponent (H)",
+    "short": "Hurst Exponent",
+    "category": "Time Series & Stat-Arb",
+    "summary": "A scaling exponent that measures long-range dependence in a time series. H < 0.5 indicates mean reversion, H = 0.5 a random walk, and H > 0.5 a persistent, trending series.",
+    "definition": "The Hurst exponent H describes how the spread of a process grows with the time horizon. For a series with Hurst exponent H, the typical size of a move over τ steps scales as τᴴ. A random walk has H = 0.5.",
+    "formula": "Rescaled range (R/S) on returns xₜ, window length n:\n  Yₜ = Σ_{s≤t} (xₛ − x̄)            cumulative deviation\n  R(n) = max Yₜ − min Yₜ ,  S(n) = std(x)\n  E[R(n)/S(n)] ∝ nᴴ   →  H = slope of log(R/S) vs log n\n\nLagged-difference scaling on log prices pₜ:\n  std(pₜ₊τ − pₜ) ∝ τᴴ   →  H = slope of log std vs log τ\n\nH < 0.5 anti-persistent (mean-reverting)\nH = 0.5 uncorrelated increments (random walk)\nH > 0.5 persistent (trending)",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Statistical arbitrage.</strong> A pair or basket spread with H well below 0.5 is a candidate for mean-reversion trading. Use it alongside, not instead of, a cointegration or ADF test.</li>\n<li><strong>Regime filters.</strong> A rolling H separates trending from choppy periods for momentum versus reversal strategies.</li>\n<li><strong>Volatility research.</strong> Realised-volatility series show H around 0.1, the \"rough volatility\" finding of Gatheral, Jaisson and Rosenbaum (2018).</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li>R/S must be applied to returns, not price levels. Applied to a price series, it returns values near 1 that mean nothing.</li>\n<li>Classical R/S is biased upward in small samples. On 4,096 i.i.d. normal returns the code below returns about 0.55, not 0.50. Use the Anis-Lloyd/Peters correction or DFA, and compare against a shuffled-series baseline.</li>\n<li>Estimates are noisy and sensitive to the range of window sizes. Report confidence intervals, for example from a block bootstrap, before trading on a value of 0.45.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\n\ndef hurst_rs(returns, min_n: int = 16) -> float:\n    \"\"\"Hurst exponent by rescaled-range (R/S) analysis.\n    Input: a series of returns/increments, NOT price levels.\"\"\"\n    x = np.asarray(returns, dtype=float)\n    N = len(x)\n    sizes = np.unique(np.floor(np.logspace(np.log10(min_n),\n                                           np.log10(N // 2), 20)).astype(int))\n    rs = []\n    for n in sizes:\n        k = N // n\n        seg = x[: k * n].reshape(k, n)\n        dev = np.cumsum(seg - seg.mean(axis=1, keepdims=True), axis=1)\n        R = dev.max(axis=1) - dev.min(axis=1)\n        S = seg.std(axis=1, ddof=0)\n        ok = S > 0\n        rs.append(np.mean(R[ok] / S[ok]))\n    H, _ = np.polyfit(np.log(sizes), np.log(rs), 1)\n    return float(H)\n\ndef hurst_lag_var(log_price, max_lag: int = 100) -> float:\n    \"\"\"Hurst from scaling of lagged differences: std(x[t+tau]-x[t]) ~ tau^H.\n    Input: log price levels.\"\"\"\n    x = np.asarray(log_price, dtype=float)\n    lags = np.arange(2, max_lag)\n    tau = [np.std(x[l:] - x[:-l]) for l in lags]\n    H, _ = np.polyfit(np.log(lags), np.log(tau), 1)\n    return float(H)\n",
+    "faq": [
+      {
+        "question": "What Hurst value indicates mean reversion?",
+        "answer": "H below 0.5. Values near 0.5 are consistent with a random walk; small deviations are often estimator bias rather than tradable structure."
+      }
+    ],
+    "related": [
+      "ofi"
+    ]
+  }
+]
