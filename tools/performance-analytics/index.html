@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sharpe, Sortino, Calmar & Max Drawdown Calculator | QuantCore Labs</title>
+<meta name="description" content="Paste an equity curve, daily returns or PnL and get Sharpe, Sortino, Calmar, CAGR, max drawdown, drawdown duration, VaR/CVaR and a monthly returns table. Runs entirely in your browser.">
+<link rel="canonical" href="https://quantcore-labs.com/tools/performance-analytics/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/performance-analytics.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Performance & Drawdown Analytics Calculator">
+<meta property="og:description" content="Sharpe, Sortino, Calmar, max drawdown, drawdown duration and monthly returns from a pasted equity curve. Client-side, no upload.">
+<meta property="og:url" content="https://quantcore-labs.com/tools/performance-analytics/">
+<meta property="og:image" content="https://quantcore-labs.com/tools/performance-analytics/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/tools/performance-analytics/#app",
+      "name": "Performance & Drawdown Analytics Calculator",
+      "url": "https://quantcore-labs.com/tools/performance-analytics/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Portfolio Performance Analytics",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Accepts equity curve / NAV, periodic returns (% or decimal) or PnL with starting capital",
+        "Optional dates in YYYY-MM-DD, YYYY/MM/DD or YYYYMMDD format",
+        "Sharpe, Sortino and Calmar ratios",
+        "CAGR, annualised volatility, total return",
+        "Maximum drawdown, longest drawdown duration, current drawdown",
+        "Historical VaR and CVaR (95%), skewness, excess kurtosis, win rate, profit factor",
+        "Equity, underwater and rolling Sharpe charts; monthly returns table",
+        "Selectable annualisation: 252, 242 (A-share), 365, 52 or 12 periods per year",
+        "Client-side computation, data never leaves the browser"
+      ],
+      "image": "https://quantcore-labs.com/tools/performance-analytics/og-image.png",
+      "publisher": { "@id": "https://quantcore-labs.com/#org" },
+      "mainEntityOfPage": { "@id": "https://quantcore-labs.com/tools/performance-analytics/#article" }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/tools/performance-analytics/#article",
+      "headline": "Sharpe, Sortino, Calmar and Maximum Drawdown: Formulas and Conventions",
+      "description": "How the calculator computes risk-adjusted return and drawdown statistics from an equity curve or return series.",
+      "image": "https://quantcore-labs.com/tools/performance-analytics/og-image.png",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T21:00:00-05:00",
+      "dateModified": "2026-11-07T21:00:00-05:00",
+      "author": { "@id": "https://quantcore-labs.com/#org" },
+      "publisher": { "@id": "https://quantcore-labs.com/#org" },
+      "mainEntityOfPage": "https://quantcore-labs.com/tools/performance-analytics/",
+      "articleBody": "Periodic returns are r_t = E_t / E_(t-1) - 1, and P is the number of periods per year (252 by default, 242 for China A-shares). CAGR = (E_n / E_0)^(P / n) - 1, where n is the number of returns. Annualised volatility = stdev(r, sample) * sqrt(P). The per-period risk-free rate is rf_p = (1 + rf)^(1/P) - 1. Sharpe = mean(r - rf_p) / stdev(r - rf_p) * sqrt(P). Sortino = (mean(r) - MAR_p) / DD * sqrt(P), where the downside deviation DD = sqrt(mean(min(r - MAR_p, 0)^2)) is taken over all periods. Calmar = CAGR / |MDD| over the full sample. The drawdown is DD_t = E_t / max(E_0..E_t) - 1; the maximum drawdown is its minimum. Drawdown duration counts periods from a peak until the equity regains that peak, or until the end of the sample if the drawdown has not recovered. Historical VaR95 = -(5th percentile of r) and CVaR95 = -(mean of r at or below that percentile). Skewness and excess kurtosis are population moment estimators."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/tools/performance-analytics/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Should I annualise with 252 or 242 trading days for A-shares?",
+          "acceptedAnswer": { "@type": "Answer", "text": "China's A-share market has about 242 trading days a year because of its longer public holidays, so 242 is the more accurate factor for daily A-share strategies. Most US and global conventions use 252. The choice scales annualised volatility by sqrt(P) and changes Sharpe by sqrt(252/242), about 2%." }
+        },
+        {
+          "@type": "Question",
+          "name": "Why is my Sortino ratio different from another tool's?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Implementations differ on the downside deviation. This calculator uses the Sortino-Price definition: the root mean square of min(r - MAR, 0) over all periods. Some libraries instead take the standard deviation of negative returns only, which yields a larger denominator and a smaller Sortino. The MAR (minimum acceptable return) also matters; it defaults to the risk-free rate here." }
+        },
+        {
+          "@type": "Question",
+          "name": "How is the Calmar ratio defined here?",
+          "acceptedAnswer": { "@type": "Answer", "text": "CAGR divided by the absolute maximum drawdown over the entire pasted sample. The original industry definition uses a trailing 36-month window, so results differ for samples longer or shorter than three years." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data uploaded anywhere?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. Parsing and every calculation run in your browser with plain JavaScript. The page makes no network requests with your data." }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "QuantCore Labs", "item": "https://quantcore-labs.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Performance & Drawdown Analytics", "item": "https://quantcore-labs.com/tools/performance-analytics/" }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.scroll{overflow-x:auto}
+table.months{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:640px}
+table.months th,table.months td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--line)}
+table.months th{color:var(--dim);font-weight:500}
+table.months td:first-child,table.months th:first-child{text-align:left;color:var(--dim)}
+table.months td.y{font-weight:600;border-left:1px solid var(--line)}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / tools / performance-analytics</nav>
+  <h1>Performance &amp; Drawdown Analytics Calculator <span class="tag">CLIENT-SIDE</span></h1>
+  <p class="lede">Paste an equity curve, a series of periodic returns, or daily PnL with a starting capital. The page computes Sharpe, Sortino, Calmar, CAGR, maximum drawdown and its duration, VaR/CVaR and a monthly returns table instantly. Your data never leaves the browser.</p>
+</header>
+
+<noscript><p><strong>JavaScript is disabled.</strong> This calculator runs in the browser. Formulas and conventions are documented below and in the <a href="/performance-analytics.md">Markdown version</a>.</p></noscript>
+
+<main>
+<section aria-labelledby="calc-h">
+<h2 id="calc-h">Calculator</h2>
+<div class="grid">
+  <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+    <h3>Input</h3>
+    <label for="mode">Data type</label>
+    <select id="mode">
+      <option value="equity">Equity curve / NAV</option>
+      <option value="pct">Periodic returns (%)</option>
+      <option value="dec">Periodic returns (decimal)</option>
+      <option value="pnl">PnL per period (needs starting capital)</option>
+    </select>
+    <label for="data">Data: one row per period. Optional date first, e.g. <code>2024-01-02,1000000</code></label>
+    <textarea id="data" spellcheck="false" placeholder="2024-01-02,1000000&#10;2024-01-03,1004200&#10;2024-01-04,998700&#10;..."></textarea>
+    <div class="row2">
+      <div><label for="ppy">Periods per year</label>
+        <select id="ppy">
+          <option value="252">252 (US / global daily)</option>
+          <option value="242">242 (A-share daily)</option>
+          <option value="365">365 (crypto daily)</option>
+          <option value="52">52 (weekly)</option>
+          <option value="12">12 (monthly)</option>
+        </select></div>
+      <div id="capWrap"><label for="cap">Starting capital</label>
+        <input type="number" id="cap" value="1000000" min="0" step="any"></div>
+    </div>
+    <div class="row2">
+      <div><label for="rf">Risk-free rate (% p.a.)</label><input type="number" id="rf" value="0" step="0.01"></div>
+      <div><label for="mar">Sortino MAR (% p.a.)</label><input type="number" id="mar" placeholder="= risk-free" step="0.01"></div>
+    </div>
+    <div class="btns">
+      <button type="button" id="sample">Load sample data</button>
+      <button type="button" id="clear">Clear</button>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+  </form>
+
+  <div class="panel" aria-live="polite">
+    <h3>Results</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Sharpe</div><div class="v" id="kSharpe">–</div><div class="s">annualised</div></div>
+      <div class="kpi"><div class="k">Sortino</div><div class="v" id="kSortino">–</div><div class="s">annualised</div></div>
+      <div class="kpi"><div class="k">Calmar</div><div class="v" id="kCalmar">–</div><div class="s">CAGR / |MDD|</div></div>
+      <div class="kpi"><div class="k">CAGR</div><div class="v" id="kCagr">–</div><div class="s" id="kSpan">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Max drawdown</div><div class="v" id="kMdd">–</div><div class="s" id="kMddWhen">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Longest DD</div><div class="v" id="kDur">–</div><div class="s" id="kDurWhen">&nbsp;</div></div>
+    </div>
+    <table class="stats"><tbody id="stats"></tbody></table>
+    <div class="ctitle"><span>Equity curve</span><span><select id="logy" aria-label="Equity axis scale"><option value="0">linear</option><option value="1">log</option></select></span></div>
+    <canvas id="cEq" height="220" role="img" aria-label="Equity curve chart"></canvas>
+    <div class="ctitle"><span>Underwater (drawdown from peak)</span></div>
+    <canvas id="cDd" height="140" role="img" aria-label="Drawdown chart"></canvas>
+    <div class="ctitle"><span>Rolling Sharpe</span><span><select id="rollw" aria-label="Rolling window"><option value="63">63 periods</option><option value="126" selected>126 periods</option><option value="252">252 periods</option></select></span></div>
+    <canvas id="cRs" height="140" role="img" aria-label="Rolling Sharpe chart"></canvas>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:16px">
+  <h3>Monthly returns</h3>
+  <div class="scroll" id="months"><p class="msg">Add dates to the input to see the monthly table.</p></div>
+</div>
+</section>
+
+<section aria-labelledby="method-h">
+<h2 id="method-h">Formulas and conventions</h2>
+<div class="formula">r_t      = E_t / E_(t−1) − 1                     P = periods per year, n = number of returns
+CAGR     = (E_n / E_0)^(P / n) − 1
+Vol_ann  = stdev(r, sample) · √P
+rf_p     = (1 + rf)^(1/P) − 1                    MAR_p likewise (defaults to rf)
+Sharpe   = mean(r − rf_p) / stdev(r − rf_p) · √P
+DD_down  = √( mean( min(r − MAR_p, 0)² ) )       over ALL periods (Sortino–Price)
+Sortino  = (mean(r) − MAR_p) / DD_down · √P
+DD_t     = E_t / max(E_0 … E_t) − 1              MDD = min DD_t
+Calmar   = CAGR / |MDD|                          full sample, not trailing 36m
+VaR95    = −Q_5%(r)       CVaR95 = −mean(r | r ≤ Q_5%(r))   historical, linear-interpolated quantile
+Skew, excess kurtosis: population moment estimators</div>
+<p>Drawdown duration counts periods from a peak until equity regains that peak. If the sample ends below its peak, the open drawdown is counted up to the last observation and flagged as ongoing. Profit factor is the sum of positive returns divided by the absolute sum of negative returns. In PnL mode, equity is starting capital plus cumulative PnL. In returns mode, equity starts at 1.</p>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># Performance &amp; Drawdown Analytics Calculator</p>
+<p>&gt; Client-side calculator for Sharpe, Sortino, Calmar, CAGR, max drawdown, drawdown duration, VaR/CVaR from an equity curve, returns or PnL. URL: https://quantcore-labs.com/tools/performance-analytics/</p>
+<h3>## Inputs</h3>
+<ul>
+<li>- Equity/NAV, returns in % or decimal, or PnL plus starting capital; one value per row, optional leading date</li>
+<li>- Periods per year: 252, 242 (A-share), 365, 52, 12</li>
+<li>- Risk-free rate and Sortino MAR, % p.a.</li>
+</ul>
+<h3>## Conventions</h3>
+<ul>
+<li>- Sharpe uses sample stdev of excess returns, annualised by √P</li>
+<li>- Sortino uses downside deviation over all periods (Sortino–Price)</li>
+<li>- Calmar uses full-sample CAGR / |MDD|</li>
+<li>- VaR/CVaR are historical at 95%</li>
+</ul>
+<h3>## Reference check</h3>
+<ul>
+<li>- Returns 1%, −2%, 3%, −1%, 2% with P=252, rf=0: Sharpe 4.5932, Sortino 9.5247, MDD −2.00%, CAGR 332.56%, Calmar 166.28</li>
+</ul>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>Should I annualise with 252 or 242 trading days for A-shares?</dt>
+<dd>China's A-share market has about 242 trading days a year because of its longer public holidays, so 242 is the more accurate factor for daily A-share strategies. Most US and global conventions use 252. The choice scales annualised volatility by √P and changes Sharpe by √(252/242), about 2%.</dd>
+<dt>Why is my Sortino ratio different from another tool's?</dt>
+<dd>Implementations differ on the downside deviation. This calculator uses the Sortino-Price definition: the root mean square of min(r − MAR, 0) over all periods. Some libraries instead take the standard deviation of negative returns only, which yields a larger denominator and a smaller Sortino. The MAR (minimum acceptable return) also matters; it defaults to the risk-free rate here.</dd>
+<dt>How is the Calmar ratio defined here?</dt>
+<dd>CAGR divided by the absolute maximum drawdown over the entire pasted sample. The original industry definition uses a trailing 36-month window, so results differ for samples longer or shorter than three years.</dd>
+<dt>Is my data uploaded anywhere?</dt>
+<dd>No. Parsing and every calculation run in your browser with plain JavaScript. The page makes no network requests with your data.</dd>
+</dl>
+</section>
+</main>
+
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. Past performance does not indicate future results. © QuantCore Labs.</p></footer>
+</div>
+
+<script>
+/* ===== PERF-CORE-BEGIN ===== */
+function parseDate(s){
+  var m = /^(\d{4})[-\/.]?(\d{1,2})[-\/.]?(\d{1,2})(?:[ T].*)?$/.exec(s.trim());
+  if (!m) return null;
+  var y = +m[1], mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  var t = Date.UTC(y, mo - 1, d), dt = new Date(t);
+  return dt.getUTCDate() === d ? t : null;
+}
+
+// Returns {values:[], dates:[] (ms or null), skipped:int, error:str}
+function parseRows(text){
+  var lines = text.split(/\r?\n/), values = [], dates = [], skipped = 0, anyDate = false, noDate = false;
+  for (var i = 0; i < lines.length; i++){
+    var line = lines[i].trim();
+    if (!line || line.charAt(0) === '#') continue;
+    var parts = line.split(/[\t,;]+|\s+/).filter(function(p){ return p !== ''; });
+    var d = null, vStr;
+    if (parts.length >= 2 && (d = parseDate(parts[0])) !== null) vStr = parts[parts.length - 1];
+    else if (parts.length === 1) vStr = parts[0];
+    else { vStr = parts[parts.length - 1]; }
+    vStr = vStr.replace(/%$/, '');
+    var v = Number(vStr);
+    if (vStr === '' || !isFinite(v)) { skipped++; continue; }   // header or junk
+    if (d !== null) anyDate = true; else noDate = true;
+    values.push(v); dates.push(d);
+  }
+  if (anyDate && noDate) dates = dates.map(function(){ return null; });   // inconsistent → ignore dates
+  return { values: values, dates: anyDate && !noDate ? dates : null, skipped: skipped };
+}
+
+// mode: 'equity' | 'pct' | 'dec' | 'pnl'. Returns {equity, eqDates, returns, error}
+function buildSeries(parsed, mode, capital){
+  var v = parsed.values, d = parsed.dates, eq = [], eqD = [], i;
+  if (mode === 'equity'){
+    for (i = 0; i < v.length; i++) if (!(v[i] > 0)) return { error: 'Equity values must be > 0 (row ' + (i + 1) + ').' };
+    eq = v.slice(); eqD = d ? d.slice() : v.map(function(){ return null; });
+  } else {
+    var base = mode === 'pnl' ? capital : 1;
+    if (mode === 'pnl' && !(capital > 0)) return { error: 'Starting capital must be > 0 for PnL mode.' };
+    eq.push(base); eqD.push(null);
+    for (i = 0; i < v.length; i++){
+      var next = mode === 'pnl' ? eq[i] + v[i] : eq[i] * (1 + (mode === 'pct' ? v[i] / 100 : v[i]));
+      if (!(next > 0)) return { error: 'Equity reaches zero or below at row ' + (i + 1) + '; ratios are undefined.' };
+      eq.push(next); eqD.push(d ? d[i] : null);
+    }
+  }
+  if (eq.length < 3) return { error: 'Need at least 2 periods of returns (3 equity points).' };
+  var r = [];
+  for (i = 1; i < eq.length; i++) r.push(eq[i] / eq[i - 1] - 1);
+  return { equity: eq, eqDates: eqD, returns: r };
+}
+
+function mean(a){ var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
+function stdev(a, ddof){ var m = mean(a), s = 0; for (var i = 0; i < a.length; i++) s += (a[i] - m) * (a[i] - m); return Math.sqrt(s / (a.length - ddof)); }
+function quantile(sorted, p){            // linear interpolation (numpy default)
+  var h = (sorted.length - 1) * p, lo = Math.floor(h), hi = Math.ceil(h);
+  return sorted[lo] + (h - lo) * (sorted[hi] - sorted[lo]);
+}
+
+function drawdowns(eq){
+  var dd = [], peak = eq[0], peakI = 0, mdd = 0, mddI = 0, mddPeakI = 0;
+  var maxDur = 0, durStart = 0, durEnd = 0, durOngoing = false;
+  for (var i = 0; i < eq.length; i++){
+    if (eq[i] >= peak){
+      if (i - peakI > maxDur){ maxDur = i - peakI; durStart = peakI; durEnd = i; durOngoing = false; }
+      peak = eq[i]; peakI = i;
+    }
+    var x = eq[i] / peak - 1; dd.push(x);
+    if (x < mdd){ mdd = x; mddI = i; mddPeakI = peakI; }
+  }
+  var last = eq.length - 1;
+  if (last - peakI > maxDur){ maxDur = last - peakI; durStart = peakI; durEnd = last; durOngoing = true; }
+  return { dd: dd, mdd: mdd, mddI: mddI, mddPeakI: mddPeakI, maxDur: maxDur, durStart: durStart, durEnd: durEnd,
+           durOngoing: durOngoing, current: dd[last] };
+}
+
+function metrics(eq, r, P, rfAnn, marAnn){
+  var n = r.length, rfp = Math.pow(1 + rfAnn, 1 / P) - 1, marp = Math.pow(1 + marAnn, 1 / P) - 1;
+  var ex = r.map(function(x){ return x - rfp; });
+  var sd = stdev(r, 1), sdEx = stdev(ex, 1);
+  var down = Math.sqrt(mean(r.map(function(x){ var y = Math.min(x - marp, 0); return y * y; })));
+  var total = eq[eq.length - 1] / eq[0] - 1;
+  var cagr = Math.pow(eq[eq.length - 1] / eq[0], P / n) - 1;
+  var D = drawdowns(eq);
+  var m = mean(r), m2 = 0, m3 = 0, m4 = 0;
+  for (var i = 0; i < n; i++){ var z = r[i] - m; m2 += z * z; m3 += z * z * z; m4 += z * z * z * z; }
+  m2 /= n; m3 /= n; m4 /= n;
+  var s = r.slice().sort(function(a, b){ return a - b; }), q5 = quantile(s, 0.05);
+  var tail = s.filter(function(x){ return x <= q5; });
+  var gp = 0, gl = 0, wins = 0;
+  r.forEach(function(x){ if (x > 0){ gp += x; wins++; } else if (x < 0) gl -= x; });
+  return {
+    n: n, total: total, cagr: cagr, vol: sd * Math.sqrt(P),
+    sharpe: sdEx > 0 ? mean(ex) / sdEx * Math.sqrt(P) : NaN,
+    sortino: down > 0 ? (m - marp) / down * Math.sqrt(P) : NaN,
+    calmar: D.mdd < 0 ? cagr / Math.abs(D.mdd) : NaN,
+    mdd: D.mdd, dd: D, skew: m2 > 0 ? m3 / Math.pow(m2, 1.5) : NaN, exKurt: m2 > 0 ? m4 / (m2 * m2) - 3 : NaN,
+    var95: -q5, cvar95: -mean(tail), best: s[n - 1], worst: s[0], winRate: wins / n,
+    profitFactor: gl > 0 ? gp / gl : Infinity, meanR: m
+  };
+}
+
+function rollingSharpe(r, w, P, rfAnn){
+  var rfp = Math.pow(1 + rfAnn, 1 / P) - 1, out = [];
+  for (var i = 0; i < r.length; i++){
+    if (i + 1 < w){ out.push(NaN); continue; }
+    var win = r.slice(i + 1 - w, i + 1).map(function(x){ return x - rfp; }), sd = stdev(win, 1);
+    out.push(sd > 0 ? mean(win) / sd * Math.sqrt(P) : NaN);
+  }
+  return out;
+}
+
+// Monthly compounding of returns keyed by the return's date. Returns {years:[{y, m:[12], total}]}
+function monthlyTable(r, rDates){
+  var map = {};
+  for (var i = 0; i < r.length; i++){
+    var d = new Date(rDates[i]), y = d.getUTCFullYear(), mo = d.getUTCMonth();
+    map[y] = map[y] || { m: [null, null, null, null, null, null, null, null, null, null, null, null], tot: 1 };
+    map[y].m[mo] = (map[y].m[mo] === null ? 1 : map[y].m[mo]) * (1 + r[i]);
+    map[y].tot *= (1 + r[i]);
+  }
+  return Object.keys(map).sort().map(function(y){
+    return { y: +y, m: map[y].m.map(function(x){ return x === null ? null : x - 1; }), total: map[y].tot - 1 };
+  });
+}
+/* ===== PERF-CORE-END ===== */
+
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var css = getComputedStyle(document.documentElement), col = function(n){ return css.getPropertyValue(n).trim(); };
+  var pct = function(x, dp){ return isFinite(x) ? (x * 100).toFixed(dp == null ? 2 : dp) + '%' : '–'; };
+  var num = function(x, dp){ return x === Infinity ? '∞' : (isFinite(x) ? x.toFixed(dp == null ? 2 : dp) : '–'); };
+  var day = function(t){ return t == null ? null : new Date(t).toISOString().slice(0, 10); };
+  var sign = function(el, x){ el.className = 'v ' + (isFinite(x) ? (x >= 0 ? 'pos' : 'neg') : ''); };
+  var last = null;
+
+  function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function sample(){
+    var rnd = mulberry32(42), d = Date.UTC(2023, 0, 2), e = 1000000, rows = [];
+    while (rows.length < 756){
+      var wd = new Date(d).getUTCDay();
+      if (wd !== 0 && wd !== 6){
+        var u = Math.max(rnd(), 1e-12), v = rnd(), z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+        if (rows.length) e *= Math.exp(0.0005 - 0.5 * 0.012 * 0.012 + 0.012 * z);
+        rows.push(day(d) + ',' + e.toFixed(2));
+      }
+      d += 86400000;
+    }
+    return rows.join('\n');
+  }
+
+  function stat(rows){ return rows.map(function(r){
+    return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>'; }).join(''); }
+
+  function run(){
+    var mode = $('mode').value, msg = $('msg');
+    $('capWrap').style.visibility = mode === 'pnl' ? 'visible' : 'hidden';
+    var text = $('data').value;
+    if (!text.trim()){ msg.className = 'msg'; msg.textContent = 'Paste data or load the sample.'; clearOut(); return; }
+    var parsed = parseRows(text);
+    var S = buildSeries(parsed, mode, parseFloat($('cap').value));
+    if (S.error){ msg.className = 'msg err'; msg.textContent = S.error; clearOut(); return; }
+    var P = +$('ppy').value, rf = (parseFloat($('rf').value) || 0) / 100;
+    var marIn = $('mar').value.trim(), mar = marIn === '' ? rf : (parseFloat(marIn) || 0) / 100;
+    var M = metrics(S.equity, S.returns, P, rf, mar);
+    var hasDates = !!parsed.dates;
+    msg.className = 'msg';
+    msg.textContent = M.n + ' returns parsed' + (parsed.skipped ? ', ' + parsed.skipped + ' non-numeric row(s) skipped' : '') +
+      (hasDates ? ', dates detected' : ', no dates');
+
+    $('kSharpe').textContent = num(M.sharpe); sign($('kSharpe'), M.sharpe);
+    $('kSortino').textContent = num(M.sortino); sign($('kSortino'), M.sortino);
+    $('kCalmar').textContent = num(M.calmar); sign($('kCalmar'), M.calmar);
+    $('kCagr').textContent = pct(M.cagr); sign($('kCagr'), M.cagr);
+    $('kSpan').textContent = (M.n / P).toFixed(2) + ' years';
+    $('kMdd').textContent = pct(M.mdd); $('kMdd').className = 'v neg';
+    var D = M.dd, ED = S.eqDates;
+    var when = function(i){ return hasDates && ED[i] != null ? day(ED[i]) : '#' + i; };
+    $('kMddWhen').textContent = when(D.mddPeakI) + ' → ' + when(D.mddI);
+    $('kDur').textContent = D.maxDur + ' per.'; $('kDur').className = 'v';
+    $('kDurWhen').textContent = D.maxDur ? when(D.durStart) + ' → ' + when(D.durEnd) + (D.durOngoing ? ' (ongoing)' : '') : 'no drawdown';
+
+    $('stats').innerHTML = stat([
+      ['Total return', pct(M.total), 'Ann. volatility', pct(M.vol)],
+      ['Mean return / period', pct(M.meanR, 3), 'Current drawdown', pct(D.current)],
+      ['Best period', pct(M.best), 'Worst period', pct(M.worst)],
+      ['VaR 95% (hist.)', pct(M.var95), 'CVaR 95% (hist.)', pct(M.cvar95)],
+      ['Win rate', pct(M.winRate, 1), 'Profit factor', num(M.profitFactor)],
+      ['Skewness', num(M.skew, 3), 'Excess kurtosis', num(M.exKurt, 3)]
+    ]);
+    last = { S: S, M: M, P: P, rf: rf, hasDates: hasDates };
+    drawAll();
+    $('months').innerHTML = hasDates ? monthsHtml(monthlyTable(S.returns, ED.slice(1))) :
+      '<p class="msg">Add dates to the input to see the monthly table.</p>';
+  }
+
+  function clearOut(){
+    ['kSharpe', 'kSortino', 'kCalmar', 'kCagr', 'kMdd', 'kDur'].forEach(function(id){ $(id).textContent = '–'; $(id).className = 'v'; });
+    ['kSpan', 'kMddWhen', 'kDurWhen'].forEach(function(id){ $(id).innerHTML = '&nbsp;'; });
+    $('stats').innerHTML = ''; last = null;
+    ['cEq', 'cDd', 'cRs'].forEach(function(id){ var c = $(id); c.getContext('2d').clearRect(0, 0, c.width, c.height); });
+  }
+
+  function monthsHtml(T){
+    var mn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var cell = function(x, cls){
+      if (x === null) return '<td></td>';
+      var a = Math.min(Math.abs(x) / 0.08, 1) * 0.55;
+      var bg = x >= 0 ? 'rgba(94,194,122,' + a + ')' : 'rgba(240,119,108,' + a + ')';
+      return '<td class="' + (cls || '') + '" style="background:' + bg + '">' + (x * 100).toFixed(1) + '</td>';
+    };
+    return '<table class="months"><thead><tr><th>Year</th>' + mn.map(function(m){ return '<th>' + m + '</th>'; }).join('') +
+      '<th>Year %</th></tr></thead><tbody>' + T.map(function(r){
+        return '<tr><td>' + r.y + '</td>' + r.m.map(function(x){ return cell(x); }).join('') + cell(r.total, 'y') + '</tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  function chart(id, ys, opts){
+    var cv = $(id), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute('height');
+    cv.style.height = H + 'px'; cv.width = W * dpr; cv.height = H * dpr;
+    var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    var tf = opts.log ? Math.log : function(x){ return x; }, inv = opts.log ? Math.exp : function(x){ return x; };
+    var lo = Infinity, hi = -Infinity;
+    ys.forEach(function(y){ if (isFinite(y)){ var t = tf(y); if (t < lo) lo = t; if (t > hi) hi = t; } });
+    if (!isFinite(lo)){ g.fillStyle = col('--dim'); g.font = '12px ' + col('--mono'); g.fillText('Not enough data for this window', 12, H / 2); return; }
+    if (opts.zero){ lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    if (hi === lo){ hi += 1; lo -= 1; }
+    var pad = { l: 58, r: 8, t: 8, b: 20 }, n = ys.length;
+    var X = function(i){ return pad.l + i / Math.max(n - 1, 1) * (W - pad.l - pad.r); };
+    var Y = function(t){ return pad.t + (hi - t) / (hi - lo) * (H - pad.t - pad.b); };
+    g.font = '11px ' + col('--mono'); g.lineWidth = 1;
+    for (var k = 0; k <= 4; k++){
+      var t = lo + (hi - lo) * k / 4, yy = Y(t);
+      g.strokeStyle = col('--line'); g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(W - pad.r, yy); g.stroke();
+      g.fillStyle = col('--dim'); g.fillText(opts.fmt(inv(t)), 4, yy + 4);
+    }
+    var D = last.S.eqDates, off = opts.dateOffset || 0;
+    if (last.hasDates){ [0, Math.floor((n - 1) / 2), n - 1].forEach(function(i, j){
+      var t = D[i + off]; if (t == null) return; var s = day(t);
+      g.fillText(s, j === 0 ? pad.l : (j === 2 ? W - pad.r - 64 : X(i) - 32), H - 5); }); }
+    if (opts.zero){ g.strokeStyle = col('--dim'); g.beginPath(); g.moveTo(pad.l, Y(0)); g.lineTo(W - pad.r, Y(0)); g.stroke(); }
+    g.beginPath(); var started = false;
+    ys.forEach(function(y, i){ if (!isFinite(y)){ started = false; return; }
+      var px = X(i), py = Y(tf(y)); if (started) g.lineTo(px, py); else { g.moveTo(px, py); started = true; } });
+    g.strokeStyle = opts.color; g.lineWidth = 1.6; g.stroke();
+    if (opts.fill){ g.lineTo(X(n - 1), Y(0)); g.lineTo(X(0), Y(0)); g.closePath(); g.fillStyle = opts.fill; g.fill(); }
+  }
+
+  function drawAll(){
+    if (!last) return;
+    var S = last.S, M = last.M;
+    chart('cEq', S.equity, { color: col('--acc'), log: $('logy').value === '1',
+      fmt: function(v){ return Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : v.toFixed(3); } });
+    chart('cDd', M.dd.dd, { color: col('--neg'), fill: 'rgba(240,119,108,.18)', zero: true, fmt: function(v){ return (v * 100).toFixed(1) + '%'; } });
+    chart('cRs', rollingSharpe(S.returns, +$('rollw').value, last.P, last.rf),
+      { color: col('--warn'), zero: true, dateOffset: 1, fmt: function(v){ return v.toFixed(2); } });
+  }
+
+  ['mode', 'ppy', 'rf', 'mar', 'cap'].forEach(function(id){ $(id).addEventListener('input', run); });
+  $('data').addEventListener('input', run);
+  $('logy').addEventListener('change', drawAll);
+  $('rollw').addEventListener('change', drawAll);
+  $('sample').addEventListener('click', function(){ $('mode').value = 'equity'; $('data').value = sample(); run(); });
+  $('clear').addEventListener('click', function(){ $('data').value = ''; run(); });
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(drawAll, 100); });
+  $('mode').value = 'equity'; $('data').value = sample(); run();
+})();
+</script>
+</body>
+</html>

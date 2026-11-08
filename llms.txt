@@ -9,6 +9,7 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [Black-Scholes Option Greeks Calculator](https://quantcore-labs.com/option-greeks-calc/): European call/put price, Delta, Gamma, Vega (per vol pt), Theta (per day), Rho (per 1%) under Black-Scholes-Merton with continuous dividend yield. Markdown: https://quantcore-labs.com/option-greeks-calc.md
 - [Monte Carlo Asset Path Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/): Geometric Brownian Motion path simulation with multi-trajectory chart and confidence-interval statistics.
 - [Markowitz Efficient Frontier Calculator](https://quantcore-labs.com/tools/portfolio-efficient-frontier/): Mean-variance optimisation, maximum-Sharpe portfolio weights and efficient frontier from expected returns and a covariance matrix.
+- [Performance & Drawdown Analytics Calculator](https://quantcore-labs.com/tools/performance-analytics/): Sharpe, Sortino, Calmar, CAGR, max drawdown and duration, VaR/CVaR and monthly returns from a pasted equity curve, returns or PnL; 252/242/365 annualisation. Markdown: https://quantcore-labs.com/performance-analytics.md
 
 ## Glossary
 
