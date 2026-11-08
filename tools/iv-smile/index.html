@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implied Volatility Smile & Skew Calculator | QuantCore Labs</title>
+<meta name="description" content="Paste option prices across strikes and expiries to back out implied volatility, plot the volatility smile and skew per expiry, infer the forward from put-call parity, and see the ATM term structure. Runs in your browser.">
+<link rel="canonical" href="https://quantcore-labs.com/tools/iv-smile/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/iv-smile.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Implied Volatility Smile & Skew Calculator">
+<meta property="og:description" content="Back out implied volatility across strikes and expiries, plot the smile, fit skew and curvature, and view the ATM term structure. Client-side.">
+<meta property="og:url" content="https://quantcore-labs.com/tools/iv-smile/">
+<meta property="og:image" content="https://quantcore-labs.com/tools/iv-smile/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/tools/iv-smile/#app",
+      "name": "Implied Volatility Smile & Skew Calculator",
+      "url": "https://quantcore-labs.com/tools/iv-smile/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Options Analytics",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Implied volatility from European call and put prices (Black-76 on the forward)",
+        "Safeguarded Newton-Raphson solver with bisection fallback and no-arbitrage bound checks",
+        "Forward inferred from put-call parity, or from spot, rate and dividend yield",
+        "Multiple expiries plotted as separate smile curves",
+        "Out-of-the-money composite smile with quadratic fit in log-moneyness",
+        "ATM implied volatility, skew slope and curvature per expiry",
+        "ATM implied volatility term structure chart",
+        "Client-side computation, data never leaves the browser"
+      ],
+      "image": "https://quantcore-labs.com/tools/iv-smile/og-image.png",
+      "publisher": { "@id": "https://quantcore-labs.com/#org" },
+      "mainEntityOfPage": { "@id": "https://quantcore-labs.com/tools/iv-smile/#article" }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/tools/iv-smile/#article",
+      "headline": "Implied Volatility Smile: Solver, Forward Inference and Skew Metrics",
+      "description": "How the calculator inverts Black-76 prices to implied volatility and summarises the smile per expiry.",
+      "image": "https://quantcore-labs.com/tools/iv-smile/og-image.png",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T21:30:00-05:00",
+      "dateModified": "2026-11-07T21:30:00-05:00",
+      "author": { "@id": "https://quantcore-labs.com/#org" },
+      "publisher": { "@id": "https://quantcore-labs.com/#org" },
+      "mainEntityOfPage": "https://quantcore-labs.com/tools/iv-smile/",
+      "articleBody": "Prices are inverted under Black-76: C = D [F N(d1) - K N(d2)], P = D [K N(-d2) - F N(-d1)], with d1 = [ln(F/K) + sigma^2 T / 2] / (sigma sqrt T), d2 = d1 - sigma sqrt T and D = e^(-rT). This is equivalent to Black-Scholes-Merton with continuous dividend yield, where F = S e^((r-q)T). When both a call and a put are quoted at the same strike, the forward is inferred from put-call parity at the strike that minimises |C - P|: F = K + (C - P) / D. This removes the need to know the dividend yield or borrow cost. A price is invertible only if it lies strictly between its no-arbitrage bounds: D max(F - K, 0) < C < D F for calls and D max(K - F, 0) < P < D K for puts. The solver uses Newton-Raphson on sigma with vega as the derivative. Each step that would leave the current bracket, or that has vega below 1e-12, is replaced by bisection. The bracket starts at [1e-6, 10] and is tightened using the sign of the pricing error, which guarantees convergence for any invertible price. The composite smile uses out-of-the-money options: puts for K < F and calls for K >= F, falling back to the other side when one is missing. A least-squares quadratic IV(k) = a + b k + c k^2 in log-moneyness k = ln(K/F) gives ATM IV = a, skew = b (IV change per unit log-moneyness) and curvature = c."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/tools/iv-smile/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why use out-of-the-money options for the smile?",
+          "acceptedAnswer": { "@type": "Answer", "text": "OTM options are more liquid and their prices are almost entirely time value, so their implied volatility is less sensitive to small errors in the forward or in bid-ask midpoints. ITM options carry large intrinsic value, so a one-tick price error can move their IV a lot. Under put-call parity with the correct forward, call and put IVs at the same strike are identical anyway." }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does plain Newton-Raphson fail for implied volatility?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Vega approaches zero for deep in- or out-of-the-money options and very short expiries, so a Newton step can shoot to negative or huge volatilities. This solver keeps a bracket that always contains the root and falls back to bisection whenever Newton would leave it, so it converges for every price within the no-arbitrage bounds." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this work for China ETF options such as 50ETF or 300ETF?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. These are European-style, so Black-76 on the forward is the standard model. Inferring the forward from put-call parity is recommended because ETF dividends and borrow costs are otherwise hard to specify. Use mid prices and calendar days to expiry." }
+        },
+        {
+          "@type": "Question",
+          "name": "What does the skew number mean?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It is the slope b of the fitted IV curve in log-moneyness at the money. A value of -0.30 means IV rises about 3 volatility points for a strike 10% below the forward (k = -0.10). Equity and index smiles usually show negative skew because downside puts are in demand as crash protection." }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "QuantCore Labs", "item": "https://quantcore-labs.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Implied Volatility Smile", "item": "https://quantcore-labs.com/tools/iv-smile/" }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input[type=number]{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:240px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.chk{display:flex;gap:8px;align-items:center;font:12px var(--mono);color:var(--dim);margin-top:12px}
+.chk input{width:auto;accent-color:var(--acc)}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+canvas{width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.legend{font:12px var(--mono);color:var(--dim);margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin-right:5px}
+.scroll{overflow-x:auto}
+table.t{border-collapse:collapse;font:12px var(--mono);width:100%}
+table.t th,table.t td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t th{color:var(--dim);font-weight:500}
+table.t td:first-child,table.t th:first-child{text-align:left}
+td.bad{color:var(--neg)}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / tools / iv-smile</nav>
+  <h1>Implied Volatility Smile &amp; Skew Calculator <span class="tag">BLACK-76 · CLIENT-SIDE</span></h1>
+  <p class="lede">Paste option prices across strikes and expiries. The page backs out implied volatility with a guaranteed-convergence solver, infers the forward from put-call parity, plots one smile per expiry and reports ATM IV, skew and curvature. Everything runs in your browser.</p>
+</header>
+
+<noscript><p><strong>JavaScript is disabled.</strong> This calculator runs in the browser. The method is documented below and in the <a href="/iv-smile.md">Markdown version</a>.</p></noscript>
+
+<main>
+<section aria-labelledby="calc-h">
+<h2 id="calc-h">Calculator</h2>
+<div class="grid">
+  <form class="panel" autocomplete="off" onsubmit="return false">
+    <h3>Option prices</h3>
+    <label for="data">One row per strike: <code>days,strike,call,put</code>. Leave a price blank or <code>-</code> if not quoted.</label>
+    <textarea id="data" spellcheck="false"></textarea>
+    <div class="row3">
+      <div><label for="S">Spot S</label><input type="number" id="S" value="2.75" step="any" min="0"></div>
+      <div><label for="r">Rate r %</label><input type="number" id="r" value="1.8" step="0.01"></div>
+      <div><label for="q">Div. q %</label><input type="number" id="q" value="0" step="0.01"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="parity" checked> Infer forward from put-call parity (ignores S and q where both C and P exist)</label>
+    <div class="btns">
+      <button type="button" id="sample">Load sample</button>
+      <button type="button" id="clear">Clear</button>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+  </form>
+
+  <div class="panel" aria-live="polite">
+    <h3>Volatility smile</h3>
+    <div class="ctitle"><span>Implied volatility vs</span>
+      <span><select id="xaxis" aria-label="X axis"><option value="k">log-moneyness ln(K/F)</option><option value="K">strike K</option></select>
+      <select id="pts" aria-label="Points shown"><option value="otm">OTM composite</option><option value="both">calls and puts</option></select></span></div>
+    <canvas id="cSmile" height="300" role="img" aria-label="Implied volatility smile chart"></canvas>
+    <div class="legend" id="legend"></div>
+    <div class="ctitle" style="margin-top:16px"><span>ATM IV term structure (days to expiry)</span></div>
+    <canvas id="cTerm" height="150" role="img" aria-label="ATM implied volatility term structure"></canvas>
+    <div class="scroll" style="margin-top:14px"><table class="t" id="sumTbl"></table></div>
+  </div>
+</div>
+<div class="panel" style="margin-top:16px">
+  <h3>Strike detail</h3>
+  <div class="scroll"><table class="t" id="detTbl"></table></div>
+</div>
+</section>
+
+<section aria-labelledby="method-h">
+<h2 id="method-h">Method</h2>
+<div class="formula">Black-76 on the forward F, discount D = e^(−rT), T = days / 365
+  C = D·[F·N(d1) − K·N(d2)]     P = D·[K·N(−d2) − F·N(−d1)]
+  d1 = [ln(F/K) + σ²T/2] / (σ√T),   d2 = d1 − σ√T
+  (identical to Black-Scholes-Merton with F = S·e^((r−q)T))
+
+Forward from put-call parity (strike K* minimising |C − P|):
+  F = K* + (C − P) / D
+
+No-arbitrage bounds (price must lie strictly inside):
+  D·max(F − K, 0) < C < D·F        D·max(K − F, 0) < P < D·K
+
+Solver: Newton  σ ← σ − (V(σ) − V_mkt) / vega(σ)
+  keep bracket [lo, hi] ∋ root, start [1e−6, 10]; bisect when Newton leaves it
+  stop when |V(σ) − V_mkt| < 1e−12 or step < 1e−12
+
+Smile summary per expiry, k = ln(K/F), OTM points:
+  IV(k) ≈ a + b·k + c·k²   (least squares)
+  ATM IV = a,  skew = b,  curvature = c</div>
+<p>The composite smile uses puts for strikes below the forward and calls at or above it, falling back to the other side when one is missing. Rows whose price breaches a bound are flagged in the detail table and excluded. Use mid prices; a stale or one-sided quote is the most common cause of a flagged row.</p>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># Implied Volatility Smile &amp; Skew Calculator</p>
+<p>&gt; Client-side implied volatility solver and smile plotter for European options across strikes and expiries. URL: https://quantcore-labs.com/tools/iv-smile/</p>
+<h3>## Input</h3>
+<ul>
+<li>- Rows: days, strike, call price, put price (either price optional)</li>
+<li>- Spot, rate and dividend yield (used when the forward cannot be inferred from parity)</li>
+</ul>
+<h3>## Output</h3>
+<ul>
+<li>- Call and put IV per strike, with no-arbitrage flags</li>
+<li>- Per expiry: forward, ATM IV, skew (dIV/dk), curvature, from a quadratic fit in ln(K/F)</li>
+<li>- Charts: smile per expiry, ATM term structure</li>
+</ul>
+<h3>## Method</h3>
+<ul>
+<li>- Black-76 inversion; safeguarded Newton-Raphson with bisection fallback; converges for any price inside the bounds</li>
+<li>- Forward from put-call parity at the strike minimising |C − P|</li>
+</ul>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>Why use out-of-the-money options for the smile?</dt>
+<dd>OTM options are more liquid and their prices are almost entirely time value, so their implied volatility is less sensitive to small errors in the forward or in bid-ask midpoints. ITM options carry large intrinsic value, so a one-tick price error can move their IV a lot. Under put-call parity with the correct forward, call and put IVs at the same strike are identical anyway.</dd>
+<dt>Why does plain Newton-Raphson fail for implied volatility?</dt>
+<dd>Vega approaches zero for deep in- or out-of-the-money options and very short expiries, so a Newton step can shoot to negative or huge volatilities. This solver keeps a bracket that always contains the root and falls back to bisection whenever Newton would leave it, so it converges for every price within the no-arbitrage bounds.</dd>
+<dt>Does this work for China ETF options such as 50ETF or 300ETF?</dt>
+<dd>Yes. These are European-style, so Black-76 on the forward is the standard model. Inferring the forward from put-call parity is recommended because ETF dividends and borrow costs are otherwise hard to specify. Use mid prices and calendar days to expiry.</dd>
+<dt>What does the skew number mean?</dt>
+<dd>It is the slope b of the fitted IV curve in log-moneyness at the money. A value of −0.30 means IV rises about 3 volatility points for a strike 10% below the forward (k = −0.10). Equity and index smiles usually show negative skew because downside puts are in demand as crash protection.</dd>
+</dl>
+</section>
+</main>
+
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. The built-in sample is synthetic, not market data. © QuantCore Labs.</p></footer>
+</div>
+
+<script>
+/* ===== IV-CORE-BEGIN ===== */
+function normCdf(x){ // Hart (1968) double precision per West (2005), |err| < 1e-14
+  var z = Math.abs(x), c;
+  if (z > 37) c = 0;
+  else {
+    var e = Math.exp(-z * z / 2);
+    if (z < 7.07106781186547){
+      var n = 3.52624965998911e-02 * z + 0.700383064443688;
+      n = n * z + 6.37396220353165; n = n * z + 33.912866078383; n = n * z + 112.079291497871;
+      n = n * z + 221.213596169931; n = n * z + 220.206867912376;
+      var d = 8.83883476483184e-02 * z + 1.75566716318264;
+      d = d * z + 16.064177579207; d = d * z + 86.7807322029461; d = d * z + 296.564248779674;
+      d = d * z + 637.333633378831; d = d * z + 793.826512519948; d = d * z + 440.413735824752;
+      c = e * n / d;
+    } else { var b = z + 0.65; b = z + 4 / b; b = z + 3 / b; b = z + 2 / b; b = z + 1 / b; c = e / b / 2.506628274631; }
+  }
+  return x > 0 ? 1 - c : c;
+}
+function normPdf(x){ return Math.exp(-0.5 * x * x) / 2.5066282746310002; }
+
+function black(F, K, T, sig, D, isCall){
+  var sT = sig * Math.sqrt(T), d1 = (Math.log(F / K) + 0.5 * sT * sT) / sT, d2 = d1 - sT;
+  return isCall ? D * (F * normCdf(d1) - K * normCdf(d2)) : D * (K * normCdf(-d2) - F * normCdf(-d1));
+}
+function blackVega(F, K, T, sig, D){
+  var sT = sig * Math.sqrt(T), d1 = (Math.log(F / K) + 0.5 * sT * sT) / sT;
+  return D * F * normPdf(d1) * Math.sqrt(T);
+}
+
+// Returns {iv, iter} or {iv: NaN, reason}
+function impliedVol(price, F, K, T, D, isCall){
+  if (!(price > 0) || !(T > 0) || !(F > 0) || !(K > 0)) return { iv: NaN, reason: 'invalid input' };
+  var lower = isCall ? D * Math.max(F - K, 0) : D * Math.max(K - F, 0), upper = isCall ? D * F : D * K;
+  if (price <= lower) return { iv: NaN, reason: 'below intrinsic' };
+  if (price >= upper) return { iv: NaN, reason: 'above upper bound' };
+  var lo = 1e-6, hi = 10;
+  if (black(F, K, T, hi, D, isCall) < price) return { iv: NaN, reason: 'IV > 1000%' };
+  // Brenner-Subrahmanyam style start, clamped
+  var sig = Math.min(Math.max(Math.sqrt(2 * Math.PI / T) * price / (D * F), 0.05), 3);
+  for (var it = 1; it <= 200; it++){
+    var f = black(F, K, T, sig, D, isCall) - price;
+    if (Math.abs(f) < 1e-12) return { iv: sig, iter: it };
+    if (f > 0) hi = sig; else lo = sig;
+    var v = blackVega(F, K, T, sig, D), nx = v > 1e-12 ? sig - f / v : NaN;
+    if (!(nx > lo && nx < hi)) nx = 0.5 * (lo + hi);
+    if (Math.abs(nx - sig) < 1e-12 * Math.max(1, sig)) return { iv: nx, iter: it };
+    sig = nx;
+  }
+  return { iv: sig, iter: 200 };
+}
+
+function parseOptionRows(text){
+  var rows = [], skipped = 0;
+  text.split(/\r?\n/).forEach(function(line){
+    line = line.trim(); if (!line || line.charAt(0) === '#') return;
+    var p = /[,;\t]/.test(line) ? line.split(/[,;\t]/).map(function(x){ return x.trim(); }) : line.split(/\s+/);
+    var num = function(s){ if (s == null || s === '' || s === '-') return null; var x = Number(s); return isFinite(x) ? x : NaN; };
+    var days = num(p[0]), K = num(p[1]), c = num(p[2]), pu = num(p[3]);
+    if (!(days > 0) || !(K > 0) || Number.isNaN(c) || Number.isNaN(pu) || (c === null && pu === null)){ skipped++; return; }
+    rows.push({ days: days, K: K, call: c, put: pu });
+  });
+  return { rows: rows, skipped: skipped };
+}
+
+function quadFit(xs, ys){ // least squares y = a + b x + c x^2
+  var n = xs.length; if (n < 3) return null;
+  var S = [0, 0, 0, 0, 0], T = [0, 0, 0];
+  for (var i = 0; i < n; i++){ var x = xs[i], y = ys[i], p = 1;
+    for (var k = 0; k < 5; k++){ S[k] += p; if (k < 3) T[k] += p * y; p *= x; } }
+  var A = [[S[0], S[1], S[2], T[0]], [S[1], S[2], S[3], T[1]], [S[2], S[3], S[4], T[2]]];
+  for (var col = 0; col < 3; col++){
+    var piv = col; for (var r = col + 1; r < 3; r++) if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
+    var tmp = A[col]; A[col] = A[piv]; A[piv] = tmp;
+    if (Math.abs(A[col][col]) < 1e-18) return null;
+    for (var r2 = 0; r2 < 3; r2++) if (r2 !== col){ var f = A[r2][col] / A[col][col];
+      for (var c2 = col; c2 < 4; c2++) A[r2][c2] -= f * A[col][c2]; }
+  }
+  return { a: A[0][3] / A[0][0], b: A[1][3] / A[1][1], c: A[2][3] / A[2][2] };
+}
+
+// S, r, q decimals. Returns array of expiry objects sorted by days.
+function analyse(rows, S, r, q, useParity){
+  var by = {};
+  rows.forEach(function(o){ (by[o.days] = by[o.days] || []).push(o); });
+  return Object.keys(by).map(Number).sort(function(a, b){ return a - b; }).map(function(days){
+    var list = by[days].sort(function(a, b){ return a.K - b.K; }), T = days / 365, D = Math.exp(-r * T);
+    var F = S * Math.exp((r - q) * T), fwdSrc = 'S,r,q', best = null;
+    if (useParity){
+      list.forEach(function(o){ if (o.call != null && o.put != null && (!best || Math.abs(o.call - o.put) < Math.abs(best.call - best.put))) best = o; });
+      if (best){ F = best.K + (best.call - best.put) / D; fwdSrc = 'parity @ ' + best.K; }
+    }
+    var pts = list.map(function(o){
+      var ci = o.call != null ? impliedVol(o.call, F, o.K, T, D, true) : null;
+      var pi = o.put != null ? impliedVol(o.put, F, o.K, T, D, false) : null;
+      var useCall = o.K >= F, pref = useCall ? ci : pi, alt = useCall ? pi : ci;
+      var otm = pref && isFinite(pref.iv) ? pref.iv : (alt && isFinite(alt.iv) ? alt.iv : NaN);
+      return { K: o.K, k: Math.log(o.K / F), call: o.call, put: o.put, callIV: ci, putIV: pi, otmIV: otm };
+    });
+    var good = pts.filter(function(p){ return isFinite(p.otmIV); });
+    var fit = quadFit(good.map(function(p){ return p.k; }), good.map(function(p){ return p.otmIV; }));
+    var atm = fit ? fit.a : NaN;
+    if (!fit && good.length >= 2){ // linear interpolation at k = 0
+      for (var i = 1; i < good.length; i++) if (good[i - 1].k <= 0 && good[i].k >= 0){
+        var w = -good[i - 1].k / (good[i].k - good[i - 1].k); atm = good[i - 1].otmIV + w * (good[i].otmIV - good[i - 1].otmIV); }
+    }
+    return { days: days, T: T, F: F, D: D, fwdSrc: fwdSrc, pts: pts, fit: fit, atm: atm, nGood: good.length };
+  });
+}
+/* ===== IV-CORE-END ===== */
+
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var css = getComputedStyle(document.documentElement), col = function(n){ return css.getPropertyValue(n).trim(); };
+  var PAL = ['#4fd1c5', '#e6c15a', '#f0776c', '#8fa8ff', '#5ec27a', '#d58cf0', '#f2a65a', '#9aa3b2'];
+  var last = null;
+  var pct = function(x, dp){ return isFinite(x) ? (x * 100).toFixed(dp == null ? 2 : dp) + '%' : '–'; };
+  var fx = function(x, dp){ return x == null ? '' : (isFinite(x) ? x.toFixed(dp) : '–'); };
+
+  function sample(){ // synthetic smile with hidden q = 1% so parity inference has work to do
+    var S = 2.75, r = 0.018, q = 0.01, out = ['# SYNTHETIC sample (not market data): days,strike,call,put'];
+    var spec = [[25, 0.190, -0.35, 1.2], [53, 0.195, -0.25, 0.8], [116, 0.200, -0.18, 0.5], [207, 0.205, -0.14, 0.35]];
+    spec.forEach(function(e){
+      var T = e[0] / 365, D = Math.exp(-r * T), F = S * Math.exp((r - q) * T);
+      for (var K = 2.40; K <= 3.1001; K += 0.05){
+        var k = Math.log(K / F), sig = e[1] + e[2] * k + e[3] * k * k;
+        var c = black(F, K, T, sig, D, true), p = black(F, K, T, sig, D, false);
+        out.push(e[0] + ',' + K.toFixed(2) + ',' + c.toFixed(4) + ',' + p.toFixed(4));
+      }
+    });
+    return out.join('\n');
+  }
+
+  function run(){
+    var msg = $('msg'), P = parseOptionRows($('data').value);
+    if (!P.rows.length){ msg.className = 'msg' + (P.skipped ? ' err' : ''); msg.textContent = P.skipped ? 'No valid rows. Expected days,strike,call,put.' : 'Paste prices or load the sample.'; last = null; draw(); fill(); return; }
+    var S = parseFloat($('S').value), r = (parseFloat($('r').value) || 0) / 100, q = (parseFloat($('q').value) || 0) / 100;
+    var useParity = $('parity').checked;
+    if (!(S > 0) && !useParity){ msg.className = 'msg err'; msg.textContent = 'Spot S must be > 0.'; return; }
+    var E = analyse(P.rows, S > 0 ? S : NaN, r, q, useParity);
+    var bad = 0; E.forEach(function(e){ e.pts.forEach(function(p){
+      if ((p.callIV && !isFinite(p.callIV.iv)) || (p.putIV && !isFinite(p.putIV.iv))) bad++; }); });
+    msg.className = 'msg' + (E.some(function(e){ return !isFinite(e.F); }) ? ' err' : '');
+    msg.textContent = P.rows.length + ' strikes, ' + E.length + ' expiries' + (P.skipped ? ', ' + P.skipped + ' row(s) skipped' : '') +
+      (bad ? ', ' + bad + ' price(s) outside no-arbitrage bounds' : '') +
+      (E.some(function(e){ return !isFinite(e.F); }) ? '. Forward unknown: enter S or quote both C and P.' : '');
+    last = { E: E }; draw(); fill();
+  }
+
+  function fill(){
+    if (!last){ $('sumTbl').innerHTML = ''; $('detTbl').innerHTML = ''; $('legend').innerHTML = ''; return; }
+    var E = last.E;
+    $('legend').innerHTML = E.map(function(e, i){ return '<span><i style="background:' + PAL[i % PAL.length] + '"></i>' + e.days + 'd</span>'; }).join('');
+    $('sumTbl').innerHTML = '<thead><tr><th>Expiry</th><th>Forward</th><th>Source</th><th>ATM IV</th><th>Skew b</th><th>Curv. c</th><th>Pts</th></tr></thead><tbody>' +
+      E.map(function(e){ return '<tr><td>' + e.days + 'd</td><td>' + fx(e.F, 4) + '</td><td>' + e.fwdSrc + '</td><td>' + pct(e.atm) +
+        '</td><td>' + (e.fit ? e.fit.b.toFixed(3) : '–') + '</td><td>' + (e.fit ? e.fit.c.toFixed(3) : '–') + '</td><td>' + e.nGood + '</td></tr>'; }).join('') + '</tbody>';
+    var cellIV = function(res){ if (!res) return '<td></td>'; return isFinite(res.iv) ? '<td>' + pct(res.iv) + '</td>' : '<td class="bad">' + res.reason + '</td>'; };
+    $('detTbl').innerHTML = '<thead><tr><th>Expiry</th><th>Strike</th><th>ln(K/F)</th><th>Call</th><th>Call IV</th><th>Put</th><th>Put IV</th><th>OTM IV</th></tr></thead><tbody>' +
+      E.map(function(e){ return e.pts.map(function(p){
+        return '<tr><td>' + e.days + 'd</td><td>' + p.K + '</td><td>' + p.k.toFixed(4) + '</td><td>' + fx(p.call, 4) + '</td>' + cellIV(p.callIV) +
+          '<td>' + fx(p.put, 4) + '</td>' + cellIV(p.putIV) + '<td>' + pct(p.otmIV) + '</td></tr>'; }).join(''); }).join('') + '</tbody>';
+  }
+
+  function frame(id){
+    var cv = $(id), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute('height');
+    cv.style.height = H + 'px'; cv.width = W * dpr; cv.height = H * dpr;
+    var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    g.font = '11px ' + col('--mono'); return { g: g, W: W, H: H };
+  }
+  function axes(c, x0, x1, y0, y1, fx, fy, pad){
+    var g = c.g; g.lineWidth = 1;
+    for (var i = 0; i <= 4; i++){
+      var yv = y0 + (y1 - y0) * i / 4, yy = pad.t + (1 - i / 4) * (c.H - pad.t - pad.b);
+      g.strokeStyle = col('--line'); g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(c.W - pad.r, yy); g.stroke();
+      g.fillStyle = col('--dim'); g.fillText(fy(yv), 4, yy + 4);
+      var xv = x0 + (x1 - x0) * i / 4, xx = pad.l + i / 4 * (c.W - pad.l - pad.r), s = fx(xv);
+      g.fillText(s, Math.min(Math.max(xx - g.measureText(s).width / 2, pad.l), c.W - pad.r - g.measureText(s).width), c.H - 5);
+    }
+  }
+
+  function draw(){
+    var cs = frame('cSmile'), ct = frame('cTerm');
+    if (!last) return;
+    var E = last.E, useK = $('xaxis').value === 'K', both = $('pts').value === 'both';
+    var X = function(p){ return useK ? p.K : p.k; }, series = [];
+    E.forEach(function(e, i){
+      var pts = [];
+      e.pts.forEach(function(p){
+        if (both){ if (p.callIV && isFinite(p.callIV.iv)) pts.push([X(p), p.callIV.iv, 'c']); if (p.putIV && isFinite(p.putIV.iv)) pts.push([X(p), p.putIV.iv, 'p']); }
+        else if (isFinite(p.otmIV)) pts.push([X(p), p.otmIV, 'o']);
+      });
+      series.push({ e: e, pts: pts, color: PAL[i % PAL.length] });
+    });
+    var all = [].concat.apply([], series.map(function(s){ return s.pts; }));
+    if (!all.length) return;
+    var x0 = Math.min.apply(null, all.map(function(p){ return p[0]; })), x1 = Math.max.apply(null, all.map(function(p){ return p[0]; }));
+    var y0 = Math.min.apply(null, all.map(function(p){ return p[1]; })), y1 = Math.max.apply(null, all.map(function(p){ return p[1]; }));
+    var px = (x1 - x0) * 0.04 || 0.01, py = (y1 - y0) * 0.1 || 0.01; x0 -= px; x1 += px; y0 -= py; y1 += py;
+    var pad = { l: 50, r: 10, t: 10, b: 22 };
+    var SX = function(x){ return pad.l + (x - x0) / (x1 - x0) * (cs.W - pad.l - pad.r); };
+    var SY = function(y){ return pad.t + (y1 - y) / (y1 - y0) * (cs.H - pad.t - pad.b); };
+    axes(cs, x0, x1, y0, y1, function(v){ return useK ? v.toFixed(2) : v.toFixed(2); }, function(v){ return (v * 100).toFixed(1) + '%'; }, pad);
+    var g = cs.g;
+    if (!useK && x0 < 0 && x1 > 0){ g.strokeStyle = col('--dim'); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(SX(0), pad.t); g.lineTo(SX(0), cs.H - pad.b); g.stroke(); g.setLineDash([]); }
+    series.forEach(function(s){
+      var e = s.e;
+      if (e.fit){
+        var ks = e.pts.filter(function(p){ return isFinite(p.otmIV); }).map(function(p){ return p.k; });
+        var kmin = Math.min.apply(null, ks), kmax = Math.max.apply(null, ks);
+        g.strokeStyle = s.color; g.globalAlpha = 0.55; g.setLineDash([5, 4]); g.lineWidth = 1.4; g.beginPath();
+        for (var j = 0; j <= 60; j++){ var k = kmin + (kmax - kmin) * j / 60, iv = e.fit.a + e.fit.b * k + e.fit.c * k * k;
+          var xx = SX(useK ? e.F * Math.exp(k) : k), yy = SY(iv); j ? g.lineTo(xx, yy) : g.moveTo(xx, yy); }
+        g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+      }
+      s.pts.forEach(function(p){
+        g.beginPath(); g.arc(SX(p[0]), SY(p[1]), 3.2, 0, 2 * Math.PI);
+        if (p[2] === 'p'){ g.strokeStyle = s.color; g.lineWidth = 1.4; g.stroke(); } else { g.fillStyle = s.color; g.fill(); }
+      });
+    });
+    // term structure
+    var ts = E.filter(function(e){ return isFinite(e.atm); });
+    if (!ts.length) return;
+    var a0 = 0, a1 = Math.max.apply(null, ts.map(function(e){ return e.days; })) * 1.05;
+    var b0 = Math.min.apply(null, ts.map(function(e){ return e.atm; })), b1 = Math.max.apply(null, ts.map(function(e){ return e.atm; }));
+    var pb = (b1 - b0) * 0.25 || 0.01; b0 -= pb; b1 += pb;
+    var TX = function(x){ return pad.l + (x - a0) / (a1 - a0) * (ct.W - pad.l - pad.r); };
+    var TY = function(y){ return pad.t + (b1 - y) / (b1 - b0) * (ct.H - pad.t - pad.b); };
+    axes(ct, a0, a1, b0, b1, function(v){ return v.toFixed(0); }, function(v){ return (v * 100).toFixed(1) + '%'; }, pad);
+    var h = ct.g; h.strokeStyle = col('--acc'); h.lineWidth = 1.6; h.beginPath();
+    ts.forEach(function(e, i){ i ? h.lineTo(TX(e.days), TY(e.atm)) : h.moveTo(TX(e.days), TY(e.atm)); }); h.stroke();
+    ts.forEach(function(e){ h.beginPath(); h.arc(TX(e.days), TY(e.atm), 3.5, 0, 2 * Math.PI); h.fillStyle = PAL[E.indexOf(e) % PAL.length]; h.fill(); });
+  }
+
+  ['data', 'S', 'r', 'q'].forEach(function(id){ $(id).addEventListener('input', run); });
+  $('parity').addEventListener('change', run);
+  $('xaxis').addEventListener('change', draw); $('pts').addEventListener('change', draw);
+  $('sample').addEventListener('click', function(){ $('data').value = sample(); $('parity').checked = true; run(); });
+  $('clear').addEventListener('click', function(){ $('data').value = ''; run(); });
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(draw, 100); });
+  $('data').value = sample(); run();
+})();
+</script>
+</body>
+</html>
