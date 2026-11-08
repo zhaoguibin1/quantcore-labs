@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monte Carlo Asset Path Simulator | QuantCore Labs</title>
+  <meta name="description" content="Interactive Monte Carlo Geometric Brownian Motion (GBM) asset path simulator with multi-trajectory visualization and confidence interval statistics. Everything runs locally in your browser.">
+  <link rel="canonical" href="https://quantcore-labs.com/tools/monte-carlo-asset-sim/">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Schema.org JSON-LD Structured Data for GEO / RAG Indexing -->
+  <script type="application/ld+json">
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Monte Carlo Asset Path Simulator",
+      "url": "https://quantcore-labs.com/tools/monte-carlo-asset-sim/",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript",
+      "description": "Simulate multi-path asset price trajectories using Geometric Brownian Motion (GBM) with configurable drift, volatility, and time horizons directly in the browser.",
+      "author": {
+        "@type": "Organization",
+        "name": "QuantCore Labs",
+        "url": "https://quantcore-labs.com"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Geometric Brownian Motion (GBM) Monte Carlo Simulation in Quantitative Finance",
+      "description": "Mathematical framework and discrete-time formulation of Geometric Brownian Motion for simulating equity and commodity asset trajectories.",
+      "author": {
+        "@type": "Organization",
+        "name": "QuantCore Labs"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What stochastic differential equation governs Geometric Brownian Motion (GBM)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "GBM is modeled by the stochastic differential equation: dS_t = μ * S_t * dt + σ * S_t * dW_t, where S_t is the asset price, μ is drift, σ is volatility, and dW_t represents a standard Brownian motion (Wiener process) increment."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the simulator generate standard normal random variables in client-side JavaScript?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The simulator uses the Box-Muller transform to convert independent uniformly distributed random variables (u1, u2 ~ Uniform(0,1)) into standard normally distributed random variables (Z ~ Normal(0,1))."
+          }
+        }
+      ]
+    }
+  ]
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-mono antialiased min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- Header & Navigation -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <nav aria-label="Breadcrumb" class="text-xs text-slate-400">
+        <a href="/" class="hover:text-cyan-400 transition-colors">quantcore-labs</a> / <span class="text-slate-200">monte-carlo-asset-sim</span>
+      </nav>
+      <div class="text-xs font-semibold text-cyan-400 tracking-wider">GBM · REAL-TIME MONTE CARLO</div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full space-y-8">
+    <div class="space-y-2">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Monte Carlo Asset Path Simulator</h1>
+      <p class="text-sm text-slate-400 max-w-3xl">
+        Simulate multi-path asset price trajectories using exact discrete-time Geometric Brownian Motion (GBM). Results update instantly in your browser — zero server calls, zero data transfer.
+      </p>
+    </div>
+
+    <!-- Interactive Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Input Controls Panel -->
+      <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4 shadow-xl">
+        <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 flex items-center justify-between">
+          <span>Parameters</span>
+          <span class="text-xs text-slate-500 font-normal">Real-Time Sync</span>
+        </h2>
+
+        <div class="space-y-4 text-xs">
+          <div>
+            <label for="initialPrice" class="block font-medium text-slate-300 mb-1">Initial Price (S₀)</label>
+            <input type="number" id="initialPrice" value="100" step="1" min="0.01" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="drift" class="block font-medium text-slate-300 mb-1">Annual Drift μ (%)</label>
+            <input type="number" id="drift" value="8" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="volatility" class="block font-medium text-slate-300 mb-1">Annual Volatility σ (%)</label>
+            <input type="number" id="volatility" value="20" step="0.5" min="0.1" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="timeHorizon" class="block font-medium text-slate-300 mb-1">Time Horizon T (Years)</label>
+            <input type="number" id="timeHorizon" value="1.0" step="0.1" min="0.01" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="timeSteps" class="block font-medium text-slate-300 mb-1">Time Steps (Steps/Year)</label>
+            <input type="number" id="timeSteps" value="252" step="1" min="10" max="1000" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="numPaths" class="block font-medium text-slate-300 mb-1">Number of Trajectories (Paths)</label>
+            <input type="number" id="numPaths" value="50" step="10" min="5" max="300" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+        </div>
+      </section>
+
+      <!-- Visualization & Statistics Output -->
+      <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-lg p-5 flex flex-col justify-between shadow-xl space-y-4">
+        <div>
+          <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 mb-4 flex items-center justify-between">
+            <span>Trajectory Canvas</span>
+            <span class="text-xs text-slate-400 font-normal" id="simStatus">Rendered Paths</span>
+          </h2>
+          <div class="relative w-full h-64 md:h-80 bg-slate-950 rounded border border-slate-800 overflow-hidden">
+            <canvas id="simCanvas" class="w-full h-full block"></canvas>
+          </div>
+        </div>
+
+        <!-- Distribution Statistics Card -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950 p-4 rounded border border-slate-800 text-xs">
+          <div>
+            <span class="text-slate-500 block">Mean Terminal S_T</span>
+            <span id="statMean" class="font-bold text-cyan-400 text-sm">–</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">5th Percentile (VaR)</span>
+            <span id="statP5" class="font-bold text-rose-400 text-sm">–</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Median S_T (50th)</span>
+            <span id="statMedian" class="font-bold text-amber-400 text-sm">–</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">95th Percentile</span>
+            <span id="statP95" class="font-bold text-emerald-400 text-sm">–</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Analytical Formulas Section -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3 shadow-xl">
+      <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Formulas & Conventions</h2>
+      <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
+S_t = S_0 * exp( (μ - 0.5 * σ²) * t + σ * W_t )
+ΔS_t = S_t * exp( (μ - 0.5 * σ²) * Δt + σ * √(Δt) * Z_i )   where Z_i ~ N(0, 1)
+      </div>
+      <p class="text-xs text-slate-400">
+        $Z_i$ is sampled using the Box-Muller transformation ($Z = \sqrt{-2\ln u_1} \cos(2\pi u_2)$). The discrete-time solution prevents log-drift bias and matches exact log-normal terminal distributions.
+      </p>
+    </section>
+
+    <!-- AI Mirror Block (Markdown Mirror) -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3 shadow-xl">
+      <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Summary for AI Agents (Markdown Mirror)</h2>
+      <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs text-slate-300 space-y-2">
+        <p class="font-bold text-cyan-400"># Monte Carlo Asset Path Simulator</p>
+        <p>&gt; Client-side Geometric Brownian Motion (GBM) path simulator with percentiles and Box-Muller normal sampling. URL: https://quantcore-labs.com/tools/monte-carlo-asset-sim/</p>
+        <p class="font-bold">## Mathematical Assumptions</p>
+        <ul class="list-disc list-inside text-slate-400 space-y-1">
+          <li>Exact log-normal transition probabilities: S(t+Δt) = S(t) * exp((μ - 0.5*σ²)*Δt + σ*sqrt(Δt)*Z)</li>
+          <li>Independent increments; constant drift μ and volatility σ across all step intervals.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4 shadow-xl">
+      <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Frequently Asked Questions</h2>
+      <dl class="space-y-4 text-xs">
+        <div>
+          <dt class="font-bold text-cyan-400">Why does the formula use (μ - 0.5 * σ²) instead of just μ?</dt>
+          <dd class="text-slate-400 mt-1">This term arises from Itô's Lemma. Because log-returns are normally distributed, the expectation of $e^{\sigma W_t}$ is $e^{0.5\sigma^2 t}$. Subtracting $0.5\sigma^2$ ensures that the expected asset price $\mathbb{E}[S_t]$ equals $S_0 e^{\mu t}$.</dd>
+        </div>
+        <div>
+          <dt class="font-bold text-cyan-400">Can this simulator be used for path-dependent derivative pricing?</dt>
+          <dd class="text-slate-400 mt-1">Yes. The simulated paths can be used directly to price Asian options (averaging path prices), Barrier options (checking knockout thresholds), or Lookback options by computing path statistics in real time.</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <p>For educational and quantitative research use only. Model outputs depend on specified parameters. © QuantCore Labs.</p>
+  </footer>
+
+  <!-- Simulation Logic & Canvas Script -->
+  <script>
+    // Box-Muller Transformation for standard normal random variable sampling
+    function sampleNormal() {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // Main Run Function
+    function runSimulation() {
+      const S0 = parseFloat(document.getElementById('initialPrice').value) || 100;
+      const mu = (parseFloat(document.getElementById('drift').value) || 0) / 100;
+      const sigma = (parseFloat(document.getElementById('volatility').value) || 20) / 100;
+      const T = parseFloat(document.getElementById('timeHorizon').value) || 1.0;
+      const stepsPerYear = parseInt(document.getElementById('timeSteps').value) || 252;
+      const numPaths = parseInt(document.getElementById('numPaths').value) || 50;
+
+      const totalSteps = Math.max(2, Math.round(T * stepsPerYear));
+      const dt = T / totalSteps;
+      const driftTerm = (mu - 0.5 * sigma * sigma) * dt;
+      const volTerm = sigma * Math.sqrt(dt);
+
+      const paths = [];
+      const terminalPrices = [];
+
+      for (let p = 0; p < numPaths; p++) {
+        const path = new Float64Array(totalSteps + 1);
+        path[0] = S0;
+        let currentS = S0;
+
+        for (let i = 1; i <= totalSteps; i++) {
+          const z = sampleNormal();
+          currentS = currentS * Math.exp(driftTerm + volTerm * z);
+          path[i] = currentS;
+        }
+        paths.push(path);
+        terminalPrices.push(currentS);
+      }
+
+      // Calculate Statistics
+      terminalPrices.sort((a, b) => a - b);
+      const sum = terminalPrices.reduce((acc, val) => acc + val, 0);
+      const mean = sum / numPaths;
+      const p5 = terminalPrices[Math.floor(numPaths * 0.05)];
+      const p50 = terminalPrices[Math.floor(numPaths * 0.50)];
+      const p95 = terminalPrices[Math.floor(numPaths * 0.95)];
+
+      document.getElementById('statMean').textContent = mean.toFixed(2);
+      document.getElementById('statP5').textContent = p5.toFixed(2);
+      document.getElementById('statMedian').textContent = p50.toFixed(2);
+      document.getElementById('statP95').textContent = p95.toFixed(2);
+      document.getElementById('simStatus').textContent = `${numPaths} Paths · ${totalSteps} Steps`;
+
+      drawCanvas(paths, totalSteps, S0);
+    }
+
+    // Render Canvas
+    function drawCanvas(paths, totalSteps, S0) {
+      const canvas = document.getElementById('simCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Find Min & Max bounds for scaling
+      let minS = S0, maxS = S0;
+      for (const path of paths) {
+        for (let i = 0; i <= totalSteps; i++) {
+          if (path[i] < minS) minS = path[i];
+          if (path[i] > maxS) maxS = path[i];
+        }
+      }
+
+      const padding = 20;
+      const usableHeight = height - padding * 2;
+      const usableWidth = width - padding * 2;
+
+      // Draw Grid Lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+
+      // Draw Initial Price Baseline
+      const initialY = height - padding - ((S0 - minS) / (maxS - minS || 1)) * usableHeight;
+      ctx.strokeStyle = '#475569';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padding, initialY);
+      ctx.lineTo(width - padding, initialY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw Paths
+      ctx.lineWidth = 1;
+      for (let p = 0; p < paths.length; p++) {
+        const path = paths[p];
+        const isUp = path[totalSteps] >= S0;
+        ctx.strokeStyle = isUp ? 'rgba(52, 211, 153, 0.35)' : 'rgba(251, 113, 133, 0.35)';
+
+        ctx.beginPath();
+        for (let i = 0; i <= totalSteps; i++) {
+          const x = padding + (i / totalSteps) * usableWidth;
+          const y = height - padding - ((path[i] - minS) / (maxS - minS || 1)) * usableHeight;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Attach Input Event Listeners for Instant Calculation
+    const inputs = ['initialPrice', 'drift', 'volatility', 'timeHorizon', 'timeSteps', 'numPaths'];
+    inputs.forEach(id => {
+      document.getElementById(id).addEventListener('input', runSimulation);
+    });
+
+    // Initial Trigger on Load
+    window.addEventListener('load', runSimulation);
+    window.addEventListener('resize', runSimulation);
+  </script>
+</body>
+</html>
