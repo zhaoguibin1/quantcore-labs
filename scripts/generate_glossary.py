@@ -319,3 +319,5 @@ if __name__ == "__main__":
         print("Generated:", f.relative_to(REPO))
     update_llms(TERMS)
     print("Updated: llms.txt")
+    import subprocess
+    subprocess.run([sys.executable, str(REPO / "scripts" / "build_sitemap.py")], check=True)

@@ -1,0 +1,6 @@
+# QuantCore Labs: all public content may be crawled, indexed and cited by
+# search engines and AI assistants.
+User-agent: *
+Allow: /
+
+Sitemap: https://quantcore-labs.com/sitemap.xml
