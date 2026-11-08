@@ -45,14 +45,43 @@
       "inLanguage": "en",
       "proficiencyLevel": "Expert",
       "datePublished": "2026-11-07T20:00:00-05:00",
-      "dateModified": "2026-11-07T20:00:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
       "publisher": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "mainEntityOfPage": "https://quantcore-labs.com/glossary/ofi/"
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/ofi/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/ofi/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/ofi/#code",
+      "name": "OFI in Python",
+      "description": "Tested Python reference implementation: Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/ofi/",
+      "contentUrl": "https://quantcore-labs.com/glossary/ofi/ofi.py",
+      "text": "import numpy as np\nimport pandas as pd\n\ndef ofi(book: pd.DataFrame) -> pd.Series:\n    \"\"\"Per-event order flow imbalance e_n (Cont, Kukanov & Stoikov, 2014).\n    book: rows are successive top-of-book snapshots with columns\n          bid_px, bid_sz, ask_px, ask_sz.\n    Sum e_n over a time window to get OFI for that window.\"\"\"\n    bp, bq = book[\"bid_px\"], book[\"bid_sz\"]\n    ap, aq = book[\"ask_px\"], book[\"ask_sz\"]\n    bp0, bq0, ap0, aq0 = bp.shift(), bq.shift(), ap.shift(), aq.shift()\n    e = (np.where(bp >= bp0, bq, 0.0) - np.where(bp <= bp0, bq0, 0.0)\n         - np.where(ap <= ap0, aq, 0.0) + np.where(ap >= ap0, aq0, 0.0))\n    e = pd.Series(e, index=book.index)\n    e.iloc[0] = 0.0  # no previous snapshot\n    return e\n\n# Window OFI, e.g. 10-second buckets:\n# ofi_10s = ofi(book).resample(\"10s\").sum()\n",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/ofi/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
     },
     {
       "@type": "FAQPage",
@@ -167,8 +196,8 @@ Pᴮ, qᴮ : best bid price and size     Pᴬ, qᴬ : best ask price and size</p
 </ul>
 </section>
 
-<section><h2>Python reference implementation</h2>
-<p>Tested with NumPy and pandas. Copy and use freely.</p>
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, pandas. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/ofi/ofi.py">Download ofi.py</a> · <a href="/code/">All snippets</a></p>
 <pre><code>import numpy as np
 import pandas as pd
 
@@ -198,6 +227,7 @@ def ofi(book: pd.DataFrame) -&gt; pd.Series:
 <p>- Category: HFT &amp; Order Book Dynamics</p>
 <p>- Canonical URL: https://quantcore-labs.com/glossary/ofi/</p>
 <p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/ofi/ofi.py</p>
 </section>
 
 <section class="related"><h2>Related terms</h2><a href="/glossary/vwap/">Volume-Weighted Average Price (VWAP)</a> <a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a> <a href="/glossary/">← All terms</a></section>

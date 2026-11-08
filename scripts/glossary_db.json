@@ -90,5 +90,40 @@
     "related": [
       "ofi"
     ]
+  },
+  {
+    "term_id": "information-coefficient",
+    "name": "Information Coefficient (IC)",
+    "short": "Information Coefficient",
+    "category": "Factor Research & Alpha Evaluation",
+    "date_published": "2026-11-07T21:45:00-05:00",
+    "summary": "The cross-sectional correlation between a factor's values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.",
+    "definition": "The information coefficient is the correlation, computed across assets on one date, between a factor's values and the returns those assets earn over the following holding period. Rank IC uses Spearman rank correlation, which is robust to outliers. A factor is judged on the time series of its IC: its mean, its stability (ICIR) and its statistical significance.",
+    "formula": "IC_t      = corr( f_{i,t} , r_{i,t→t+h} )        across assets i on date t\nRank IC_t = corr( rank f_{i,t} , rank r_{i,t→t+h} )   (Spearman)\n\nMean IC   = (1/n) Σ_t IC_t\nICIR      = mean(IC) / std(IC)\nt-stat    ≈ ICIR · √(n / h)        h-period overlapping returns, n dates\n\nFundamental law (Grinold):  IR ≈ IC · √breadth",
+    "sections": [
+      {
+        "heading": "Institutional usage",
+        "html": "<ul>\n<li><strong>Factor screening.</strong> Rank IC is the first filter in most factor libraries. As a rough guide for daily-rebalanced equity factors, a mean rank IC of 0.02–0.05 with ICIR above about 0.5 is worth further work, subject to turnover and costs.</li>\n<li><strong>Decay analysis.</strong> Computing IC for horizons h = 1, 5, 10, 20 shows how fast a signal decays, which sets the rebalance frequency.</li>\n<li><strong>Factor weighting.</strong> Rolling mean IC or ICIR is a common input to dynamic factor weighting and to the expected-return scaling in mean-variance optimisation.</li>\n</ul>"
+      },
+      {
+        "heading": "Pitfalls",
+        "html": "<ul>\n<li><strong>Look-ahead.</strong> Forward returns must start after the signal is known. For A-shares, a factor computed at the close of t can only be traded at t+1 because of T+1 settlement and order timing, so the code defaults to <code>lag=1</code>.</li>\n<li><strong>Untradeable names.</strong> Suspended stocks, and A-share stocks that open at limit-up (for buys) or limit-down (for sells), should be masked out. Otherwise IC overstates what can actually be captured.</li>\n<li><strong>Overlapping horizons.</strong> With h &gt; 1 consecutive IC values share returns, so the naive t-stat is inflated. Use the √(n/h) adjustment shown here or Newey-West standard errors.</li>\n<li><strong>Size and industry exposure.</strong> A factor that is mostly a small-cap or sector bet will show high IC in some regimes. Neutralise against size and industry before judging it.</li>\n</ul>"
+      }
+    ],
+    "code_snippet": "import numpy as np\nimport pandas as pd\n\ndef forward_returns(close: pd.DataFrame, horizon: int = 1, lag: int = 1) -> pd.DataFrame:\n    \"\"\"Forward return aligned to the signal date.\n    close: dates x assets. A signal computed at the close of t is traded at t+lag\n    (lag=1 suits A-share T+1 execution) and held for `horizon` periods.\"\"\"\n    return close.shift(-lag - horizon) / close.shift(-lag) - 1\n\ndef information_coefficient(factor: pd.DataFrame, fwd_ret: pd.DataFrame,\n                            method: str = \"rank\", min_obs: int = 20) -> pd.Series:\n    \"\"\"Cross-sectional IC per date, fully vectorised (no per-date loop).\n    method=\"rank\" gives Spearman rank IC; \"pearson\" gives normal IC.\"\"\"\n    f, r = factor.align(fwd_ret, join=\"inner\")\n    valid = f.notna() & r.notna()\n    f, r = f.where(valid), r.where(valid)\n    if method == \"rank\":\n        f, r = f.rank(axis=1), r.rank(axis=1)\n    f = f.sub(f.mean(axis=1), axis=0)\n    r = r.sub(r.mean(axis=1), axis=0)\n    ic = (f * r).sum(axis=1) / np.sqrt((f ** 2).sum(axis=1) * (r ** 2).sum(axis=1))\n    return ic.where(valid.sum(axis=1) >= min_obs)\n\ndef ic_summary(ic: pd.Series, horizon: int = 1) -> dict:\n    \"\"\"Mean IC, ICIR and an approximate t-stat. Overlapping horizons share\n    information, so the effective sample size is taken as n / horizon.\"\"\"\n    ic = ic.dropna()\n    n, m, s = len(ic), ic.mean(), ic.std(ddof=1)\n    return {\"n\": n, \"mean_ic\": m, \"ic_std\": s, \"icir\": m / s,\n            \"t_stat\": m / s * np.sqrt(n / horizon), \"hit_rate\": (ic > 0).mean()}\n",
+    "faq": [
+      {
+        "question": "What is a good IC value?",
+        "answer": "For daily or weekly equity factors, a mean rank IC around 0.03–0.05 is typically considered meaningful, and ICIR above 0.5 indicates a stable signal. Values much higher than 0.1 on broad universes usually point to look-ahead bias or a data error."
+      },
+      {
+        "question": "Should I use rank IC or Pearson IC?",
+        "answer": "Rank IC is the default because it is robust to outliers and to the non-normal cross-section of returns. Pearson IC is closer to what a linear model captures and is useful when factor values are already standardised and winsorised."
+      }
+    ],
+    "related": [
+      "hurst-exponent",
+      "vwap"
+    ]
   }
 ]

@@ -5,8 +5,8 @@ Reads scripts/glossary_db.json and writes:
   glossary/index.html, glossary/<term_id>/index.html, and the "## Glossary" section of llms.txt.
 
 Usage (from the repo root):
-  python3 scripts/generate_glossary.py          # validate + build
-  python3 scripts/generate_glossary.py --test   # also execute every code_snippet to catch errors
+  python3 scripts/generate_glossary.py            # validate, execute every snippet, build
+  python3 scripts/generate_glossary.py --no-test  # skip snippet execution
 
 All text fields are HTML-escaped and JSON-LD is produced with json.dumps, so quotes, '<' and '&'
 in definitions, formulas or code are safe. Only sections[].html is inserted as raw HTML.
@@ -15,6 +15,38 @@ import html, json, sys, pathlib, re
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DB = REPO / "scripts" / "glossary_db.json"
+MODIFIED = "2026-11-07T21:45:00-05:00"
+LICENSE = "MIT"
+LICENSE_URL = "https://opensource.org/license/mit"
+STDLIB = {"math", "re", "os", "sys", "json", "itertools", "functools", "collections", "typing", "dataclasses", "statistics"}
+
+def deps(code):
+    mods = re.findall(r"^\s*(?:from|import)\s+([A-Za-z_][\w]*)", code, re.M)
+    out = []
+    for m in mods:
+        if m not in STDLIB and m not in out:
+            out.append(m)
+    return out
+
+def raw_py(t):
+    url = f"{BASE}/glossary/{t['term_id']}/"
+    head = (f'"""{t["name"]}: reference implementation.\n\n'
+            f'Source: {url}\nLicense: MIT (c) 2026 QuantCore Labs\n'
+            f'Requires: Python 3.9+, {", ".join(deps(t["code_snippet"])) or "standard library only"}\n"""\n')
+    return head + t["code_snippet"]
+
+def code_ld(t):
+    url = f"{BASE}/glossary/{t['term_id']}/"
+    d = deps(t["code_snippet"])
+    return {"@type": "SoftwareSourceCode", "@id": f"{url}#code",
+            "name": f"{t['short']} in Python", "description": f"Tested Python reference implementation: {t['summary']}",
+            "programmingLanguage": {"@type": "ComputerLanguage", "name": "Python"},
+            "runtimePlatform": "Python 3.9+" + (", " + ", ".join(d) if d else ""),
+            "codeSampleType": "full solution", "license": LICENSE_URL,
+            "url": url, "contentUrl": f"{url}{t['term_id']}.py", "text": t["code_snippet"],
+            "about": {"@id": f"{url}#term"}, "isPartOf": {"@id": f"{BASE}/code/#hub"},
+            "author": {"@id": f"{BASE}/#org"}, "dateModified": MODIFIED}
+
 REQUIRED = ["term_id", "name", "short", "category", "summary", "definition", "formula", "code_snippet", "faq"]
 BASE = "https://quantcore-labs.com"
 DATE = "2026-11-07T20:00:00-05:00"
@@ -113,8 +145,8 @@ def term_page(t):
 
 {sections}
 
-<section><h2>Python reference implementation</h2>
-<p>Tested with NumPy and pandas. Copy and use freely.</p>
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires {html.escape(", ".join(deps(code)) or "standard library only")}. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/{t['term_id']}/{t['term_id']}.py">Download {t['term_id']}.py</a> · <a href="/code/">All snippets</a></p>
 <pre><code>{html.escape(code)}</code></pre></section>
 
 <section><h2>FAQ</h2>{faq_html}</section>
@@ -125,6 +157,7 @@ def term_page(t):
 <p>- Category: {html.escape(t['category'])}</p>
 <p>- Canonical URL: {url}</p>
 <p>- Part of: {BASE}/glossary/</p>
+<p>- Python source: {url}{t['term_id']}.py</p>
 </section>
 
 <section class="related"><h2>Related terms</h2>{related} <a href="/glossary/">← All terms</a></section>
@@ -135,9 +168,10 @@ def term_page(t):
          "description": t["definition"], "url": url, "inDefinedTermSet": {"@id": SET_ID}},
         {"@type": "TechArticle", "@id": f"{url}#article", "headline": t["name"] + ": Definition, Formula and Python",
          "description": t["summary"], "about": {"@id": f"{url}#term"}, "inLanguage": "en",
-         "proficiencyLevel": "Expert", "datePublished": DATE, "dateModified": DATE,
+         "proficiencyLevel": "Expert", "datePublished": t.get("date_published", DATE), "dateModified": MODIFIED,
          "author": {"@id": f"{BASE}/#org"}, "publisher": {"@id": f"{BASE}/#org"},
-         "mainEntityOfPage": url},
+         "mainEntityOfPage": url, "hasPart": {"@id": f"{url}#code"}},
+        code_ld(t),
         {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q,
             "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in [(f["question"],f["answer"]) for f in t["faq"]]]},
         breadcrumb_ld([("QuantCore Labs", "/"), ("Glossary", "/glossary/"), (t["short"], path)]),
@@ -177,6 +211,39 @@ def index_page():
                 "Definitions, formulas and tested Python implementations for quantitative finance, market microstructure and algorithmic trading terms.",
                 "/glossary/", [("quantcore-labs", "/"), ("glossary", None)], "KNOWLEDGE BASE · GLOSSARY", body, ld)
 
+def code_page():
+    rows = "\n".join(f"""<article class="card">
+<div class="meta"><span class="cat">{html.escape(t['category'])}</span><span class="id">{html.escape(", ".join(deps(t['code_snippet'])))}</span></div>
+<h2><a href="/glossary/{t['term_id']}/#code">{html.escape(t['short'])} in Python</a></h2>
+<p>{html.escape(t['summary'])}</p>
+<p><a href="/glossary/{t['term_id']}/{t['term_id']}.py">{t['term_id']}.py</a> · <a href="/glossary/{t['term_id']}/">definition and formula</a></p>
+</article>""" for t in TERMS)
+    md = "\n".join(f"<li>- [{html.escape(t['short'])}]({BASE}/glossary/{t['term_id']}/{t['term_id']}.py): {html.escape(', '.join(deps(t['code_snippet'])))}</li>" for t in TERMS)
+    body = f"""<h1>Quant Code Snippets</h1>
+<p class="lede">Vectorised, tested Python reference implementations of quantitative finance measures. Each snippet is tested before publication and re-executed by the generator on every rebuild, is MIT licensed, and links to the definition and formula it implements.</p>
+<section aria-label="Snippets">
+{rows}
+</section>
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># QuantCore Labs Quant Code Snippets</p>
+<p>&gt; Tested Python implementations, MIT licensed. URL: {BASE}/code/</p>
+<ul style="list-style:none;padding:0">{md}</ul>
+</section>"""
+    ld = {"@context": "https://schema.org", "@graph": [
+        ORG,
+        {"@type": "CollectionPage", "@id": f"{BASE}/code/#hub", "name": "QuantCore Labs Quant Code Snippets",
+         "url": f"{BASE}/code/", "description": "Tested Python reference implementations of quantitative finance measures.",
+         "publisher": {"@id": f"{BASE}/#org"}, "license": LICENSE_URL,
+         "mainEntity": {"@type": "ItemList", "itemListElement": [
+             {"@type": "ListItem", "position": i + 1, "item": {"@id": f"{BASE}/glossary/{t['term_id']}/#code"}}
+             for i, t in enumerate(TERMS)]}},
+        *[{k: v for k, v in code_ld(t).items() if k != "text"} for t in TERMS],
+        breadcrumb_ld([("QuantCore Labs", "/"), ("Code", "/code/")]),
+    ]}
+    return page("Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs",
+                "Vectorised, tested Python implementations of VWAP, order flow imbalance, Hurst exponent, information coefficient and more. MIT licensed.",
+                "/code/", [("quantcore-labs", "/"), ("code", None)], "KNOWLEDGE BASE · CODE", body, ld)
+
 
 def load_and_validate():
     terms = json.loads(DB.read_text(encoding="utf-8"))
@@ -203,21 +270,24 @@ def load_and_validate():
 def test_snippets(terms):
     for t in terms:
         try:
-            exec(compile(t["code_snippet"], f"<{t['term_id']}>", "exec"), {"__name__": "snippet"})
+            exec(compile(raw_py(t), f"<{t['term_id']}.py>", "exec"), {"__name__": "snippet"})
         except Exception as e:
             sys.exit(f"code_snippet for '{t['term_id']}' failed: {e!r}")
         print(f"  snippet ok: {t['term_id']}")
 
+def _set_section(s, title, lines):
+    block = "\n".join([f"## {title}", ""] + lines) + "\n\n"
+    if f"## {title}\n" in s:
+        return re.sub(rf"## {title}\n.*?(?=^## |\Z)", lambda m: block, s, flags=re.S | re.M)
+    return s.replace("## Optional", block + "## Optional") if "## Optional" in s else s.rstrip() + "\n\n" + block
+
 def update_llms(terms):
     p = REPO / "llms.txt"
-    lines = ["## Glossary", "", f"- [Glossary index]({BASE}/glossary/): all terms"]
-    lines += [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']}" for t in terms]
-    block = "\n".join(lines) + "\n\n"
     s = p.read_text(encoding="utf-8")
-    if "## Glossary" in s:
-        s = re.sub(r"## Glossary\n.*?(?=^## |\Z)", lambda m: block, s, flags=re.S | re.M)
-    else:
-        s = s.replace("## Optional", block + "## Optional") if "## Optional" in s else s.rstrip() + "\n\n" + block
+    s = _set_section(s, "Glossary", [f"- [Glossary index]({BASE}/glossary/): all terms"] +
+                     [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']}" for t in terms])
+    s = _set_section(s, "Code", [f"- [Code snippets index]({BASE}/code/): tested Python implementations, MIT licensed"] +
+                     [f"- [{t['term_id']}.py]({BASE}/glossary/{t['term_id']}/{t['term_id']}.py): {t['short']} in Python ({', '.join(deps(t['code_snippet']))})" for t in terms])
     p.write_text(s, encoding="utf-8")
 
 def check_jsonld(text, where):
@@ -230,11 +300,12 @@ def check_jsonld(text, where):
 if __name__ == "__main__":
     TERMS = load_and_validate()
     BY = {t["term_id"]: t for t in TERMS}
-    if "--test" in sys.argv:
+    if "--no-test" not in sys.argv:
         test_snippets(TERMS)
     out = REPO / "glossary"
     out.mkdir(exist_ok=True)
     pages = {out / "index.html": index_page()}
+    pages[REPO / "code" / "index.html"] = code_page()
     for t in TERMS:
         pages[out / t["term_id"] / "index.html"] = term_page(t)
     for path, text in pages.items():
@@ -242,5 +313,9 @@ if __name__ == "__main__":
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
         print("Generated:", path.relative_to(REPO))
+    for t in TERMS:
+        f = out / t["term_id"] / f"{t['term_id']}.py"
+        f.write_text(raw_py(t), encoding="utf-8")
+        print("Generated:", f.relative_to(REPO))
     update_llms(TERMS)
     print("Updated: llms.txt")

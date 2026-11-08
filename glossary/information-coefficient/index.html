@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Information Coefficient (IC): Definition, Formula &amp; Python | QuantCore Labs</title>
+<meta name="description" content="The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.">
+<link rel="canonical" href="https://quantcore-labs.com/glossary/information-coefficient/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Information Coefficient (IC): Definition, Formula &amp; Python | QuantCore Labs">
+<meta property="og:description" content="The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.">
+<meta property="og:url" content="https://quantcore-labs.com/glossary/information-coefficient/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "DefinedTerm",
+      "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term",
+      "name": "Information Coefficient (IC)",
+      "termCode": "information-coefficient",
+      "description": "The information coefficient is the correlation, computed across assets on one date, between a factor's values and the returns those assets earn over the following holding period. Rank IC uses Spearman rank correlation, which is robust to outliers. A factor is judged on the time series of its IC: its mean, its stability (ICIR) and its statistical significance.",
+      "url": "https://quantcore-labs.com/glossary/information-coefficient/",
+      "inDefinedTermSet": {
+        "@id": "https://quantcore-labs.com/glossary/#set"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/glossary/information-coefficient/#article",
+      "headline": "Information Coefficient (IC): Definition, Formula and Python",
+      "description": "The cross-sectional correlation between a factor's values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term"
+      },
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-07T21:45:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/information-coefficient/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code",
+      "name": "Information Coefficient in Python",
+      "description": "Tested Python reference implementation: The cross-sectional correlation between a factor's values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/information-coefficient/",
+      "contentUrl": "https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py",
+      "text": "import numpy as np\nimport pandas as pd\n\ndef forward_returns(close: pd.DataFrame, horizon: int = 1, lag: int = 1) -> pd.DataFrame:\n    \"\"\"Forward return aligned to the signal date.\n    close: dates x assets. A signal computed at the close of t is traded at t+lag\n    (lag=1 suits A-share T+1 execution) and held for `horizon` periods.\"\"\"\n    return close.shift(-lag - horizon) / close.shift(-lag) - 1\n\ndef information_coefficient(factor: pd.DataFrame, fwd_ret: pd.DataFrame,\n                            method: str = \"rank\", min_obs: int = 20) -> pd.Series:\n    \"\"\"Cross-sectional IC per date, fully vectorised (no per-date loop).\n    method=\"rank\" gives Spearman rank IC; \"pearson\" gives normal IC.\"\"\"\n    f, r = factor.align(fwd_ret, join=\"inner\")\n    valid = f.notna() & r.notna()\n    f, r = f.where(valid), r.where(valid)\n    if method == \"rank\":\n        f, r = f.rank(axis=1), r.rank(axis=1)\n    f = f.sub(f.mean(axis=1), axis=0)\n    r = r.sub(r.mean(axis=1), axis=0)\n    ic = (f * r).sum(axis=1) / np.sqrt((f ** 2).sum(axis=1) * (r ** 2).sum(axis=1))\n    return ic.where(valid.sum(axis=1) >= min_obs)\n\ndef ic_summary(ic: pd.Series, horizon: int = 1) -> dict:\n    \"\"\"Mean IC, ICIR and an approximate t-stat. Overlapping horizons share\n    information, so the effective sample size is taken as n / horizon.\"\"\"\n    ic = ic.dropna()\n    n, m, s = len(ic), ic.mean(), ic.std(ddof=1)\n    return {\"n\": n, \"mean_ic\": m, \"ic_std\": s, \"icir\": m / s,\n            \"t_stat\": m / s * np.sqrt(n / horizon), \"hit_rate\": (ic > 0).mean()}\n",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a good IC value?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For daily or weekly equity factors, a mean rank IC around 0.03–0.05 is typically considered meaningful, and ICIR above 0.5 indicates a stable signal. Values much higher than 0.1 on broad universes usually point to look-ahead bias or a data error."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Should I use rank IC or Pearson IC?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Rank IC is the default because it is robust to outliers and to the non-normal cross-section of returns. Pearson IC is closer to what a linear model captures and is useful when factor values are already standardised and winsorised."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Glossary",
+          "item": "https://quantcore-labs.com/glossary/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Information Coefficient",
+          "item": "https://quantcore-labs.com/glossary/information-coefficient/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <a href="/glossary/">glossary</a> / <span style="color:var(--text)">information-coefficient</span></nav><div class="tag">GLOSSARY · INFORMATION COEFFICIENT</div></div></header>
+<main>
+<article>
+<h1>Information Coefficient (IC)</h1>
+<p class="lede">Factor Research &amp; Alpha Evaluation · Term ID: <code>information-coefficient</code></p>
+<p class="def"><strong>Definition.</strong> The information coefficient is the correlation, computed across assets on one date, between a factor&#x27;s values and the returns those assets earn over the following holding period. Rank IC uses Spearman rank correlation, which is robust to outliers. A factor is judged on the time series of its IC: its mean, its stability (ICIR) and its statistical significance.</p>
+
+<section><h2>Formula</h2>
+<pre class="formula">IC_t      = corr( f_{i,t} , r_{i,t→t+h} )        across assets i on date t
+Rank IC_t = corr( rank f_{i,t} , rank r_{i,t→t+h} )   (Spearman)
+
+Mean IC   = (1/n) Σ_t IC_t
+ICIR      = mean(IC) / std(IC)
+t-stat    ≈ ICIR · √(n / h)        h-period overlapping returns, n dates
+
+Fundamental law (Grinold):  IR ≈ IC · √breadth</pre></section>
+
+<section><h2>Institutional usage</h2>
+<ul>
+<li><strong>Factor screening.</strong> Rank IC is the first filter in most factor libraries. As a rough guide for daily-rebalanced equity factors, a mean rank IC of 0.02–0.05 with ICIR above about 0.5 is worth further work, subject to turnover and costs.</li>
+<li><strong>Decay analysis.</strong> Computing IC for horizons h = 1, 5, 10, 20 shows how fast a signal decays, which sets the rebalance frequency.</li>
+<li><strong>Factor weighting.</strong> Rolling mean IC or ICIR is a common input to dynamic factor weighting and to the expected-return scaling in mean-variance optimisation.</li>
+</ul>
+</section>
+<section><h2>Pitfalls</h2>
+<ul>
+<li><strong>Look-ahead.</strong> Forward returns must start after the signal is known. For A-shares, a factor computed at the close of t can only be traded at t+1 because of T+1 settlement and order timing, so the code defaults to <code>lag=1</code>.</li>
+<li><strong>Untradeable names.</strong> Suspended stocks, and A-share stocks that open at limit-up (for buys) or limit-down (for sells), should be masked out. Otherwise IC overstates what can actually be captured.</li>
+<li><strong>Overlapping horizons.</strong> With h &gt; 1 consecutive IC values share returns, so the naive t-stat is inflated. Use the √(n/h) adjustment shown here or Newey-West standard errors.</li>
+<li><strong>Size and industry exposure.</strong> A factor that is mostly a small-cap or sector bet will show high IC in some regimes. Neutralise against size and industry before judging it.</li>
+</ul>
+</section>
+
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, pandas. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/information-coefficient/information-coefficient.py">Download information-coefficient.py</a> · <a href="/code/">All snippets</a></p>
+<pre><code>import numpy as np
+import pandas as pd
+
+def forward_returns(close: pd.DataFrame, horizon: int = 1, lag: int = 1) -&gt; pd.DataFrame:
+    &quot;&quot;&quot;Forward return aligned to the signal date.
+    close: dates x assets. A signal computed at the close of t is traded at t+lag
+    (lag=1 suits A-share T+1 execution) and held for `horizon` periods.&quot;&quot;&quot;
+    return close.shift(-lag - horizon) / close.shift(-lag) - 1
+
+def information_coefficient(factor: pd.DataFrame, fwd_ret: pd.DataFrame,
+                            method: str = &quot;rank&quot;, min_obs: int = 20) -&gt; pd.Series:
+    &quot;&quot;&quot;Cross-sectional IC per date, fully vectorised (no per-date loop).
+    method=&quot;rank&quot; gives Spearman rank IC; &quot;pearson&quot; gives normal IC.&quot;&quot;&quot;
+    f, r = factor.align(fwd_ret, join=&quot;inner&quot;)
+    valid = f.notna() &amp; r.notna()
+    f, r = f.where(valid), r.where(valid)
+    if method == &quot;rank&quot;:
+        f, r = f.rank(axis=1), r.rank(axis=1)
+    f = f.sub(f.mean(axis=1), axis=0)
+    r = r.sub(r.mean(axis=1), axis=0)
+    ic = (f * r).sum(axis=1) / np.sqrt((f ** 2).sum(axis=1) * (r ** 2).sum(axis=1))
+    return ic.where(valid.sum(axis=1) &gt;= min_obs)
+
+def ic_summary(ic: pd.Series, horizon: int = 1) -&gt; dict:
+    &quot;&quot;&quot;Mean IC, ICIR and an approximate t-stat. Overlapping horizons share
+    information, so the effective sample size is taken as n / horizon.&quot;&quot;&quot;
+    ic = ic.dropna()
+    n, m, s = len(ic), ic.mean(), ic.std(ddof=1)
+    return {&quot;n&quot;: n, &quot;mean_ic&quot;: m, &quot;ic_std&quot;: s, &quot;icir&quot;: m / s,
+            &quot;t_stat&quot;: m / s * np.sqrt(n / horizon), &quot;hit_rate&quot;: (ic &gt; 0).mean()}
+</code></pre></section>
+
+<section><h2>FAQ</h2><h3>What is a good IC value?</h3><p>For daily or weekly equity factors, a mean rank IC around 0.03–0.05 is typically considered meaningful, and ICIR above 0.5 indicates a stable signal. Values much higher than 0.1 on broad universes usually point to look-ahead bias or a data error.</p><h3>Should I use rank IC or Pearson IC?</h3><p>Rank IC is the default because it is robust to outliers and to the non-normal cross-section of returns. Pearson IC is closer to what a linear model captures and is useful when factor values are already standardised and winsorised.</p></section>
+
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># Information Coefficient (IC)</p>
+<p>&gt; The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</p>
+<p>- Category: Factor Research &amp; Alpha Evaluation</p>
+<p>- Canonical URL: https://quantcore-labs.com/glossary/information-coefficient/</p>
+<p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py</p>
+</section>
+
+<section class="related"><h2>Related terms</h2><a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a> <a href="/glossary/vwap/">Volume-Weighted Average Price (VWAP)</a> <a href="/glossary/">← All terms</a></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -18,6 +18,15 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [Volume-Weighted Average Price (VWAP)](https://quantcore-labs.com/glossary/vwap/): The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.
 - [Order Flow Imbalance (OFI)](https://quantcore-labs.com/glossary/ofi/): Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.
 - [Hurst Exponent (H)](https://quantcore-labs.com/glossary/hurst-exponent/): A scaling exponent that measures long-range dependence in a time series. H < 0.5 indicates mean reversion, H = 0.5 a random walk, and H > 0.5 a persistent, trending series.
+- [Information Coefficient (IC)](https://quantcore-labs.com/glossary/information-coefficient/): The cross-sectional correlation between a factor's values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.
+
+## Code
+
+- [Code snippets index](https://quantcore-labs.com/code/): tested Python implementations, MIT licensed
+- [vwap.py](https://quantcore-labs.com/glossary/vwap/vwap.py): VWAP in Python (numpy, pandas)
+- [ofi.py](https://quantcore-labs.com/glossary/ofi/ofi.py): OFI in Python (numpy, pandas)
+- [hurst-exponent.py](https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py): Hurst Exponent in Python (numpy)
+- [information-coefficient.py](https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py): Information Coefficient in Python (numpy, pandas)
 
 ## Optional
 

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs</title>
+<meta name="description" content="Vectorised, tested Python implementations of VWAP, order flow imbalance, Hurst exponent, information coefficient and more. MIT licensed.">
+<link rel="canonical" href="https://quantcore-labs.com/code/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Quant Python Code Snippets: Tested Reference Implementations | QuantCore Labs">
+<meta property="og:description" content="Vectorised, tested Python implementations of VWAP, order flow imbalance, Hurst exponent, information coefficient and more. MIT licensed.">
+<meta property="og:url" content="https://quantcore-labs.com/code/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": "https://quantcore-labs.com/code/#hub",
+      "name": "QuantCore Labs Quant Code Snippets",
+      "url": "https://quantcore-labs.com/code/",
+      "description": "Tested Python reference implementations of quantitative finance measures.",
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "license": "https://opensource.org/license/mit",
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/vwap/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/ofi/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code"
+            }
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "item": {
+              "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/vwap/#code",
+      "name": "VWAP in Python",
+      "description": "Tested Python reference implementation: The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/vwap/",
+      "contentUrl": "https://quantcore-labs.com/glossary/vwap/vwap.py",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vwap/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/ofi/#code",
+      "name": "OFI in Python",
+      "description": "Tested Python reference implementation: Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/ofi/",
+      "contentUrl": "https://quantcore-labs.com/glossary/ofi/ofi.py",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/ofi/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code",
+      "name": "Hurst Exponent in Python",
+      "description": "Tested Python reference implementation: A scaling exponent that measures long-range dependence in a time series. H < 0.5 indicates mean reversion, H = 0.5 a random walk, and H > 0.5 a persistent, trending series.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/hurst-exponent/",
+      "contentUrl": "https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/information-coefficient/#code",
+      "name": "Information Coefficient in Python",
+      "description": "Tested Python reference implementation: The cross-sectional correlation between a factor's values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/information-coefficient/",
+      "contentUrl": "https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Code",
+          "item": "https://quantcore-labs.com/code/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <span style="color:var(--text)">code</span></nav><div class="tag">KNOWLEDGE BASE · CODE</div></div></header>
+<main>
+<h1>Quant Code Snippets</h1>
+<p class="lede">Vectorised, tested Python reference implementations of quantitative finance measures. Each snippet is tested before publication and re-executed by the generator on every rebuild, is MIT licensed, and links to the definition and formula it implements.</p>
+<section aria-label="Snippets">
+<article class="card">
+<div class="meta"><span class="cat">Execution &amp; Market Microstructure</span><span class="id">numpy, pandas</span></div>
+<h2><a href="/glossary/vwap/#code">VWAP in Python</a></h2>
+<p>The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.</p>
+<p><a href="/glossary/vwap/vwap.py">vwap.py</a> · <a href="/glossary/vwap/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">HFT &amp; Order Book Dynamics</span><span class="id">numpy, pandas</span></div>
+<h2><a href="/glossary/ofi/#code">OFI in Python</a></h2>
+<p>Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.</p>
+<p><a href="/glossary/ofi/ofi.py">ofi.py</a> · <a href="/glossary/ofi/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Time Series &amp; Stat-Arb</span><span class="id">numpy</span></div>
+<h2><a href="/glossary/hurst-exponent/#code">Hurst Exponent in Python</a></h2>
+<p>A scaling exponent that measures long-range dependence in a time series. H &lt; 0.5 indicates mean reversion, H = 0.5 a random walk, and H &gt; 0.5 a persistent, trending series.</p>
+<p><a href="/glossary/hurst-exponent/hurst-exponent.py">hurst-exponent.py</a> · <a href="/glossary/hurst-exponent/">definition and formula</a></p>
+</article>
+<article class="card">
+<div class="meta"><span class="cat">Factor Research &amp; Alpha Evaluation</span><span class="id">numpy, pandas</span></div>
+<h2><a href="/glossary/information-coefficient/#code">Information Coefficient in Python</a></h2>
+<p>The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</p>
+<p><a href="/glossary/information-coefficient/information-coefficient.py">information-coefficient.py</a> · <a href="/glossary/information-coefficient/">definition and formula</a></p>
+</article>
+</section>
+<section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
+<p># QuantCore Labs Quant Code Snippets</p>
+<p>&gt; Tested Python implementations, MIT licensed. URL: https://quantcore-labs.com/code/</p>
+<ul style="list-style:none;padding:0"><li>- [VWAP](https://quantcore-labs.com/glossary/vwap/vwap.py): numpy, pandas</li>
+<li>- [OFI](https://quantcore-labs.com/glossary/ofi/ofi.py): numpy, pandas</li>
+<li>- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py): numpy</li>
+<li>- [Information Coefficient](https://quantcore-labs.com/glossary/information-coefficient/information-coefficient.py): numpy, pandas</li></ul>
+</section>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+</body>
+</html>

@@ -45,14 +45,43 @@
       "inLanguage": "en",
       "proficiencyLevel": "Expert",
       "datePublished": "2026-11-07T20:00:00-05:00",
-      "dateModified": "2026-11-07T20:00:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
       "publisher": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "mainEntityOfPage": "https://quantcore-labs.com/glossary/vwap/"
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/vwap/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/vwap/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/vwap/#code",
+      "name": "VWAP in Python",
+      "description": "Tested Python reference implementation: The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy, pandas",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/vwap/",
+      "contentUrl": "https://quantcore-labs.com/glossary/vwap/vwap.py",
+      "text": "import numpy as np\nimport pandas as pd\n\ndef vwap(price: pd.Series, volume: pd.Series) -> float:\n    \"\"\"Session VWAP: sum(p * v) / sum(v).\"\"\"\n    v = volume.astype(float)\n    return float((price * v).sum() / v.sum())\n\ndef intraday_vwap(bars: pd.DataFrame) -> pd.Series:\n    \"\"\"Running VWAP that resets each trading day.\n    bars: DatetimeIndex, columns high, low, close, volume.\"\"\"\n    tp = (bars[\"high\"] + bars[\"low\"] + bars[\"close\"]) / 3.0  # typical price\n    pv = tp * bars[\"volume\"]\n    day = bars.index.normalize()\n    return pv.groupby(day).cumsum() / bars[\"volume\"].groupby(day).cumsum()\n\ndef slippage_bps(avg_fill: float, bench_vwap: float, side: int) -> float:\n    \"\"\"Execution cost vs VWAP in basis points. side=+1 buy, -1 sell.\n    Positive = worse than VWAP.\"\"\"\n    return side * (avg_fill - bench_vwap) / bench_vwap * 1e4\n",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/vwap/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
     },
     {
       "@type": "FAQPage",
@@ -160,8 +189,8 @@ side = +1 for buys, −1 for sells; positive = worse than benchmark</pre></secti
 </ul>
 </section>
 
-<section><h2>Python reference implementation</h2>
-<p>Tested with NumPy and pandas. Copy and use freely.</p>
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy, pandas. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/vwap/vwap.py">Download vwap.py</a> · <a href="/code/">All snippets</a></p>
 <pre><code>import numpy as np
 import pandas as pd
 
@@ -192,6 +221,7 @@ def slippage_bps(avg_fill: float, bench_vwap: float, side: int) -&gt; float:
 <p>- Category: Execution &amp; Market Microstructure</p>
 <p>- Canonical URL: https://quantcore-labs.com/glossary/vwap/</p>
 <p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/vwap/vwap.py</p>
 </section>
 
 <section class="related"><h2>Related terms</h2><a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/">← All terms</a></section>

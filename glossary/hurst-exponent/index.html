@@ -45,14 +45,43 @@
       "inLanguage": "en",
       "proficiencyLevel": "Expert",
       "datePublished": "2026-11-07T20:00:00-05:00",
-      "dateModified": "2026-11-07T20:00:00-05:00",
+      "dateModified": "2026-11-07T21:45:00-05:00",
       "author": {
         "@id": "https://quantcore-labs.com/#org"
       },
       "publisher": {
         "@id": "https://quantcore-labs.com/#org"
       },
-      "mainEntityOfPage": "https://quantcore-labs.com/glossary/hurst-exponent/"
+      "mainEntityOfPage": "https://quantcore-labs.com/glossary/hurst-exponent/",
+      "hasPart": {
+        "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#code",
+      "name": "Hurst Exponent in Python",
+      "description": "Tested Python reference implementation: A scaling exponent that measures long-range dependence in a time series. H < 0.5 indicates mean reversion, H = 0.5 a random walk, and H > 0.5 a persistent, trending series.",
+      "programmingLanguage": {
+        "@type": "ComputerLanguage",
+        "name": "Python"
+      },
+      "runtimePlatform": "Python 3.9+, numpy",
+      "codeSampleType": "full solution",
+      "license": "https://opensource.org/license/mit",
+      "url": "https://quantcore-labs.com/glossary/hurst-exponent/",
+      "contentUrl": "https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py",
+      "text": "import numpy as np\n\ndef hurst_rs(returns, min_n: int = 16) -> float:\n    \"\"\"Hurst exponent by rescaled-range (R/S) analysis.\n    Input: a series of returns/increments, NOT price levels.\"\"\"\n    x = np.asarray(returns, dtype=float)\n    N = len(x)\n    sizes = np.unique(np.floor(np.logspace(np.log10(min_n),\n                                           np.log10(N // 2), 20)).astype(int))\n    rs = []\n    for n in sizes:\n        k = N // n\n        seg = x[: k * n].reshape(k, n)\n        dev = np.cumsum(seg - seg.mean(axis=1, keepdims=True), axis=1)\n        R = dev.max(axis=1) - dev.min(axis=1)\n        S = seg.std(axis=1, ddof=0)\n        ok = S > 0\n        rs.append(np.mean(R[ok] / S[ok]))\n    H, _ = np.polyfit(np.log(sizes), np.log(rs), 1)\n    return float(H)\n\ndef hurst_lag_var(log_price, max_lag: int = 100) -> float:\n    \"\"\"Hurst from scaling of lagged differences: std(x[t+tau]-x[t]) ~ tau^H.\n    Input: log price levels.\"\"\"\n    x = np.asarray(log_price, dtype=float)\n    lags = np.arange(2, max_lag)\n    tau = [np.std(x[l:] - x[:-l]) for l in lags]\n    H, _ = np.polyfit(np.log(lags), np.log(tau), 1)\n    return float(H)\n",
+      "about": {
+        "@id": "https://quantcore-labs.com/glossary/hurst-exponent/#term"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/code/#hub"
+      },
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "dateModified": "2026-11-07T21:45:00-05:00"
     },
     {
       "@type": "FAQPage",
@@ -163,8 +192,8 @@ H &gt; 0.5 persistent (trending)</pre></section>
 </ul>
 </section>
 
-<section><h2>Python reference implementation</h2>
-<p>Tested with NumPy and pandas. Copy and use freely.</p>
+<section id="code"><h2>Python reference implementation</h2>
+<p>Requires numpy. Tested before publication; the generator re-executes it on every rebuild. MIT licensed. <a href="/glossary/hurst-exponent/hurst-exponent.py">Download hurst-exponent.py</a> · <a href="/code/">All snippets</a></p>
 <pre><code>import numpy as np
 
 def hurst_rs(returns, min_n: int = 16) -&gt; float:
@@ -204,6 +233,7 @@ def hurst_lag_var(log_price, max_lag: int = 100) -&gt; float:
 <p>- Category: Time Series &amp; Stat-Arb</p>
 <p>- Canonical URL: https://quantcore-labs.com/glossary/hurst-exponent/</p>
 <p>- Part of: https://quantcore-labs.com/glossary/</p>
+<p>- Python source: https://quantcore-labs.com/glossary/hurst-exponent/hurst-exponent.py</p>
 </section>
 
 <section class="related"><h2>Related terms</h2><a href="/glossary/ofi/">Order Flow Imbalance (OFI)</a> <a href="/glossary/">← All terms</a></section>

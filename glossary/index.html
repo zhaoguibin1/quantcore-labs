@@ -65,6 +65,17 @@
           "inDefinedTermSet": {
             "@id": "https://quantcore-labs.com/glossary/#set"
           }
+        },
+        {
+          "@type": "DefinedTerm",
+          "@id": "https://quantcore-labs.com/glossary/information-coefficient/#term",
+          "name": "Information Coefficient (IC)",
+          "termCode": "information-coefficient",
+          "description": "The information coefficient is the correlation, computed across assets on one date, between a factor's values and the returns those assets earn over the following holding period. Rank IC uses Spearman rank correlation, which is robust to outliers. A factor is judged on the time series of its IC: its mean, its stability (ICIR) and its statistical significance.",
+          "url": "https://quantcore-labs.com/glossary/information-coefficient/",
+          "inDefinedTermSet": {
+            "@id": "https://quantcore-labs.com/glossary/#set"
+          }
         }
       ]
     },
@@ -143,13 +154,19 @@ footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font
 <h2><a href="/glossary/hurst-exponent/">Hurst Exponent (H)</a></h2>
 <p>A scaling exponent that measures long-range dependence in a time series. H &lt; 0.5 indicates mean reversion, H = 0.5 a random walk, and H &gt; 0.5 a persistent, trending series.</p>
 </article>
+<article class="card">
+<div class="meta"><span class="cat">Factor Research &amp; Alpha Evaluation</span><span class="id">Term ID: information-coefficient</span></div>
+<h2><a href="/glossary/information-coefficient/">Information Coefficient (IC)</a></h2>
+<p>The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</p>
+</article>
 </section>
 <section class="md"><h2 style="margin-top:0">Summary for AI agents (Markdown mirror)</h2>
 <p># QuantCore Labs Glossary</p>
 <p>&gt; Quantitative finance definitions with formulas and Python code. URL: https://quantcore-labs.com/glossary/</p>
 <ul style="list-style:none;padding:0"><li>- [VWAP](https://quantcore-labs.com/glossary/vwap/): The ratio of cumulative traded value to cumulative volume over a horizon. The standard benchmark for judging institutional execution quality.</li>
 <li>- [OFI](https://quantcore-labs.com/glossary/ofi/): Net buy-minus-sell pressure at the best bid and ask, measured from changes in top-of-book prices and sizes. Short-horizon price changes are approximately linear in OFI.</li>
-<li>- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/): A scaling exponent that measures long-range dependence in a time series. H &lt; 0.5 indicates mean reversion, H = 0.5 a random walk, and H &gt; 0.5 a persistent, trending series.</li></ul>
+<li>- [Hurst Exponent](https://quantcore-labs.com/glossary/hurst-exponent/): A scaling exponent that measures long-range dependence in a time series. H &lt; 0.5 indicates mean reversion, H = 0.5 a random walk, and H &gt; 0.5 a persistent, trending series.</li>
+<li>- [Information Coefficient](https://quantcore-labs.com/glossary/information-coefficient/): The cross-sectional correlation between a factor&#x27;s values and subsequent asset returns. Rank IC, its mean and ICIR are the standard first test of whether an alpha factor predicts returns.</li></ul>
 </section>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
