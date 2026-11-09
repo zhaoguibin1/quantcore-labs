@@ -48,7 +48,8 @@
         "CAGR, annualised volatility, total return",
         "Maximum drawdown, longest drawdown duration, current drawdown",
         "Historical VaR and CVaR (95%), skewness, excess kurtosis, win rate, profit factor",
-        "Equity, underwater and rolling Sharpe charts; monthly returns table",
+        "Interactive equity, underwater and rolling Sharpe charts: synced crosshair, drag-to-zoom, 3M/6M/1Y/3Y range buttons, statistics for any selected period",
+        "Monthly returns table",
         "Selectable annualisation: 252, 242 (A-share), 365, 52 or 12 periods per year",
         "Client-side computation, data never leaves the browser"
       ],
@@ -148,9 +149,16 @@ table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top
 table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
 table.stats td:nth-child(2n){text-align:right}
 table.stats td:nth-child(2n+1){color:var(--dim)}
-canvas{width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
 .ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.zoombar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:16px}
+.zoombar button{padding:3px 9px;font-size:11px}
+.zoombar button.on{background:rgba(79,209,197,.15)}
+.zoombar .hint{font:11px var(--mono);color:var(--dim);margin-left:auto}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.readout b{font-weight:600}
+.rangeinfo{font:11px var(--mono);color:var(--warn);margin-top:6px;min-height:14px}
 .scroll{overflow-x:auto}
 table.months{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:640px}
 table.months th,table.months td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--line)}
@@ -230,6 +238,12 @@ dl.faq dd{margin:4px 0 0;color:var(--dim)}
       <div class="kpi"><div class="k">Longest DD</div><div class="v" id="kDur">–</div><div class="s" id="kDurWhen">&nbsp;</div></div>
     </div>
     <table class="stats"><tbody id="stats"></tbody></table>
+    <div class="zoombar" id="zoombar" role="group" aria-label="Chart range">
+      <button type="button" data-r="all" class="on">All</button><button type="button" data-r="3">3Y</button><button type="button" data-r="1">1Y</button><button type="button" data-r="0.5">6M</button><button type="button" data-r="0.25">3M</button>
+      <span class="hint">Mouse: drag to zoom, double-click to reset · Touch: slide to inspect</span>
+    </div>
+    <div class="readout" id="readout" aria-live="off">&nbsp;</div>
+    <div class="rangeinfo" id="rangeinfo"></div>
     <div class="ctitle"><span>Equity curve</span><span><select id="logy" aria-label="Equity axis scale"><option value="0">linear</option><option value="1">log</option></select></span></div>
     <canvas id="cEq" height="220" role="img" aria-label="Equity curve chart"></canvas>
     <div class="ctitle"><span>Underwater (drawdown from peak)</span></div>
@@ -520,7 +534,9 @@ function monthlyTable(r, rDates){
       ['Win rate', pct(M.winRate, 1), 'Profit factor', num(M.profitFactor)],
       ['Skewness', num(M.skew, 3), 'Excess kurtosis', num(M.exKurt, 3)]
     ]);
-    last = { S: S, M: M, P: P, rf: rf, hasDates: hasDates };
+    last = { S: S, M: M, P: P, rf: rf, mar: mar, hasDates: hasDates };
+    view = { i0: 0, i1: S.equity.length - 1 }; hoverI = null; drag = null;
+    Array.prototype.forEach.call($('zoombar').querySelectorAll('button'), function(b){ b.classList.toggle('on', b.dataset.r === 'all'); });
     drawAll();
     $('months').innerHTML = hasDates ? monthsHtml(monthlyTable(S.returns, ED.slice(1))) :
       '<p class="msg">Add dates to the input to see the monthly table.</p>';
@@ -529,7 +545,7 @@ function monthlyTable(r, rDates){
   function clearOut(){
     ['kSharpe', 'kSortino', 'kCalmar', 'kCagr', 'kMdd', 'kDur'].forEach(function(id){ $(id).textContent = '–'; $(id).className = 'v'; });
     ['kSpan', 'kMddWhen', 'kDurWhen'].forEach(function(id){ $(id).innerHTML = '&nbsp;'; });
-    $('stats').innerHTML = ''; last = null;
+    $('stats').innerHTML = ''; last = null; readout();
     ['cEq', 'cDd', 'cRs'].forEach(function(id){ var c = $(id); c.getContext('2d').clearRect(0, 0, c.width, c.height); });
   }
 
@@ -547,46 +563,121 @@ function monthlyTable(r, rDates){
       }).join('') + '</tbody></table>';
   }
 
+  // ---- interactive charts: shared view window, synced crosshair, drag-to-zoom ----
+  var view = null, hoverI = null, drag = null, geo = {}, rafPending = false, lastTouch = 0;
+  var fromTouch = function(){ return Date.now() - lastTouch < 800; };  // ignore mouse events synthesised after a tap
+  function series(){                       // all three series aligned to the equity index
+    var w = +$('rollw').value;
+    if (last.rsW !== w){ last.rs = [NaN].concat(rollingSharpe(last.S.returns, w, last.P, last.rf)); last.rsW = w; }
+    return { eq: last.S.equity, dd: last.M.dd.dd, rs: last.rs };
+  }
+  var fmtEq = function(v){ return Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : v.toFixed(3); };
+  var label = function(i){ var t = last.S.eqDates[i]; return last.hasDates && t != null ? day(t) : '#' + i; };
+
   function chart(id, ys, opts){
     var cv = $(id), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.getAttribute('height');
     cv.style.height = H + 'px'; cv.width = W * dpr; cv.height = H * dpr;
     var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    var i0 = view.i0, i1 = view.i1, span = Math.max(i1 - i0, 1);
+    var pad = { l: 58, r: 8, t: 8, b: 20 };
+    geo[id] = { pad: pad, W: W };
     var tf = opts.log ? Math.log : function(x){ return x; }, inv = opts.log ? Math.exp : function(x){ return x; };
-    var lo = Infinity, hi = -Infinity;
-    ys.forEach(function(y){ if (isFinite(y)){ var t = tf(y); if (t < lo) lo = t; if (t > hi) hi = t; } });
+    var lo = Infinity, hi = -Infinity, i;
+    for (i = i0; i <= i1; i++){ var y = ys[i]; if (isFinite(y)){ var tv = tf(y); if (tv < lo) lo = tv; if (tv > hi) hi = tv; } }
+    g.font = '11px ' + col('--mono');
     if (!isFinite(lo)){ g.fillStyle = col('--dim'); g.font = '12px ' + col('--mono'); g.fillText('Not enough data for this window', 12, H / 2); return; }
     if (opts.zero){ lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
     if (hi === lo){ hi += 1; lo -= 1; }
-    var pad = { l: 58, r: 8, t: 8, b: 20 }, n = ys.length;
-    var X = function(i){ return pad.l + i / Math.max(n - 1, 1) * (W - pad.l - pad.r); };
+    var X = function(k){ return pad.l + (k - i0) / span * (W - pad.l - pad.r); };
     var Y = function(t){ return pad.t + (hi - t) / (hi - lo) * (H - pad.t - pad.b); };
-    g.font = '11px ' + col('--mono'); g.lineWidth = 1;
+    g.lineWidth = 1;
     for (var k = 0; k <= 4; k++){
       var t = lo + (hi - lo) * k / 4, yy = Y(t);
       g.strokeStyle = col('--line'); g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(W - pad.r, yy); g.stroke();
       g.fillStyle = col('--dim'); g.fillText(opts.fmt(inv(t)), 4, yy + 4);
     }
-    var D = last.S.eqDates, off = opts.dateOffset || 0;
-    if (last.hasDates){ [0, Math.floor((n - 1) / 2), n - 1].forEach(function(i, j){
-      var t = D[i + off]; if (t == null) return; var s = day(t);
-      g.fillText(s, j === 0 ? pad.l : (j === 2 ? W - pad.r - 64 : X(i) - 32), H - 5); }); }
+    [i0, Math.round((i0 + i1) / 2), i1].forEach(function(ix, j){
+      var s = label(ix); g.fillText(s, j === 0 ? pad.l : (j === 2 ? W - pad.r - g.measureText(s).width : X(ix) - g.measureText(s).width / 2), H - 5); });
+    if (drag && drag.active){
+      var xa = X(Math.min(drag.a, drag.b)), xb = X(Math.max(drag.a, drag.b));
+      g.fillStyle = 'rgba(79,209,197,.12)'; g.fillRect(xa, pad.t, xb - xa, H - pad.t - pad.b);
+    }
     if (opts.zero){ g.strokeStyle = col('--dim'); g.beginPath(); g.moveTo(pad.l, Y(0)); g.lineTo(W - pad.r, Y(0)); g.stroke(); }
     g.beginPath(); var started = false;
-    ys.forEach(function(y, i){ if (!isFinite(y)){ started = false; return; }
-      var px = X(i), py = Y(tf(y)); if (started) g.lineTo(px, py); else { g.moveTo(px, py); started = true; } });
+    for (i = i0; i <= i1; i++){ var v = ys[i]; if (!isFinite(v)){ started = false; continue; }
+      var px = X(i), py = Y(tf(v)); if (started) g.lineTo(px, py); else { g.moveTo(px, py); started = true; } }
     g.strokeStyle = opts.color; g.lineWidth = 1.6; g.stroke();
-    if (opts.fill){ g.lineTo(X(n - 1), Y(0)); g.lineTo(X(0), Y(0)); g.closePath(); g.fillStyle = opts.fill; g.fill(); }
+    if (opts.fill){ g.lineTo(X(i1), Y(0)); g.lineTo(X(i0), Y(0)); g.closePath(); g.fillStyle = opts.fill; g.fill(); }
+    if (hoverI != null && hoverI >= i0 && hoverI <= i1){
+      var hx = X(hoverI);
+      g.strokeStyle = col('--dim'); g.setLineDash([3, 3]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(hx, pad.t); g.lineTo(hx, H - pad.b); g.stroke(); g.setLineDash([]);
+      if (isFinite(ys[hoverI])){ g.beginPath(); g.arc(hx, Y(tf(ys[hoverI])), 3.5, 0, 2 * Math.PI); g.fillStyle = opts.color; g.fill(); }
+    }
+  }
+
+  function readout(){
+    var el = $('readout');
+    if (!last){ el.innerHTML = '&nbsp;'; $('rangeinfo').textContent = ''; return; }
+    var s = series(), i = hoverI == null ? view.i1 : hoverI, R = last.S.returns;
+    el.innerHTML = '<b>' + label(i) + '</b><span>Equity ' + fmtEq(s.eq[i]) + '</span><span class="' + (i > 0 && R[i - 1] < 0 ? 'neg' : 'pos') +
+      '">Period ' + (i > 0 ? pct(R[i - 1]) : '–') + '</span><span class="neg">DD ' + pct(s.dd[i]) + '</span><span>Roll. Sharpe ' + num(s.rs[i]) + '</span>';
+    var n = s.eq.length - 1;
+    if (view.i0 === 0 && view.i1 === n){ $('rangeinfo').textContent = ''; return; }
+    var eq = s.eq.slice(view.i0, view.i1 + 1);
+    if (eq.length < 3){ $('rangeinfo').textContent = ''; return; }
+    var m = metrics(eq, R.slice(view.i0, view.i1), last.P, last.rf, last.mar);
+    $('rangeinfo').textContent = 'Selected ' + label(view.i0) + ' → ' + label(view.i1) + ': return ' + pct(m.total) + ', CAGR ' + pct(m.cagr) +
+      ', max DD ' + pct(m.mdd) + ', Sharpe ' + num(m.sharpe) + ', Sortino ' + num(m.sortino);
   }
 
   function drawAll(){
     if (!last) return;
-    var S = last.S, M = last.M;
-    chart('cEq', S.equity, { color: col('--acc'), log: $('logy').value === '1',
-      fmt: function(v){ return Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : v.toFixed(3); } });
-    chart('cDd', M.dd.dd, { color: col('--neg'), fill: 'rgba(240,119,108,.18)', zero: true, fmt: function(v){ return (v * 100).toFixed(1) + '%'; } });
-    chart('cRs', rollingSharpe(S.returns, +$('rollw').value, last.P, last.rf),
-      { color: col('--warn'), zero: true, dateOffset: 1, fmt: function(v){ return v.toFixed(2); } });
+    var s = series();
+    chart('cEq', s.eq, { color: col('--acc'), log: $('logy').value === '1', fmt: fmtEq });
+    chart('cDd', s.dd, { color: col('--neg'), fill: 'rgba(240,119,108,.18)', zero: true, fmt: function(v){ return (v * 100).toFixed(1) + '%'; } });
+    chart('cRs', s.rs, { color: col('--warn'), zero: true, fmt: function(v){ return v.toFixed(2); } });
+    readout();
   }
+  function redraw(){ if (rafPending) return; rafPending = true; requestAnimationFrame(function(){ rafPending = false; drawAll(); }); }
+  function setView(i0, i1){
+    var n = last.S.equity.length - 1;
+    view = { i0: Math.max(0, Math.min(i0, n - 2)), i1: Math.min(n, Math.max(i1, 2)) };
+    if (view.i1 - view.i0 < 2) view.i0 = Math.max(0, view.i1 - 2);
+    var full = view.i0 === 0 && view.i1 === n;
+    Array.prototype.forEach.call($('zoombar').querySelectorAll('button'), function(b){ b.classList.toggle('on', full && b.dataset.r === 'all'); });
+    redraw();
+  }
+  function idxAt(id, clientX){
+    var c = $(id), r = c.getBoundingClientRect(), G = geo[id];
+    if (!G || !view) return null;
+    var f = (clientX - r.left - G.pad.l) / (G.W - G.pad.l - G.pad.r);
+    return Math.round(view.i0 + Math.min(Math.max(f, 0), 1) * (view.i1 - view.i0));
+  }
+  ['cEq', 'cDd', 'cRs'].forEach(function(id){
+    var c = $(id);
+    c.addEventListener('mousedown', function(e){ if (!last || fromTouch()) return; var i = idxAt(id, e.clientX); drag = { a: i, b: i, x0: e.clientX, active: false }; e.preventDefault(); });
+    c.addEventListener('mousemove', function(e){
+      if (!last || fromTouch()) return; hoverI = idxAt(id, e.clientX);
+      if (drag){ drag.b = hoverI; drag.active = Math.abs(e.clientX - drag.x0) > 5; }
+      redraw();
+    });
+    c.addEventListener('mouseleave', function(){ if (!drag && !fromTouch()){ hoverI = null; redraw(); } });
+    c.addEventListener('dblclick', function(){ if (last) setView(0, last.S.equity.length - 1); });
+    c.addEventListener('touchstart', function(e){ lastTouch = Date.now(); if (last){ hoverI = idxAt(id, e.touches[0].clientX); redraw(); } }, { passive: true });
+    c.addEventListener('touchmove', function(e){ lastTouch = Date.now(); if (last){ hoverI = idxAt(id, e.touches[0].clientX); redraw(); } }, { passive: true });
+  });
+  window.addEventListener('mouseup', function(){
+    if (!drag) return;
+    var d = drag; drag = null;
+    if (d.active && Math.abs(d.b - d.a) >= 2) setView(Math.min(d.a, d.b), Math.max(d.a, d.b)); else redraw();
+  });
+  $('zoombar').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b || !last) return;
+    var n = last.S.equity.length - 1;
+    if (b.dataset.r === 'all') setView(0, n);
+    else { setView(n - Math.round(+b.dataset.r * last.P), n); b.classList.add('on'); }
+  });
 
   ['mode', 'ppy', 'rf', 'mar', 'cap'].forEach(function(id){ $(id).addEventListener('input', run); });
   $('data').addEventListener('input', run);

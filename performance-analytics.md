@@ -30,7 +30,7 @@ Skewness and excess kurtosis use population moment estimators. Drawdown duration
 
 ## Outputs
 
-Sharpe, Sortino, Calmar, CAGR, total return, annualised volatility, max drawdown with peak and trough dates, longest drawdown duration, current drawdown, best and worst period, VaR/CVaR 95%, win rate, profit factor, skewness, excess kurtosis. Charts: equity (linear or log), underwater, rolling Sharpe (63/126/252). Monthly returns table when dates are present.
+Sharpe, Sortino, Calmar, CAGR, total return, annualised volatility, max drawdown with peak and trough dates, longest drawdown duration, current drawdown, best and worst period, VaR/CVaR 95%, win rate, profit factor, skewness, excess kurtosis. Charts: equity (linear or log), underwater, rolling Sharpe (63/126/252), with a synced crosshair readout, drag-to-zoom, 3M/6M/1Y/3Y range buttons and full statistics (return, CAGR, max DD, Sharpe, Sortino) for any selected period. Monthly returns table when dates are present.
 
 ## Reference check
 
