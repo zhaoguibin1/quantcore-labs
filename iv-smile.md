@@ -8,6 +8,7 @@
 - Rows of `days,strike,call,put` (comma, tab or semicolon). Either price may be blank or `-`.
 - Spot S, rate r and dividend yield q in % p.a. These are used only when the forward cannot be inferred from put-call parity.
 - Option: infer the forward from put-call parity (default on).
+- For USD options, r can be filled in one click from the U.S. Treasury par yield curve at the median expiry (continuous compounding)
 
 ## Method
 

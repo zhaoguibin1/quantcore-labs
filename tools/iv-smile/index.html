@@ -41,6 +41,7 @@
       "isAccessibleForFree": true,
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "featureList": [
+        "One-click USD risk-free rate from the U.S. Treasury par yield curve, interpolated to the median expiry",
         "Implied volatility from European call and put prices (Black-76 on the forward)",
         "Safeguarded Newton-Raphson solver with bisection fallback and no-arbitrage bound checks",
         "Forward inferred from put-call parity, or from spot, rate and dividend yield",
@@ -156,6 +157,10 @@ td.bad{color:var(--neg)}
 dl.faq dt{font-weight:600;margin-top:14px}
 dl.faq dd{margin:4px 0 0;color:var(--dim)}
 .disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.ust{margin-top:6px;background:transparent;color:var(--acc);border:1px dashed var(--acc);border-radius:4px;padding:3px 8px;font:11px var(--mono);cursor:pointer}
+.ust:hover{background:rgba(79,209,197,.1)}
+.ust-note{font:11px var(--mono);color:var(--dim);margin-top:4px;min-height:14px}
+.ust-note a{color:var(--dim)}
 </style>
 </head>
 <body>
@@ -181,6 +186,7 @@ dl.faq dd{margin:4px 0 0;color:var(--dim)}
       <div><label for="r">Rate r %</label><input type="number" id="r" value="1.8" step="0.01"></div>
       <div><label for="q">Div. q %</label><input type="number" id="q" value="0" step="0.01"></div>
     </div>
+    <button type="button" class="ust" id="ustBtn">Fill r from USD Treasury curve (median expiry; USD options only)</button><div class="ust-note" id="ustNote"></div>
     <label class="chk"><input type="checkbox" id="parity" checked> Infer forward from put-call parity (ignores S and q where both C and P exist)</label>
     <div class="btns">
       <button type="button" id="sample">Load sample</button>
@@ -271,6 +277,31 @@ Smile summary per expiry, k = ln(K/F), OTM points:
 </div>
 
 <script>
+/* ===== UST-RATES-BEGIN ===== */
+// Risk-free rate from the U.S. Treasury par yield curve (data/rates.json, refreshed each business day).
+// Linear interpolation in maturity, flat beyond the shortest/longest tenor.
+function ustRate(curve, years, field){
+  var t = curve.tenors;
+  if (years <= t[0].years) return t[0][field];
+  for (var i = 1; i < t.length; i++) if (years <= t[i].years){
+    var a = t[i - 1], b = t[i], w = (years - a.years) / (b.years - a.years);
+    return a[field] + w * (b[field] - a[field]);
+  }
+  return t[t.length - 1][field];
+}
+function ustFill(input, note, years, field, label){
+  note.textContent = 'Loading U.S. Treasury curve…';
+  fetch('/data/rates.json', { cache: 'no-cache' }).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(c){
+      var v = ustRate(c, years, field), bey = ustRate(c, years, 'par_bey');
+      input.value = v.toFixed(3);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      note.innerHTML = 'USD Treasury par curve, ' + c.as_of + ', ' + label + ': ' + bey.toFixed(2) + '% BEY → ' + v.toFixed(3) +
+        '% ' + (field === 'continuous' ? 'continuous' : 'effective annual') + '. <a href="' + c.source_url + '" rel="noopener">Source: U.S. Treasury</a>';
+    })
+    .catch(function(){ note.textContent = 'Treasury curve unavailable right now; enter the rate manually.'; });
+}
+/* ===== UST-RATES-END ===== */
 /* ===== IV-CORE-BEGIN ===== */
 function normCdf(x){ // Hart (1968) double precision per West (2005), |err| < 1e-14
   var z = Math.abs(x), c;
@@ -511,6 +542,11 @@ function analyse(rows, S, r, q, useParity){
   var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(draw, 100); });
   $('data').value = sample(); run();
 })();
+document.getElementById('ustBtn').addEventListener('click', function(){
+  var rows = parseOptionRows(document.getElementById('data').value).rows.map(function(o){ return o.days; }).sort(function(a, b){ return a - b; });
+  var d = rows.length ? rows[Math.floor(rows.length / 2)] : 91;
+  ustFill(document.getElementById('r'), document.getElementById('ustNote'), d / 365, 'continuous', 'interpolated at ' + d + 'd');
+});
 </script>
 </body>
 </html>

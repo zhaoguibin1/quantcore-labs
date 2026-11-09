@@ -11,6 +11,7 @@
 - σ: annualised volatility, %
 - r: continuously compounded risk-free rate, %
 - q: continuous dividend yield, %
+- r can be filled in one click from the U.S. Treasury par yield curve (published daily), interpolated to the option expiry and converted to continuous compounding
 
 ## Formulas
 

@@ -1,0 +1,30 @@
+name: Update Treasury rates
+
+on:
+  schedule:
+    - cron: "17 23 * * 1-5"   # 18:17 New York (EST) / 19:17 (EDT), after Treasury's end-of-day release
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: treasury-rates
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch latest par yield curve
+        run: python3 scripts/update_rates.py
+      - name: Commit if a new curve date was published
+        run: |
+          if [ -z "$(git status --porcelain -- data/rates.json)" ]; then echo "No change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/rates.json
+          git commit -m "Update Treasury par yield curve ($(python3 -c 'import json;print(json.load(open("data/rates.json"))["as_of"])'))"
+          git push

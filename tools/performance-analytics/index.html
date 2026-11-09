@@ -41,6 +41,7 @@
       "isAccessibleForFree": true,
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "featureList": [
+        "One-click risk-free rate: latest U.S. 3-month Treasury yield as an effective annual rate",
         "Accepts equity curve / NAV, periodic returns (% or decimal) or PnL with starting capital",
         "Optional dates in YYYY-MM-DD, YYYY/MM/DD or YYYYMMDD format",
         "Sharpe, Sortino and Calmar ratios",
@@ -163,6 +164,10 @@ table.months td.y{font-weight:600;border-left:1px solid var(--line)}
 dl.faq dt{font-weight:600;margin-top:14px}
 dl.faq dd{margin:4px 0 0;color:var(--dim)}
 .disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.ust{margin-top:6px;background:transparent;color:var(--acc);border:1px dashed var(--acc);border-radius:4px;padding:3px 8px;font:11px var(--mono);cursor:pointer}
+.ust:hover{background:rgba(79,209,197,.1)}
+.ust-note{font:11px var(--mono);color:var(--dim);margin-top:4px;min-height:14px}
+.ust-note a{color:var(--dim)}
 </style>
 </head>
 <body>
@@ -203,9 +208,10 @@ dl.faq dd{margin:4px 0 0;color:var(--dim)}
         <input type="number" id="cap" value="1000000" min="0" step="any"></div>
     </div>
     <div class="row2">
-      <div><label for="rf">Risk-free rate (% p.a.)</label><input type="number" id="rf" value="0" step="0.01"></div>
+      <div><label for="rf">Risk-free rate (% p.a.)</label><input type="number" id="rf" value="0" step="0.01"><button type="button" class="ust" id="ustBtn">USD 3M T-bill</button></div>
       <div><label for="mar">Sortino MAR (% p.a.)</label><input type="number" id="mar" placeholder="= risk-free" step="0.01"></div>
     </div>
+    <div class="ust-note" id="ustNote"></div>
     <div class="btns">
       <button type="button" id="sample">Load sample data</button>
       <button type="button" id="clear">Clear</button>
@@ -297,6 +303,31 @@ Skew, excess kurtosis: population moment estimators</div>
 </div>
 
 <script>
+/* ===== UST-RATES-BEGIN ===== */
+// Risk-free rate from the U.S. Treasury par yield curve (data/rates.json, refreshed each business day).
+// Linear interpolation in maturity, flat beyond the shortest/longest tenor.
+function ustRate(curve, years, field){
+  var t = curve.tenors;
+  if (years <= t[0].years) return t[0][field];
+  for (var i = 1; i < t.length; i++) if (years <= t[i].years){
+    var a = t[i - 1], b = t[i], w = (years - a.years) / (b.years - a.years);
+    return a[field] + w * (b[field] - a[field]);
+  }
+  return t[t.length - 1][field];
+}
+function ustFill(input, note, years, field, label){
+  note.textContent = 'Loading U.S. Treasury curve…';
+  fetch('/data/rates.json', { cache: 'no-cache' }).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(c){
+      var v = ustRate(c, years, field), bey = ustRate(c, years, 'par_bey');
+      input.value = v.toFixed(3);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      note.innerHTML = 'USD Treasury par curve, ' + c.as_of + ', ' + label + ': ' + bey.toFixed(2) + '% BEY → ' + v.toFixed(3) +
+        '% ' + (field === 'continuous' ? 'continuous' : 'effective annual') + '. <a href="' + c.source_url + '" rel="noopener">Source: U.S. Treasury</a>';
+    })
+    .catch(function(){ note.textContent = 'Treasury curve unavailable right now; enter the rate manually.'; });
+}
+/* ===== UST-RATES-END ===== */
 /* ===== PERF-CORE-BEGIN ===== */
 function parseDate(s){
   var m = /^(\d{4})[-\/.]?(\d{1,2})[-\/.]?(\d{1,2})(?:[ T].*)?$/.exec(s.trim());
@@ -566,6 +597,9 @@ function monthlyTable(r, rDates){
   var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(drawAll, 100); });
   $('mode').value = 'equity'; $('data').value = sample(); run();
 })();
+document.getElementById('ustBtn').addEventListener('click', function(){
+  ustFill(document.getElementById('rf'), document.getElementById('ustNote'), 0.25, 'effective_annual', '3-month');
+});
 </script>
 </body>
 </html>

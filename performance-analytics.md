@@ -9,6 +9,7 @@
 - One row per period; an optional leading date (YYYY-MM-DD, YYYY/MM/DD or YYYYMMDD) enables the monthly table and dated drawdown ranges
 - Periods per year: 252 (US/global daily), 242 (A-share daily), 365, 52, 12
 - Risk-free rate and Sortino MAR, % p.a. (MAR defaults to the risk-free rate)
+- Risk-free rate can be filled in one click with the latest U.S. 3-month Treasury yield, converted to an effective annual rate
 
 ## Formulas
 
