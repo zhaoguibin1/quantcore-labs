@@ -1,0 +1,106 @@
+{
+ "as_of": "2026-11-06",
+ "source": "U.S. Department of the Treasury, Daily Treasury Par Yield Curve Rates",
+ "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve",
+ "basis": "par_bey = published CMT par yield (% , semiannual bond-equivalent); continuous = 2*ln(1+y/2); effective_annual = (1+y/2)^2-1. Par yields are used as zero-rate approximations.",
+ "tenors": [
+  {
+   "label": "1 Mo",
+   "years": 0.083333,
+   "par_bey": 4.02,
+   "continuous": 3.980132,
+   "effective_annual": 4.060401
+  },
+  {
+   "label": "1.5 Month",
+   "years": 0.125,
+   "par_bey": 4.07,
+   "continuous": 4.029141,
+   "effective_annual": 4.111412
+  },
+  {
+   "label": "2 Mo",
+   "years": 0.166667,
+   "par_bey": 4.15,
+   "continuous": 4.10753,
+   "effective_annual": 4.193056
+  },
+  {
+   "label": "3 Mo",
+   "years": 0.25,
+   "par_bey": 4.19,
+   "continuous": 4.146713,
+   "effective_annual": 4.23389
+  },
+  {
+   "label": "4 Mo",
+   "years": 0.333333,
+   "par_bey": 4.19,
+   "continuous": 4.146713,
+   "effective_annual": 4.23389
+  },
+  {
+   "label": "6 Mo",
+   "years": 0.5,
+   "par_bey": 4.23,
+   "continuous": 4.185889,
+   "effective_annual": 4.274732
+  },
+  {
+   "label": "1 Yr",
+   "years": 1.0,
+   "par_bey": 4.33,
+   "continuous": 4.283793,
+   "effective_annual": 4.376872
+  },
+  {
+   "label": "2 Yr",
+   "years": 2.0,
+   "par_bey": 4.51,
+   "continuous": 4.459901,
+   "effective_annual": 4.56085
+  },
+  {
+   "label": "3 Yr",
+   "years": 3.0,
+   "par_bey": 4.59,
+   "continuous": 4.538122,
+   "effective_annual": 4.64267
+  },
+  {
+   "label": "5 Yr",
+   "years": 5.0,
+   "par_bey": 4.64,
+   "continuous": 4.586994,
+   "effective_annual": 4.693824
+  },
+  {
+   "label": "7 Yr",
+   "years": 7.0,
+   "par_bey": 4.74,
+   "continuous": 4.684703,
+   "effective_annual": 4.796169
+  },
+  {
+   "label": "10 Yr",
+   "years": 10.0,
+   "par_bey": 4.86,
+   "continuous": 4.80189,
+   "effective_annual": 4.919049
+  },
+  {
+   "label": "20 Yr",
+   "years": 20.0,
+   "par_bey": 5.29,
+   "continuous": 5.221249,
+   "effective_annual": 5.35996
+  },
+  {
+   "label": "30 Yr",
+   "years": 30.0,
+   "par_bey": 5.26,
+   "continuous": 5.19202,
+   "effective_annual": 5.329169
+  }
+ ]
+}
