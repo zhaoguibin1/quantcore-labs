@@ -21,7 +21,17 @@
       "@type": "Organization",
       "@id": "https://quantcore-labs.com/#org",
       "name": "QuantCore Labs",
-      "url": "https://quantcore-labs.com/"
+      "url": "https://quantcore-labs.com/",
+      "email": "contact@quantcore-labs.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "contact@quantcore-labs.com",
+        "availableLanguage": [
+          "en",
+          "zh"
+        ]
+      }
     },
     {
       "@type": "AboutPage",
@@ -132,9 +142,16 @@ ul.plain li{margin:6px 0}
 
 <section><h2>Corrections</h2>
 <p>When an error is found, the page, its Markdown version and its tests are corrected together, and the page's modified date in its structured data is updated. Each page states the conventions it uses, so results can be compared with other tools on a like-for-like basis.</p></section>
+
+<section id="contact"><h2>Contact</h2>
+<p>Corrections, questions and suggestions: <a id="mail" href="/about/#contact">contact [at] quantcore-labs [dot] com</a>. When reporting a numerical issue, please include the page, your inputs and the value you expected, so it can be reproduced.</p>
+<script>
+(function(){ var a = document.getElementById('mail'), u = 'contact', d = 'quantcore-labs.com';
+  a.href = 'mailto:' + u + '@' + d; a.textContent = u + '@' + d; })();
+</script></section>
 </article>
 </main>
 <footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p>
-<p><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+<p><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
 </body>
 </html>

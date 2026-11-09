@@ -174,8 +174,18 @@ def about():
 
 <section><h2>Corrections</h2>
 <p>When an error is found, the page, its Markdown version and its tests are corrected together, and the page's modified date in its structured data is updated. Each page states the conventions it uses, so results can be compared with other tools on a like-for-like basis.</p></section>
+
+<section id="contact"><h2>Contact</h2>
+<p>Corrections, questions and suggestions: <a id="mail" href="/about/#contact">contact [at] quantcore-labs [dot] com</a>. When reporting a numerical issue, please include the page, your inputs and the value you expected, so it can be reproduced.</p>
+<script>
+(function(){{ var a = document.getElementById('mail'), u = 'contact', d = 'quantcore-labs.com';
+  a.href = 'mailto:' + u + '@' + d; a.textContent = u + '@' + d; }})();
+</script></section>
 </article>"""
-    ld = {"@context": "https://schema.org", "@graph": [ORG,
+    org = dict(ORG, email="contact@quantcore-labs.com",
+               contactPoint={"@type": "ContactPoint", "contactType": "customer support", "email": "contact@quantcore-labs.com",
+                             "availableLanguage": ["en", "zh"]})
+    ld = {"@context": "https://schema.org", "@graph": [org,
           {"@type": "AboutPage", "@id": f"{BASE}/about/#page", "url": f"{BASE}/about/", "name": "About QuantCore Labs",
            "about": {"@id": f"{BASE}/#org"}, "isPartOf": {"@id": f"{BASE}/#website"}},
           breadcrumb_ld([("QuantCore Labs", "/"), ("About", "/about/")])]}
@@ -236,7 +246,7 @@ def not_found():
 RELATED_STYLE = ("margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;"
                  "font:13px/1.7 ui-monospace,Menlo,Consolas,monospace")
 FOOTER_LINKS = ('<p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · '
-                '<a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p>')
+                '<a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p>')
 
 def related_block(t):
     links = [f'<a href="{path_of(BY[x])}" style="color:#22d3ee">{esc(BY[x]["name"])}</a>' for x in t["terms"]]
@@ -258,7 +268,9 @@ def patch_tool(t):
     else:
         assert s.count("</main>") == 1, f
         s = s.replace("</main>", block + "</main>")
-    if "<!-- FOOTER-LINKS -->" not in s:
+    if "<!-- FOOTER-LINKS -->" in s:
+        s = re.sub(r"<!-- FOOTER-LINKS --><p[^>]*>.*?</p>", lambda m: "<!-- FOOTER-LINKS -->" + FOOTER_LINKS, s, count=1, flags=re.S)
+    else:
         i = s.rfind("</footer>"); assert i > 0, f
         s = s[:i] + "<!-- FOOTER-LINKS -->" + FOOTER_LINKS + s[i:]
     f.write_text(s, encoding="utf-8")
