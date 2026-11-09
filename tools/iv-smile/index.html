@@ -49,6 +49,9 @@
         "Out-of-the-money composite smile with quadratic fit in log-moneyness",
         "ATM implied volatility, skew slope and curvature per expiry",
         "ATM implied volatility term structure chart",
+        "Implied volatility surface heatmap over log-moneyness and expiry, with total-variance interpolation between quoted expiries and no extrapolation",
+        "Calendar-arbitrage check: flags moneyness ranges where total implied variance falls with expiry",
+        "Optional interactive 3D surface (Plotly, loaded only on request) with quoted points overlaid",
         "Client-side computation, data never leaves the browser"
       ],
       "image": "https://quantcore-labs.com/tools/iv-smile/og-image.png",
@@ -150,6 +153,10 @@ table.t th,table.t td{padding:5px 8px;text-align:right;border-bottom:1px solid v
 table.t th{color:var(--dim);font-weight:500}
 table.t td:first-child,table.t th:first-child{text-align:left}
 td.bad{color:var(--neg)}
+#cSurf{touch-action:pan-y;cursor:crosshair}
+.surfbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;font:11px var(--mono);color:var(--dim);margin-top:6px}
+.surfbar .scale{display:inline-block;width:120px;height:9px;vertical-align:middle;margin:0 6px;border-radius:2px}
+.surfread{color:var(--text)}
 .formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
 .md{font:13px/1.6 var(--mono)}
 .md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
@@ -206,6 +213,15 @@ dl.faq dd{margin:4px 0 0;color:var(--dim)}
     <canvas id="cTerm" height="150" role="img" aria-label="ATM implied volatility term structure"></canvas>
     <div class="scroll" style="margin-top:14px"><table class="t" id="sumTbl"></table></div>
   </div>
+</div>
+<div class="panel" style="margin-top:16px">
+  <h3>Volatility surface</h3>
+  <div class="ctitle"><span>Implied volatility by log-moneyness ln(K/F) (x) and days to expiry (y). Dashed rows mark quoted expiries; between them, total variance is interpolated. Blank = no quotes to interpolate from.</span></div>
+  <canvas id="cSurf" height="300" role="img" aria-label="Implied volatility surface heatmap"></canvas>
+  <div class="surfbar"><span id="surfScale"></span><span class="surfread" id="surfRead">&nbsp;</span></div>
+  <div class="msg" id="arbMsg"></div>
+  <div class="btns"><button type="button" id="btn3d">3D view (loads Plotly, ~560 KB)</button></div>
+  <div id="plot3d" style="display:none;height:460px;margin-top:10px"></div>
 </div>
 <div class="panel" style="margin-top:16px">
   <h3>Strike detail</h3>
@@ -410,6 +426,50 @@ function analyse(rows, S, r, q, useParity){
     return { days: days, T: T, F: F, D: D, fwdSrc: fwdSrc, pts: pts, fit: fit, atm: atm, nGood: good.length };
   });
 }
+// Piecewise-linear OTM IV through the quoted points of one expiry; NaN outside the quoted k range.
+function smileAt(e, k){
+  var p = e.pts.filter(function(q){ return isFinite(q.otmIV); }).sort(function(a, b){ return a.k - b.k; });
+  if (p.length < 2 || k < p[0].k - 1e-12 || k > p[p.length - 1].k + 1e-12) return NaN;
+  for (var i = 1; i < p.length; i++) if (k <= p[i].k + 1e-12){
+    var w = (k - p[i - 1].k) / (p[i].k - p[i - 1].k || 1);
+    return p[i - 1].otmIV + Math.min(Math.max(w, 0), 1) * (p[i].otmIV - p[i - 1].otmIV);
+  }
+  return p[p.length - 1].otmIV;
+}
+
+// IV surface on a (log-moneyness x days) grid. Between quoted expiries, total implied
+// variance w = IV^2 * T is interpolated linearly in T at fixed k; no extrapolation.
+// Also reports calendar-arbitrage violations: w falling from one expiry to the next.
+function surfaceGrid(E, nk, nt){
+  var ex = E.filter(function(e){ return e.pts.filter(function(q){ return isFinite(q.otmIV); }).length >= 2; });
+  if (ex.length < 2) return null;
+  var kmin = Infinity, kmax = -Infinity;
+  ex.forEach(function(e){ e.pts.forEach(function(q){ if (isFinite(q.otmIV)){ kmin = Math.min(kmin, q.k); kmax = Math.max(kmax, q.k); } }); });
+  var ks = [], Ts = [], iv = [], i, j;
+  for (i = 0; i < nk; i++) ks.push(kmin + (kmax - kmin) * i / (nk - 1));
+  var T0 = ex[0].T, T1 = ex[ex.length - 1].T;
+  for (j = 0; j < nt; j++) Ts.push(T0 + (T1 - T0) * j / (nt - 1));
+  ex.forEach(function(e){ if (Ts.indexOf(e.T) < 0) Ts.push(e.T); });   // every quoted expiry is an exact row
+  Ts.sort(function(a, b){ return a - b; });
+  Ts.forEach(function(T){
+    var b = 0; while (b < ex.length - 2 && T > ex[b + 1].T) b++;
+    var A = ex[b], B = ex[b + 1], row = [];
+    ks.forEach(function(k){
+      var sa = smileAt(A, k), sb = smileAt(B, k);
+      if (!isFinite(sa) || !isFinite(sb)){ row.push(NaN); return; }
+      var wa = sa * sa * A.T, wb = sb * sb * B.T, w = wa + (T - A.T) / (B.T - A.T) * (wb - wa);
+      row.push(w > 0 ? Math.sqrt(w / T) : NaN);
+    });
+    iv.push(row);
+  });
+  var arb = [];
+  for (j = 0; j + 1 < ex.length; j++){
+    var bad = ks.filter(function(k){ var a = smileAt(ex[j], k), c = smileAt(ex[j + 1], k);
+      return isFinite(a) && isFinite(c) && c * c * ex[j + 1].T < a * a * ex[j].T - 1e-12; });
+    if (bad.length) arb.push({ from: ex[j].days, to: ex[j + 1].days, kmin: Math.min.apply(null, bad), kmax: Math.max.apply(null, bad), n: bad.length });
+  }
+  return { ks: ks, days: Ts.map(function(T){ return T * 365; }), iv: iv, quoted: ex.map(function(e){ return e.days; }), arb: arb, ex: ex };
+}
 /* ===== IV-CORE-END ===== */
 
 (function(){
@@ -483,6 +543,8 @@ function analyse(rows, S, r, q, useParity){
 
   function draw(){
     var cs = frame('cSmile'), ct = frame('cTerm');
+    drawSurface();
+    if (window.Plotly && $('plot3d').style.display !== 'none') draw3d();
     if (!last) return;
     var E = last.E, useK = $('xaxis').value === 'K', both = $('pts').value === 'both';
     var X = function(p){ return useK ? p.K : p.k; }, series = [];
@@ -533,6 +595,111 @@ function analyse(rows, S, r, q, useParity){
     ts.forEach(function(e, i){ i ? h.lineTo(TX(e.days), TY(e.atm)) : h.moveTo(TX(e.days), TY(e.atm)); }); h.stroke();
     ts.forEach(function(e){ h.beginPath(); h.arc(TX(e.days), TY(e.atm), 3.5, 0, 2 * Math.PI); h.fillStyle = PAL[E.indexOf(e) % PAL.length]; h.fill(); });
   }
+
+
+  // ---- volatility surface: heatmap (no libraries) + optional lazy-loaded Plotly 3D ----
+  var VIR = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+  function vir(t){ t = Math.min(Math.max(t, 0), 1) * (VIR.length - 1); var i = Math.min(Math.floor(t), VIR.length - 2), f = t - i, a = VIR[i], b = VIR[i + 1];
+    return 'rgb(' + Math.round(a[0] + f * (b[0] - a[0])) + ',' + Math.round(a[1] + f * (b[1] - a[1])) + ',' + Math.round(a[2] + f * (b[2] - a[2])) + ')'; }
+  var surf = null, surfHover = null;
+  function drawSurface(){
+    var c = frame('cSurf'), g = c.g;
+    surf = last ? surfaceGrid(last.E, 61, 40) : null;
+    $('btn3d').disabled = !surf;
+    if (!surf){
+      g.fillStyle = col('--dim'); g.font = '12px ' + col('--mono');
+      g.fillText(last ? 'Need at least two expiries with two or more valid quotes each.' : 'Paste prices or load the sample.', 12, c.H / 2);
+      $('surfScale').innerHTML = ''; $('surfRead').innerHTML = '&nbsp;'; $('arbMsg').textContent = ''; return;
+    }
+    var vals = [].concat.apply([], surf.iv).filter(isFinite), lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (hi - lo < 1e-9){ hi = lo + 0.01; }
+    var pad = { l: 50, r: 10, t: 8, b: 22 }, W = c.W, H = c.H, nk = surf.ks.length, nt = surf.days.length;
+    var k0 = surf.ks[0], k1 = surf.ks[nk - 1], d0 = surf.days[0], d1 = surf.days[nt - 1];
+    var X = function(k){ return pad.l + (k - k0) / (k1 - k0) * (W - pad.l - pad.r); };
+    var Y = function(d){ return H - pad.b - (d - d0) / (d1 - d0) * (H - pad.t - pad.b); };
+    var cw = (W - pad.l - pad.r) / (nk - 1);
+    for (var j = 0; j < nt; j++){
+      var yTop = j + 1 < nt ? (Y(surf.days[j]) + Y(surf.days[j + 1])) / 2 : pad.t;
+      var yBot = j > 0 ? (Y(surf.days[j]) + Y(surf.days[j - 1])) / 2 : H - pad.b;
+      for (var i = 0; i < nk; i++){ var v = surf.iv[j][i]; if (!isFinite(v)) continue;
+        g.fillStyle = vir((v - lo) / (hi - lo)); g.fillRect(X(surf.ks[i]) - cw / 2, yTop, cw + 0.6, yBot - yTop + 0.6); }
+    }
+    g.font = '11px ' + col('--mono'); g.fillStyle = col('--dim'); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1;
+    surf.quoted.forEach(function(d){ var yy = Y(d); g.setLineDash([4, 3]); g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(W - pad.r, yy); g.stroke(); g.setLineDash([]);
+      g.fillText(d + 'd', 4, yy + 4); });
+    surf.ex.forEach(function(e){ e.pts.forEach(function(q){ if (isFinite(q.otmIV)){ g.beginPath(); g.arc(X(q.k), Y(e.days), 1.8, 0, 2 * Math.PI); g.fillStyle = '#fff'; g.fill(); } }); });
+    g.fillStyle = col('--dim');
+    [k0, (k0 + k1) / 2, k1].forEach(function(k, n){ var t = k.toFixed(3), w = g.measureText(t).width;
+      g.fillText(t, n === 0 ? pad.l : n === 2 ? W - pad.r - w : X(k) - w / 2, H - 6); });
+    if (surfHover){
+      g.strokeStyle = '#fff'; g.lineWidth = 1; g.strokeRect(X(surf.ks[surfHover.i]) - cw / 2, Y(surf.days[surfHover.j]) - 4, cw, 8);
+    }
+    $('surfScale').innerHTML = (lo * 100).toFixed(1) + '%<span class="scale" style="background:linear-gradient(90deg,' +
+      [0, .25, .5, .75, 1].map(vir).join(',') + ')"></span>' + (hi * 100).toFixed(1) + '%';
+    surf.geo = { pad: pad, W: W, H: H, X: X, Y: Y };
+    $('arbMsg').className = 'msg' + (surf.arb.length ? ' err' : '');
+    $('arbMsg').textContent = surf.arb.length ? 'Calendar arbitrage: total variance falls between ' + surf.arb.map(function(a){
+      return a.from + 'd → ' + a.to + 'd (ln(K/F) ' + a.kmin.toFixed(3) + ' to ' + a.kmax.toFixed(3) + ')'; }).join('; ') +
+      '. Check those quotes (stale or crossed prices are the usual cause).' : 'No calendar arbitrage: total variance rises with expiry at every quoted moneyness.';
+    surfRead();
+  }
+  function surfRead(){
+    if (!surf || !surfHover){ $('surfRead').innerHTML = surf ? 'Hover or tap the surface for values' : '&nbsp;'; return; }
+    var i = surfHover.i, j = surfHover.j, v = surf.iv[j][i], d = surf.days[j], k = surf.ks[i];
+    var q = surf.quoted.some(function(x){ return Math.abs(x - d) < 1e-6; });
+    $('surfRead').textContent = 'ln(K/F) ' + k.toFixed(3) + ' (K ≈ ' + (Math.exp(k) * 100).toFixed(1) + '% of F) · ' + d.toFixed(0) + 'd · IV ' +
+      (isFinite(v) ? (v * 100).toFixed(2) + '%' : 'n/a') + (q ? ' · quoted expiry' : ' · interpolated');
+  }
+  function surfPick(clientX, clientY){
+    if (!surf || !surf.geo) return;
+    var r = $('cSurf').getBoundingClientRect(), G = surf.geo, x = clientX - r.left, y = clientY - r.top;
+    var fk = (x - G.pad.l) / (G.W - G.pad.l - G.pad.r), fd = (G.H - G.pad.b - y) / (G.H - G.pad.t - G.pad.b);
+    if (fk < 0 || fk > 1 || fd < 0 || fd > 1){ surfHover = null; drawSurface(); return; }
+    var i = Math.round(fk * (surf.ks.length - 1)), dd = surf.days[0] + fd * (surf.days[surf.days.length - 1] - surf.days[0]), j = 0;
+    surf.days.forEach(function(d, n){ if (Math.abs(d - dd) < Math.abs(surf.days[j] - dd)) j = n; });
+    surfHover = { i: i, j: j }; drawSurface();
+  }
+  $('cSurf').addEventListener('mousemove', function(e){ surfPick(e.clientX, e.clientY); });
+  $('cSurf').addEventListener('mouseleave', function(){ surfHover = null; drawSurface(); });
+  $('cSurf').addEventListener('touchstart', function(e){ surfPick(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  $('cSurf').addEventListener('touchmove', function(e){ surfPick(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+
+  var PLOTLY_SRC = 'https://cdn.jsdelivr.net/npm/plotly.js-gl3d-dist-min@4.2.0/plotly-gl3d.min.js';
+  var PLOTLY_SRI = 'sha384-FIPest0F2WAPBZywmHOfM9f+AiwK/u8Ofa/lKAhctEZkupuN7c4zxUyFsbc2QHPq';
+  var plotlyLoading = null;
+  function loadPlotly(){
+    if (window.Plotly) return Promise.resolve();
+    if (plotlyLoading) return plotlyLoading;
+    plotlyLoading = new Promise(function(res, rej){
+      var sc = document.createElement('script'); sc.src = PLOTLY_SRC; sc.integrity = PLOTLY_SRI; sc.crossOrigin = 'anonymous';
+      sc.onload = res; sc.onerror = function(){ plotlyLoading = null; rej(new Error('load failed')); }; document.head.appendChild(sc);
+    });
+    return plotlyLoading;
+  }
+  function draw3d(){
+    if (!surf || !window.Plotly) return;
+    var z = surf.iv.map(function(row){ return row.map(function(v){ return isFinite(v) ? +(v * 100).toFixed(3) : null; }); });
+    var px = [], py = [], pz = [];
+    surf.ex.forEach(function(e){ e.pts.forEach(function(q){ if (isFinite(q.otmIV)){ px.push(q.k); py.push(e.days); pz.push(q.otmIV * 100); } }); });
+    var ax = function(t){ return { title: { text: t }, color: '#9aa3b2', gridcolor: '#2a3140', zerolinecolor: '#2a3140', backgroundcolor: '#0a0e13', showbackground: true }; };
+    Plotly.react('plot3d', [
+      { type: 'surface', x: surf.ks, y: surf.days, z: z, colorscale: 'Viridis', opacity: 0.92, name: 'surface',
+        colorbar: { title: { text: 'IV %' }, tickfont: { color: '#9aa3b2' }, len: 0.7 },
+        hovertemplate: 'ln(K/F) %{x:.3f}<br>%{y:.0f} days<br>IV %{z:.2f}%<extra></extra>' },
+      { type: 'scatter3d', mode: 'markers', x: px, y: py, z: pz, name: 'quotes', marker: { size: 2.5, color: '#ffffff' },
+        hovertemplate: 'quote<br>ln(K/F) %{x:.3f}<br>%{y} days<br>IV %{z:.2f}%<extra></extra>' }
+    ], { paper_bgcolor: '#111821', font: { color: '#d7e0ea', family: 'ui-monospace, Menlo, monospace', size: 11 },
+         margin: { l: 0, r: 0, t: 0, b: 0 }, showlegend: false,
+         scene: { xaxis: ax('ln(K/F)'), yaxis: ax('days'), zaxis: ax('IV %'), camera: { eye: { x: -1.6, y: -1.6, z: 0.9 } } } },
+       { displaylogo: false, responsive: true });
+  }
+  $('btn3d').addEventListener('click', function(){
+    var b = $('btn3d'), box = $('plot3d');
+    if (box.style.display !== 'none'){ box.style.display = 'none'; b.textContent = '3D view'; return; }
+    b.disabled = true; b.textContent = 'Loading Plotly…';
+    loadPlotly().then(function(){ box.style.display = 'block'; b.disabled = false; b.textContent = 'Hide 3D view'; draw3d(); })
+      .catch(function(){ b.disabled = false; b.textContent = '3D view (loads Plotly, ~560 KB)'; $('arbMsg').textContent = 'Could not load the 3D library (offline or blocked). The heatmap above shows the same surface.'; });
+  });
 
   ['data', 'S', 'r', 'q'].forEach(function(id){ $(id).addEventListener('input', run); });
   $('parity').addEventListener('change', run);

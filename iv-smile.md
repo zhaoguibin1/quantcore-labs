@@ -32,6 +32,9 @@ IV(k) ~ a + b k + c k^2 (least squares): ATM IV = a, skew = b, curvature = c
 - Call IV, put IV and OTM composite IV per strike; prices outside the bounds are flagged
 - Per expiry: forward and its source, ATM IV, skew, curvature, number of valid points
 - Charts: smile per expiry vs ln(K/F) or strike, with fitted curves; ATM IV term structure
+- Volatility surface heatmap (log-moneyness x days). Each quoted expiry is a piecewise-linear OTM smile; between expiries, total variance w = IV^2 T is interpolated linearly in T at fixed ln(K/F), with no extrapolation
+- Calendar-arbitrage check: reports any moneyness range where total variance falls from one expiry to the next
+- Optional 3D surface view (Plotly gl3d, about 560 KB, loaded only when requested, with subresource integrity)
 
 ## Validation
 
