@@ -41,6 +41,37 @@ def is_snippet(t):
 def path_of(t):
     return f"/code/{t['term_id']}/" if is_snippet(t) else f"/glossary/{t['term_id']}/"
 
+def md_url_of(t):
+    return BASE + path_of(t).rstrip("/") + ".md"
+
+def html_to_md(h):
+    """Small converter for the controlled HTML used in sections (ul/li, strong, em, code, a, p)."""
+    h = re.sub(r'<a href="([^"]+)"[^>]*>(.*?)</a>', lambda m: f"[{m.group(2)}]({m.group(1) if m.group(1).startswith('http') else BASE + m.group(1)})", h, flags=re.S)
+    h = re.sub(r"</?strong>", "**", h); h = re.sub(r"</?em>", "*", h); h = re.sub(r"</?code>", "`", h)
+    h = re.sub(r"<li>\s*", "- ", h); h = re.sub(r"</li>", "", h)
+    h = re.sub(r"</?(ul|ol|p)>", "", h)
+    h = re.sub(r"<[^>]+>", "", h)
+    lines = [l.strip() for l in html.unescape(h).splitlines()]
+    return "\n".join(l for l in lines if l)
+
+def term_md(t):
+    url = BASE + path_of(t)
+    snip = is_snippet(t)
+    out = [f"# {t['name']}", "", f"> {t['summary']}", f"> URL: {url}", "",
+           f"Category: {t['category']}. {'Snippet' if snip else 'Term'} ID: `{t['term_id']}`.", "",
+           f"## {'What it does' if snip else 'Definition'}", "", t["definition"], "",
+           f"## {'Approach' if snip else 'Formula'}", "", "```", t["formula"], "```", ""]
+    for sec in t["sections"]:
+        out += [f"## {sec['heading']}", "", html_to_md(sec["html"]), ""]
+    out += ["## Python reference implementation", "",
+            f"Requires {dep_label(t['code_snippet'])}. Tested before publication and re-executed with assertions on every rebuild. MIT licensed. Raw file: {url}{t['term_id']}.py", "",
+            "```python", t["code_snippet"].rstrip(), "```", "", "## FAQ", ""]
+    for f in t["faq"]:
+        out += [f"**{f['question']}**", "", f["answer"], ""]
+    if t["related"]:
+        out += ["## Related", ""] + [f"- [{BY[r]['name']}]({BASE + path_of(BY[r])})" for r in t["related"]] + [""]
+    return "\n".join(out)
+
 def raw_py(t):
     url = BASE + path_of(t)
     head = (f'"""{t["name"]}: reference implementation.\n\n'
@@ -103,7 +134,7 @@ th{color:var(--dim);font-weight:500}
 footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
 """
 
-def page(title, desc, path, crumbs, tag, body, ld):
+def page(title, desc, path, crumbs, tag, body, ld, md_url=None):
     url = f"{BASE}{path}"
     crumb_html = " / ".join(
         f'<a href="{u}">{html.escape(n)}</a>' if u else f'<span style="color:var(--text)">{html.escape(n)}</span>'
@@ -116,7 +147,7 @@ def page(title, desc, path, crumbs, tag, body, ld):
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
 <link rel="canonical" href="{url}">
-<meta name="robots" content="index,follow,max-snippet:-1">
+{('<link rel="alternate" type="text/markdown" href="' + md_url + '" title="Markdown version for LLMs">' + chr(10)) if md_url else ""}<meta name="robots" content="index,follow,max-snippet:-1">
 <meta name="theme-color" content="#020617">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="QuantCore Labs">
@@ -197,7 +228,7 @@ def term_page(t):
     sect = "code" if snip else "glossary"
     return page(f"{t['name']}: {'Tested Python Code' if snip else 'Definition, Formula & Python'} | QuantCore Labs", t["summary"], path,
                 [("quantcore-labs", "/"), (sect, f"/{sect}/"), (t["term_id"], None)],
-                ("CODE · " if snip else "GLOSSARY · ") + t["short"].upper(), body, ld)
+                ("CODE · " if snip else "GLOSSARY · ") + t["short"].upper(), body, ld, md_url=md_url_of(t))
 
 def index_page():
     cards = "\n".join(f"""<article class="card">
@@ -313,9 +344,9 @@ def update_llms(terms):
     p = REPO / "llms.txt"
     s = p.read_text(encoding="utf-8")
     s = _set_section(s, "Glossary", [f"- [Glossary index]({BASE}/glossary/): all terms"] +
-                     [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']}" for t in terms if not is_snippet(t)])
+                     [f"- [{t['name']}]({BASE}/glossary/{t['term_id']}/): {t['summary']} Markdown: {md_url_of(t)}" for t in terms if not is_snippet(t)])
     s = _set_section(s, "Code", [f"- [Code snippets index]({BASE}/code/): tested Python implementations, MIT licensed"] +
-                     [f"- [{t['term_id']}.py]({BASE}{path_of(t)}{t['term_id']}.py): {t['short']}{'' if is_snippet(t) else ' in Python'} ({dep_label(t['code_snippet'])})" for t in snippets_first(terms)])
+                     [f"- [{t['short']}{'' if is_snippet(t) else ' in Python'}]({BASE}{path_of(t)}): {dep_label(t['code_snippet'])}. Raw: {BASE}{path_of(t)}{t['term_id']}.py Markdown: {md_url_of(t)}" for t in snippets_first(terms)])
     p.write_text(s, encoding="utf-8")
 
 def check_jsonld(text, where):
@@ -344,6 +375,10 @@ if __name__ == "__main__":
         path.write_text(text, encoding="utf-8")
         print("Generated:", path.relative_to(REPO))
     for t in TERMS:
+        m = REPO / (path_of(t).strip("/") + ".md")
+        m.write_text(term_md(t) + "\n", encoding="utf-8")
+        print("Generated:", m.relative_to(REPO))
+    for t in TERMS:
         f = REPO / path_of(t).strip("/") / f"{t['term_id']}.py"
         f.write_text(raw_py(t), encoding="utf-8")
         print("Generated:", f.relative_to(REPO))
@@ -351,3 +386,4 @@ if __name__ == "__main__":
     print("Updated: llms.txt")
     import subprocess
     subprocess.run([sys.executable, str(REPO / "scripts" / "build_sitemap.py")], check=True)
+    subprocess.run([sys.executable, str(REPO / "scripts" / "build_llms_full.py")], check=True)
