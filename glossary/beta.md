@@ -65,6 +65,10 @@ The slope from Cov/Var is exactly the OLS slope when an intercept is allowed. Th
 
 The window, the frequency, the market series and whether returns are excess or raw all change the slope. Two betas are comparable when those choices match. This function documents none of them except the arithmetic, which is sample covariance over sample variance.
 
+## Use it in a calculator
+
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/)

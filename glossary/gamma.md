@@ -59,6 +59,10 @@ Call minus put is a forward under put-call parity, and a forward's second deriva
 
 It means delta will move quickly if the spot moves, which is a property of that contract in this model. Long gamma and short gamma describe a position. The page does not score either as an advantage.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Delta](https://quantcore-labs.com/glossary/delta/)

@@ -81,6 +81,10 @@ The close that updates the moving averages is the same close that ends the bar's
 
 No. The curve is the result of this rule, this cost and this sample, with no market impact. Use it to check the code. Judging whether a rule is worth trading needs a later sample, realistic costs and a risk report.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+
 ## Related
 
 - [Vectorised Daily Backtest with A-share Trading Constraints](https://quantcore-labs.com/code/vectorized-backtest/)

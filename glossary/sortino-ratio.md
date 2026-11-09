@@ -70,6 +70,10 @@ Those periods contribute a zero, so they dilute the root-mean-square. Dropping t
 
 Only if that is the return you have decided is the minimum you care about. The parameter is a minimum acceptable return, not a funding rate. Leaving it at zero scores any negative periodic return as downside.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+
 ## Related
 
 - [Sharpe Ratio](https://quantcore-labs.com/glossary/sharpe-ratio/)

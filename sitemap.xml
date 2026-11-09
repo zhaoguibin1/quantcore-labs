@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://quantcore-labs.com/</loc><lastmod>2026-11-08T22:18:54+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/about/</loc></url>
   <url><loc>https://quantcore-labs.com/code/</loc><lastmod>2026-11-08T21:50:01+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/</loc><lastmod>2026-11-08T21:50:01+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/option-greeks-calc/</loc><lastmod>2026-11-09T08:08:01+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/privacy/</loc></url>
   <url><loc>https://quantcore-labs.com/code/cython-rolling-mean/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/duckdb-asof-vwap/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/duckdb-parquet-loader/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
@@ -54,7 +56,7 @@
   <url><loc>https://quantcore-labs.com/glossary/vpin/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/vwap/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/iv-smile/</loc><lastmod>2026-11-09T08:45:17+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/monte-carlo-asset-sim/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/monte-carlo-asset-sim/</loc><lastmod>2026-11-09T09:14:58+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/performance-analytics/</loc><lastmod>2026-11-09T08:42:55+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/portfolio-efficient-frontier/</loc><lastmod>2026-11-09T09:07:46+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/portfolio-efficient-frontier/</loc><lastmod>2026-11-09T09:14:58+08:00</lastmod></url>
 </urlset>

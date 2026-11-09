@@ -65,6 +65,10 @@ A higher risk-free rate reduces the present value of the strike the put might re
 
 No. q is held fixed. Rho moves only r. The dividend yield changes d2, so a different q produces a different rho, but the derivative itself is with respect to the interest rate.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Delta](https://quantcore-labs.com/glossary/delta/)

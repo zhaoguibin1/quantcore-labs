@@ -3,45 +3,233 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QuantCore Labs</title>
-<meta name="description" content="QuantCore Labs — Quantitative research and algorithmic tools.">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #0b0e14; color: #e6e8ee;
-    min-height: 100vh; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center; padding: 24px;
-  }
-  .logo { font-size: 15px; letter-spacing: 0.35em; text-transform: uppercase; color: #7c8cf8; margin-bottom: 28px; }
-  h1 { font-size: clamp(42px, 8vw, 72px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
-  h1 span { color: #7c8cf8; }
-  p.tagline { margin-top: 20px; font-size: clamp(16px, 2.5vw, 20px); color: #9aa3b2; max-width: 560px; line-height: 1.6; }
-  .badge {
-    margin-top: 36px; display: inline-block; padding: 8px 18px;
-    border: 1px solid #2a3140; border-radius: 999px;
-    font-size: 14px; color: #9aa3b2; letter-spacing: 0.08em;
-  }
-  footer { position: fixed; bottom: 20px; left: 16px; right: 16px; font-size: 13px; color: #5c6675; }
-  .links { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 640px; }
-  .links a { padding: 8px 16px; border: 1px solid #2a3140; border-radius: 999px; font-size: 14px; color: #9aa3b2; text-decoration: none; letter-spacing: 0.04em; }
-  .links a:hover { color: #e6e8ee; border-color: #7c8cf8; }
-</style>
+<title>QuantCore Labs: Free Quant Calculators, Glossary and Tested Python Code</title>
+<meta name="description" content="Free client-side quant tools: option Greeks, implied volatility surface, Sharpe/Sortino/drawdown analytics, efficient frontier, Monte Carlo. Plus a quant glossary and tested Python code.">
 <link rel="canonical" href="https://quantcore-labs.com/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="QuantCore Labs: Free Quant Calculators, Glossary and Tested Python Code">
+<meta property="og:description" content="Free client-side quant tools: option Greeks, implied volatility surface, Sharpe/Sortino/drawdown analytics, efficient frontier, Monte Carlo. Plus a quant glossary and tested Python code.">
+<meta property="og:url" content="https://quantcore-labs.com/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://quantcore-labs.com/#website",
+      "url": "https://quantcore-labs.com/",
+      "name": "QuantCore Labs",
+      "description": "Free client-side quantitative finance calculators, a quant glossary and tested Python code.",
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "ItemList",
+      "@id": "https://quantcore-labs.com/#tools",
+      "name": "QuantCore Labs calculators",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Black-Scholes Option Greeks",
+          "url": "https://quantcore-labs.com/option-greeks-calc/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Implied Volatility Smile & Surface",
+          "url": "https://quantcore-labs.com/tools/iv-smile/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Performance & Drawdown Analytics",
+          "url": "https://quantcore-labs.com/tools/performance-analytics/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Markowitz Efficient Frontier",
+          "url": "https://quantcore-labs.com/tools/portfolio-efficient-frontier/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "name": "Monte Carlo Asset Simulator",
+          "url": "https://quantcore-labs.com/tools/monte-carlo-asset-sim/"
+        }
+      ]
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": "https://quantcore-labs.com/#home",
+      "url": "https://quantcore-labs.com/",
+      "name": "QuantCore Labs",
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/#website"
+      },
+      "about": [
+        {
+          "@id": "https://quantcore-labs.com/glossary/#set"
+        },
+        {
+          "@id": "https://quantcore-labs.com/code/#hub"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+
+.hero{padding:6px 0 4px}
+.hero h1{font-size:32px}
+.strip{font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:0 0 26px;background:var(--panel)}
+.strip b{color:var(--text)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips span{font-size:11px;color:var(--acc);border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:2px 8px}
+.grp h3{margin-top:14px}
+.grp p{margin:4px 0;color:var(--dim);font-size:13px}
+.grp a{white-space:nowrap}
+ul.plain{padding-left:18px}
+ul.plain li{margin:6px 0}
+</style>
 </head>
 <body>
-  <div class="logo">QuantCore Labs</div>
-  <h1>Quant<span>Core</span> Labs</h1>
-  <p class="tagline">Quantitative research and algorithmic tools. Built for people who trade on evidence, not noise.</p>
-  <nav class="links" aria-label="Site">
-    <a href="/option-greeks-calc/">Black-Scholes Option Greeks</a>
-    <a href="/tools/iv-smile/">Implied Volatility Smile</a>
-    <a href="/tools/monte-carlo-asset-sim/">Monte Carlo Asset Simulator</a>
-    <a href="/tools/portfolio-efficient-frontier/">Markowitz Efficient Frontier</a>
-    <a href="/tools/performance-analytics/">Performance &amp; Drawdown Analytics</a>
-    <a href="/glossary/">Quant Glossary</a>
-    <a href="/code/">Quant Code Snippets</a>
-  </nav>
-  <footer>For educational and quantitative research use only. Not investment advice. &copy; QuantCore Labs.</footer>
+<header><div class="bar"><nav aria-label="Breadcrumb"><span style="color:var(--text)">quantcore-labs</span></nav><div class="tag">FREE · CLIENT-SIDE · TESTED</div></div></header>
+<main>
+<section class="hero">
+<h1>QuantCore Labs</h1>
+<p class="lede">Quantitative research tools for people who trade on evidence, not noise. Free calculators, a quant glossary and tested Python code. The calculators run entirely in your browser, and every formula is checked against reference implementations before it is published.</p>
+</section>
+<p class="strip" id="ust">U.S. Treasury par yields: loading…</p>
+
+<section aria-labelledby="tools-h">
+<h2 id="tools-h">Calculators</h2>
+<div class="grid2">
+<article class="card">
+<h2><a href="/option-greeks-calc/">Black-Scholes Option Greeks</a></h2>
+<p>European call and put prices with Delta, Gamma, Vega, Theta and Rho under Black-Scholes-Merton with dividend yield. Fill the rate from the U.S. Treasury curve in one click.</p>
+<div class="chips"><span>BSM with dividend yield</span><span>Greeks per day / per vol point</span><span>Treasury rate fill</span></div>
+</article>
+<article class="card">
+<h2><a href="/tools/iv-smile/">Implied Volatility Smile &amp; Surface</a></h2>
+<p>Back out implied volatility across strikes and expiries, infer the forward from put-call parity, fit skew and curvature, and view the surface with a calendar-arbitrage check.</p>
+<div class="chips"><span>Guaranteed-convergence solver</span><span>Surface heatmap + optional 3D</span><span>Calendar-arbitrage check</span></div>
+</article>
+<article class="card">
+<h2><a href="/tools/performance-analytics/">Performance &amp; Drawdown Analytics</a></h2>
+<p>Paste an equity curve, returns or PnL to get Sharpe, Sortino, Calmar, max drawdown and its duration, VaR/CVaR and a monthly table, with zoomable charts and statistics for any selected period.</p>
+<div class="chips"><span>252 / 242 (A-share) annualisation</span><span>Drag-to-zoom period stats</span><span>Data never leaves the browser</span></div>
+</article>
+<article class="card">
+<h2><a href="/tools/portfolio-efficient-frontier/">Markowitz Efficient Frontier</a></h2>
+<p>Exact long-only maximum-Sharpe portfolio, efficient frontier, capital market line and minimum-variance portfolio for three assets with your own correlations.</p>
+<div class="chips"><span>Exact optimum (KKT)</span><span>User-set correlations</span><span>Capital market line</span></div>
+</article>
+<article class="card">
+<h2><a href="/tools/monte-carlo-asset-sim/">Monte Carlo Asset Simulator</a></h2>
+<p>Simulate price paths under Geometric Brownian Motion with exact log-normal steps; terminal percentiles and horizon VaR compared with closed-form values.</p>
+<div class="chips"><span>Exact GBM discretisation</span><span>Horizon VaR</span><span>Closed-form benchmarks</span></div>
+</article>
+</div>
+</section>
+
+<section aria-labelledby="kb-h">
+<h2 id="kb-h">Knowledge base</h2>
+<div class="grid2">
+<article class="card grp">
+<div class="meta"><span class="cat">Glossary</span><span class="id">35 terms</span></div>
+<h2><a href="/glossary/">Quant glossary</a></h2>
+<p>Definition, formula, institutional usage, pitfalls and a tested Python implementation for each term.</p>
+<h3>Execution &amp; transaction costs</h3><p><a href="/glossary/vwap/">VWAP</a> · <a href="/glossary/amihud-illiquidity/">Amihud Illiquidity</a> · <a href="/glossary/twap/">TWAP</a> · <a href="/glossary/implementation-shortfall/">Implementation Shortfall</a> · <a href="/glossary/arrival-price/">Arrival Price</a> · <a href="/glossary/participation-rate/">Participation Rate</a> · <a href="/glossary/almgren-chriss/">Almgren-Chriss</a></p>
+<h3>Market microstructure</h3><p><a href="/glossary/ofi/">OFI</a> · <a href="/glossary/vpin/">VPIN</a> · <a href="/glossary/kyles-lambda/">Kyle&#x27;s Lambda</a> · <a href="/glossary/pin-informed-trading/">PIN</a></p>
+<h3>Risk &amp; performance</h3><p><a href="/glossary/var-expected-shortfall/">VaR &amp; ES</a> · <a href="/glossary/sharpe-ratio/">Sharpe Ratio</a> · <a href="/glossary/sortino-ratio/">Sortino Ratio</a> · <a href="/glossary/information-ratio/">Information Ratio</a> · <a href="/glossary/tracking-error/">Tracking Error</a> · <a href="/glossary/max-drawdown/">Max Drawdown</a> · <a href="/glossary/calmar-ratio/">Calmar Ratio</a> · <a href="/glossary/kelly-criterion/">Kelly Criterion</a></p>
+<h3>Volatility &amp; options</h3><p><a href="/glossary/realized-volatility/">Realized Volatility</a> · <a href="/glossary/parkinson-volatility/">Parkinson Volatility</a> · <a href="/glossary/garch/">GARCH(1,1)</a> · <a href="/glossary/implied-volatility/">Implied Volatility</a> · <a href="/glossary/delta/">Delta</a> · <a href="/glossary/gamma/">Gamma</a> · <a href="/glossary/vega/">Vega</a> · <a href="/glossary/theta/">Theta</a> · <a href="/glossary/rho/">Rho</a> · <a href="/glossary/put-call-parity/">Put-Call Parity</a></p>
+<h3>Time series &amp; stat-arb</h3><p><a href="/glossary/hurst-exponent/">Hurst Exponent</a> · <a href="/glossary/adf-test/">ADF Test</a> · <a href="/glossary/cointegration/">Cointegration</a> · <a href="/glossary/half-life-mean-reversion/">Half-Life</a></p>
+<h3>Factors &amp; portfolios</h3><p><a href="/glossary/information-coefficient/">Information Coefficient</a> · <a href="/glossary/beta/">Beta</a></p>
+</article>
+<article class="card grp">
+<div class="meta"><span class="cat">Code</span><span class="id">14 snippets + 35 term implementations</span></div>
+<h2><a href="/code/">Quant code snippets</a></h2>
+<p>MIT-licensed Python for data handling, fast rolling operators and backtesting. Every file is executed with assertions on each rebuild.</p>
+<p><a href="/code/rolling-window-numba/">Numba Rolling Operators</a> · <a href="/code/duckdb-parquet-ticks/">DuckDB + Parquet Ticks</a> · <a href="/code/vectorized-backtest/">Vectorised Backtest</a> · <a href="/code/cython-rolling-mean/">Cython Rolling Mean</a> · <a href="/code/duckdb-parquet-loader/">DuckDB Parquet Loader</a> · <a href="/code/polars-vectorized-backtest/">Polars MA Backtest</a> · <a href="/code/numba-ewma-volatility/">Numba EWMA Vol</a> · <a href="/code/pandas-tick-to-ohlcv/">Tick to OHLCV</a> · <a href="/code/pandas-volume-bars/">Volume Bars</a> · <a href="/code/pairs-zscore-signal/">Pair Z-Score</a> · <a href="/code/numpy-strided-rolling/">NumPy Strided Rolling</a> · <a href="/code/numba-order-book-replay/">Numba Book Imbalance</a> · <a href="/code/polars-asof-join-quotes/">Polars As-Of Quotes</a> · <a href="/code/duckdb-asof-vwap/">DuckDB Minute VWAP</a></p>
+</article>
+</div>
+</section>
+
+<section aria-labelledby="how-h">
+<h2 id="how-h">How the numbers are checked</h2>
+<ul class="plain">
+<li><strong>Against reference libraries.</strong> Calculators and snippets are cross-checked against SciPy, statsmodels, NumPy and pandas, or against closed-form results. For example, the implied-volatility solver is round-tripped over 466 grid cases, and the efficient-frontier optimum matches SciPy SLSQP to 1e-10.</li>
+<li><strong>On every rebuild.</strong> Each published Python file is executed in a fresh interpreter together with its assertions, so a dependency change that breaks a result stops the build.</li>
+<li><strong>Stated conventions.</strong> Units and day counts (Theta per day, Vega per vol point, 252 or 242 trading days) are written on each page, because most disagreements between tools come from conventions, not maths.</li>
+<li><strong>Public data only.</strong> The only external data is the U.S. Treasury par yield curve, which is public and refreshed each business day. Licensed market data is not redistributed.</li>
+</ul>
+<p>More in <a href="/about/">About &amp; methodology</a>.</p>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h" style="margin-top:0">For AI agents and developers</h2>
+<p>- Index: <a href="/llms.txt">/llms.txt</a> · full content in one file: <a href="/llms-full.txt">/llms-full.txt</a></p>
+<p>- Every page has a Markdown version (link rel="alternate" type="text/markdown"), e.g. <a href="/glossary/sharpe-ratio.md">/glossary/sharpe-ratio.md</a></p>
+<p>- Raw Python for every implementation, e.g. <a href="/glossary/information-coefficient/information-coefficient.py">information-coefficient.py</a> · <a href="/sitemap.xml">sitemap.xml</a></p>
+</section>
+<script>
+(function(){
+  var el = document.getElementById('ust');
+  fetch('/data/rates.json', { cache: 'no-cache' }).then(function(r){ if (!r.ok) throw 0; return r.json(); }).then(function(c){
+    var pick = function(lab){ var t = c.tenors.filter(function(x){ return x.label === lab; })[0]; return t ? t.par_bey.toFixed(2) + '%' : '–'; };
+    el.innerHTML = 'U.S. Treasury par yields, ' + c.as_of + ': 3M <b>' + pick('3 Mo') + '</b> · 2Y <b>' + pick('2 Yr') + '</b> · 10Y <b>' + pick('10 Yr') +
+      '</b> · 30Y <b>' + pick('30 Yr') + '</b>. Used by the one-click risk-free rate in the calculators. <a href="' + c.source_url + '" rel="noopener">Source</a>';
+  }).catch(function(){ el.style.display = 'none'; });
+})();
+</script>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p>
+<p><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
 </body>
 </html>

@@ -6,11 +6,11 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 
 ## Tools
 
-- [Black-Scholes Option Greeks Calculator](https://quantcore-labs.com/option-greeks-calc/): European call/put price, Delta, Gamma, Vega (per vol pt), Theta (per day), Rho (per 1%) under Black-Scholes-Merton with continuous dividend yield. Markdown: https://quantcore-labs.com/option-greeks-calc.md
-- [Monte Carlo Asset Path Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/): Geometric Brownian Motion path simulation with multi-trajectory chart, terminal-price percentiles, horizon VaR and exact log-normal benchmarks. Markdown: https://quantcore-labs.com/monte-carlo-asset-sim.md
-- [Markowitz Efficient Frontier Calculator](https://quantcore-labs.com/tools/portfolio-efficient-frontier/): Three-asset long-only mean-variance tool: exact maximum-Sharpe portfolio, exact efficient frontier, capital market line and minimum-variance portfolio, with user-set correlations. Markdown: https://quantcore-labs.com/portfolio-efficient-frontier.md
-- [Performance & Drawdown Analytics Calculator](https://quantcore-labs.com/tools/performance-analytics/): Sharpe, Sortino, Calmar, CAGR, max drawdown and duration, VaR/CVaR and monthly returns from a pasted equity curve, returns or PnL; 252/242/365 annualisation. Markdown: https://quantcore-labs.com/performance-analytics.md
-- [Implied Volatility Smile & Skew Calculator](https://quantcore-labs.com/tools/iv-smile/): back out IV across strikes and expiries (Black-76, safeguarded Newton), infer the forward from put-call parity, fit ATM IV/skew/curvature, plot smiles and ATM term structure. Markdown: https://quantcore-labs.com/iv-smile.md
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/): European call and put prices with Delta, Gamma, Vega, Theta and Rho under Black-Scholes-Merton with dividend yield. Fill the rate from the U.S. Treasury curve in one click. Markdown: https://quantcore-labs.com/option-greeks-calc.md
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/): Back out implied volatility across strikes and expiries, infer the forward from put-call parity, fit skew and curvature, and view the surface with a calendar-arbitrage check. Markdown: https://quantcore-labs.com/iv-smile.md
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/): Paste an equity curve, returns or PnL to get Sharpe, Sortino, Calmar, max drawdown and its duration, VaR/CVaR and a monthly table, with zoomable charts and statistics for any selected period. Markdown: https://quantcore-labs.com/performance-analytics.md
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/): Exact long-only maximum-Sharpe portfolio, efficient frontier, capital market line and minimum-variance portfolio for three assets with your own correlations. Markdown: https://quantcore-labs.com/portfolio-efficient-frontier.md
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/): Simulate price paths under Geometric Brownian Motion with exact log-normal steps; terminal percentiles and horizon VaR compared with closed-form values. Markdown: https://quantcore-labs.com/monte-carlo-asset-sim.md
 
 ## Glossary
 
@@ -106,4 +106,7 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 
 ## Optional
 
-- [About QuantCore-Labs](https://quantcore-labs.com/): site overview
+- [About & methodology](https://quantcore-labs.com/about/): how calculators and code are verified; data sources
+- [Privacy](https://quantcore-labs.com/privacy/): no accounts, no cookies, inputs stay in the browser
+- [Home](https://quantcore-labs.com/): site overview
+

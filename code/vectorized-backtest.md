@@ -98,6 +98,10 @@ Holdings are path-dependent once trading constraints exist: a stock at limit-dow
 
 Shift every signal by at least one period before it can affect positions, and decide the execution price in advance. In this code a signal formed at the close of t trades at the close of t+1 and first earns the t+1 to t+2 return; the test suite checks that a signal built from the t to t+1 return earns nothing.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+
 ## Related
 
 - [Information Coefficient (IC)](https://quantcore-labs.com/glossary/information-coefficient/)

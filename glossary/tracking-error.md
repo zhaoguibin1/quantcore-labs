@@ -58,6 +58,10 @@ Yes, if the difference in returns is constant. Standard deviation does not see t
 
 In mandate language, active risk usually means this volatility of active returns, sometimes the ex-ante forecast of it. Quote whether the number is realised or predicted. This function is realised.
 
+## Use it in a calculator
+
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Information Ratio](https://quantcore-labs.com/glossary/information-ratio/)

@@ -61,6 +61,11 @@ The call-minus-put package pays S_T − K at expiry no matter what path volatili
 
 At these inputs the two premiums are not consistent with one forward. Causes include a dividend yield you left at zero, American early exercise, stale quotes, or a genuine dislocation larger than the cost of putting the package on. The sign says which side is rich relative to the identity. It does not by itself say there is a trade.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+
 ## Related
 
 - [Implied Volatility](https://quantcore-labs.com/glossary/implied-volatility/)

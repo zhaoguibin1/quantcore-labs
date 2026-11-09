@@ -41,6 +41,12 @@ def is_snippet(t):
 def path_of(t):
     return f"/code/{t['term_id']}/" if is_snippet(t) else f"/glossary/{t['term_id']}/"
 
+TOOLS_JSON = pathlib.Path(__file__).resolve().parent / "tools.json"
+TOOLS = json.loads(TOOLS_JSON.read_text(encoding="utf-8")) if TOOLS_JSON.exists() else []
+
+def tools_for(t):
+    return [x for x in TOOLS if t["term_id"] in x["terms"] + x["code"]]
+
 def md_url_of(t):
     return BASE + path_of(t).rstrip("/") + ".md"
 
@@ -68,6 +74,8 @@ def term_md(t):
             "```python", t["code_snippet"].rstrip(), "```", "", "## FAQ", ""]
     for f in t["faq"]:
         out += [f"**{f['question']}**", "", f["answer"], ""]
+    if tools_for(t):
+        out += ["## Use it in a calculator", ""] + [f"- [{x['name']}]({BASE}{x['url']})" for x in tools_for(t)] + [""]
     if t["related"]:
         out += ["## Related", ""] + [f"- [{BY[r]['name']}]({BASE + path_of(BY[r])})" for r in t["related"]] + [""]
     return "\n".join(out)
@@ -164,7 +172,8 @@ def page(title, desc, path, crumbs, tag, body, ld, md_url=None):
 <main>
 {body}
 </main>
-<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p></footer>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p>
+<p><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
 </body>
 </html>
 """
@@ -183,6 +192,9 @@ def term_page(t):
     sections = "\n".join(f'<section><h2>{h}</h2>\n{b}\n</section>' for h, b in [(s["heading"],s["html"]) for s in t["sections"]])
     faq_html = "".join(f"<h3>{html.escape(q)}</h3><p>{html.escape(a)}</p>" for q, a in [(f["question"],f["answer"]) for f in t["faq"]])
     related = " ".join(f'<a href="{path_of(BY[s])}">{html.escape(BY[s]["name"])}</a>' for s in t["related"])
+    tl = tools_for(t)
+    tool_html = ("<section><h2>Use it in a calculator</h2><p>" + " · ".join(
+        f'<a href="{x["url"]}">{html.escape(x["name"])}</a>' for x in tl) + "</p></section>\n") if tl else ""
     body = f"""<article>
 <h1>{html.escape(t['name'])}</h1>
 <p class="lede">{html.escape(t['category'])} · {'Snippet' if snip else 'Term'} ID: <code>{t['term_id']}</code></p>
@@ -208,7 +220,7 @@ def term_page(t):
 <p>- Python source: {url}{t['term_id']}.py</p>
 </section>
 
-<section class="related"><h2>Related</h2>{related} <a href="{'/code/' if snip else '/glossary/'}">← All {'snippets' if snip else 'terms'}</a></section>
+{tool_html}<section class="related"><h2>Related</h2>{related} <a href="{'/code/' if snip else '/glossary/'}">← All {'snippets' if snip else 'terms'}</a></section>
 </article>"""
     graph = [ORG]
     if not snip:
@@ -385,5 +397,6 @@ if __name__ == "__main__":
     update_llms(TERMS)
     print("Updated: llms.txt")
     import subprocess
+    subprocess.run([sys.executable, str(REPO / "scripts" / "build_site_pages.py")], check=True)
     subprocess.run([sys.executable, str(REPO / "scripts" / "build_sitemap.py")], check=True)
     subprocess.run([sys.executable, str(REPO / "scripts" / "build_llms_full.py")], check=True)

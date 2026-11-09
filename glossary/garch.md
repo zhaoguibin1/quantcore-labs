@@ -82,6 +82,10 @@ A Gaussian likelihood, a Student-t likelihood and a robust estimator do not retu
 
 Not in this filter. σ²_t is the variance assigned before ε_t is treated as realised, which is what you want if the next step is to standardise ε_t by σ_t. The update that includes ε_t² lands in σ²_{t+1}.
 
+## Use it in a calculator
+
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+
 ## Related
 
 - [RiskMetrics EWMA Volatility in Numba](https://quantcore-labs.com/code/numba-ewma-volatility/)

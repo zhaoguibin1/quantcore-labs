@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About &amp; Methodology | QuantCore Labs</title>
+<meta name="description" content="How QuantCore Labs builds and verifies its calculators, glossary and code: reference checks, continuous testing, stated conventions and public data only.">
+<link rel="canonical" href="https://quantcore-labs.com/about/">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#020617">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="About &amp; Methodology | QuantCore Labs">
+<meta property="og:description" content="How QuantCore Labs builds and verifies its calculators, glossary and code: reference checks, continuous testing, stated conventions and public data only.">
+<meta property="og:url" content="https://quantcore-labs.com/about/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "AboutPage",
+      "@id": "https://quantcore-labs.com/about/#page",
+      "url": "https://quantcore-labs.com/about/",
+      "name": "About QuantCore Labs",
+      "about": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "isPartOf": {
+        "@id": "https://quantcore-labs.com/#website"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "About",
+          "item": "https://quantcore-labs.com/about/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#020617;--panel:#0f172a;--line:#1e293b;--text:#e2e8f0;--dim:#94a3b8;--faint:#64748b;--acc:#22d3ee}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+::selection{background:var(--acc);color:var(--bg)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);position:sticky;top:0;backdrop-filter:blur(6px);z-index:5}
+.bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--dim)}
+.bar .tag{color:var(--acc);font-weight:600;letter-spacing:.08em;white-space:nowrap}
+main{max-width:880px;margin:0 auto;padding:28px 16px 56px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.lede{color:var(--dim);font-size:14px;margin:0 0 24px;max-width:720px}
+h2{font-size:17px;margin:34px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);color:#fff}
+h3{font-size:14px;color:var(--acc);margin:18px 0 6px}
+p,li{font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .15s}
+.card:hover{border-color:rgba(34,211,238,.5)}
+.card .meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.card .meta .cat{color:var(--acc);font-weight:600}.card .meta .id{color:var(--faint);text-transform:none}
+.card h2{border:0;margin:0;padding:0;font-size:17px}
+.card p{color:var(--dim);font-size:13px;margin:8px 0 0}
+.def{background:var(--panel);border-left:3px solid var(--acc);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px}
+pre{background:#0b1222;border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+pre.formula{color:#f1f5f9}
+code{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:500}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;font-size:13px}
+.md p,.md li{font-size:13px}
+.related a{margin-right:16px}
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;font-size:12px;color:var(--faint)}
+
+.hero{padding:6px 0 4px}
+.hero h1{font-size:32px}
+.strip{font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:0 0 26px;background:var(--panel)}
+.strip b{color:var(--text)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips span{font-size:11px;color:var(--acc);border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:2px 8px}
+.grp h3{margin-top:14px}
+.grp p{margin:4px 0;color:var(--dim);font-size:13px}
+.grp a{white-space:nowrap}
+ul.plain{padding-left:18px}
+ul.plain li{margin:6px 0}
+</style>
+</head>
+<body>
+<header><div class="bar"><nav aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / <span style="color:var(--text)">about</span></nav><div class="tag">ABOUT · METHODOLOGY</div></div></header>
+<main>
+<article>
+<h1>About QuantCore Labs</h1>
+<p class="lede">An independent, free collection of quantitative finance calculators, definitions and code. No accounts, no ads and no paywall.</p>
+
+<section><h2>What is here</h2>
+<ul class="plain">
+<li><strong>5 calculators</strong> for options, volatility, portfolio construction, simulation and performance analysis. They run entirely in your browser.</li>
+<li><strong>A glossary of 35 terms.</strong> Each has a definition, formula, institutional usage, common pitfalls and a Python implementation.</li>
+<li><strong>14 code snippets</strong> for data handling, fast rolling operators and backtesting.</li>
+</ul></section>
+
+<section><h2>Methodology</h2>
+<ul class="plain">
+<li><strong>Reference checks.</strong> Every calculator is verified against an independent implementation (SciPy, statsmodels, NumPy or pandas) or a closed-form result before release. Examples: Black-Scholes prices match textbook values; implied volatility is round-tripped across 466 strike, expiry and volatility cases; Sharpe, Sortino, drawdown and VaR match a NumPy/SciPy implementation to about 1e-14; the efficient-frontier optimum matches SciPy SLSQP to 1e-10.</li>
+<li><strong>Continuous testing.</strong> Each published Python file is executed together with its assertions on every rebuild of the site. A monthly scheduled check also reruns them after dependency upgrades.</li>
+<li><strong>Explicit conventions.</strong> Units, compounding and day counts are stated on each page: Theta per calendar day, Vega per volatility point, continuous versus effective annual rates, and 252 versus 242 trading days.</li>
+<li><strong>Honest limits.</strong> Pages state what a model does not do, for example European exercise only, or no extrapolation outside quoted strikes.</li>
+</ul></section>
+
+<section><h2>Data</h2>
+<p>The only external data is the U.S. Department of the Treasury daily par yield curve. It is U.S. government data in the public domain, refreshed automatically each business day and used for the one-click risk-free rate. Real-time market quotes are not offered, because exchange and vendor data licences generally do not allow redistribution on a public website. To analyse your own data, paste it into a calculator: it stays in your browser.</p></section>
+
+<section><h2>What this is not</h2>
+<p>Nothing on this site is investment advice, a recommendation or an offer to buy or sell any security. Model outputs depend on the inputs and assumptions you choose. Past performance does not indicate future results.</p></section>
+
+<section><h2>Corrections</h2>
+<p>When an error is found, the page, its Markdown version and its tests are corrected together, and the page's modified date in its structured data is updated. Each page states the conventions it uses, so results can be compared with other tools on a like-for-like basis.</p></section>
+</article>
+</main>
+<footer><p>For educational and quantitative research use only. Not investment advice. © QuantCore Labs.</p>
+<p><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</body>
+</html>

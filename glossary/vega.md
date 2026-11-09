@@ -61,6 +61,11 @@ The calculus derivative is the change in price for a change of 1.00 in σ, i.e. 
 
 European calls and puts with the same strike and expiry do, in Black-Scholes-Merton. Put-call parity says their difference does not depend on volatility, so the volatility derivatives match.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+
 ## Related
 
 - [Implied Volatility](https://quantcore-labs.com/glossary/implied-volatility/)

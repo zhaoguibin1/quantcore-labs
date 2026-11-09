@@ -72,86 +72,61 @@ At T = 0 or σ = 0 the tool returns the deterministic limit (discounted forward 
 
 ---
 
-# Monte Carlo Asset Path Simulator
+# Implied Volatility Smile & Skew Calculator
 
-> Client-side Monte Carlo simulator of asset price paths under Geometric Brownian Motion (GBM), with terminal-price percentiles.
-> URL: https://quantcore-labs.com/tools/monte-carlo-asset-sim/
+> Client-side implied volatility solver and smile plotter for European options across strikes and expiries.
+> URL: https://quantcore-labs.com/tools/iv-smile/
 
-## Inputs
+## Input
 
-- Initial price S0
-- Annual drift mu (%) and annual volatility sigma (%)
-- Time horizon T (years) and time steps per year
-- Number of simulated paths
-
-## Model
-
-```
-dS_t = mu * S_t * dt + sigma * S_t * dW_t                      (GBM)
-S_{t+dt} = S_t * exp( (mu - sigma^2/2) * dt + sigma * sqrt(dt) * Z ),  Z ~ N(0, 1)
-```
-
-The exact log-normal step is used, so there is no discretisation bias in the terminal distribution. Normal draws use the Box-Muller transform. Drift and volatility are constant, and increments are independent.
-
-## Outputs
-
-- Chart of the simulated paths
-- Mean terminal price, plus the 5th, 50th and 95th percentiles of the terminal price S_T
-- 95% VaR over the horizon, computed as S0 minus the 5th percentile of S_T (in price units and as % of S0)
-- Exact log-normal mean and percentiles, for comparison with the simulated values
-
-## Notes
-
-- The (mu - sigma^2/2) term comes from Ito's lemma. It makes E[S_T] = S0 * exp(mu * T) while the median is S0 * exp((mu - sigma^2/2) * T).
-- Exact log-normal quantiles are S0 * exp((mu - sigma^2/2) T + z_q sigma sqrt(T)), with z_0.05 = -1.645. With few paths the simulated percentiles are noisy; with 5,000 paths they are within about 1% of the exact values.
-- Simulated paths can be used for path-dependent payoffs such as Asian, barrier or lookback options. Pricing them requires simulating under the risk-neutral drift (r - q) instead of mu.
-- Educational and analytical use only; not investment advice.
-
----
-
-# Markowitz Efficient Frontier Calculator
-
-> Client-side long-only mean-variance tool for three assets: exact maximum-Sharpe (tangency) portfolio, exact efficient frontier, capital market line and minimum-variance portfolio.
-> URL: https://quantcore-labs.com/tools/portfolio-efficient-frontier/
-
-## Inputs
-
-- Expected annual return and volatility for three assets
-- Pairwise correlations rho_12, rho_13, rho_23 (default 0.3). The page rejects combinations that do not form a positive-definite covariance matrix.
-- Risk-free rate R_f (%)
-- Number of random portfolios to display (visual only; it does not affect the optimum)
+- Rows of `days,strike,call,put` (comma, tab or semicolon). Either price may be blank or `-`.
+- Spot S, rate r and dividend yield q in % p.a. These are used only when the forward cannot be inferred from put-call parity.
+- Option: infer the forward from put-call parity (default on).
+- For USD options, r can be filled in one click from the U.S. Treasury par yield curve at the median expiry (continuous compounding)
 
 ## Method
 
 ```
-Sigma_ij = sigma_i * sigma_j * rho_ij
-R_p      = sum_i w_i * mu_i
-sigma_p  = sqrt( w' Sigma w )
-Sharpe   = (R_p - R_f) / sigma_p
-Weights: w_i >= 0, sum_i w_i = 1   (long-only, fully invested)
+Black-76, D = e^(-rT), T = days/365
+C = D [F N(d1) - K N(d2)],  P = D [K N(-d2) - F N(-d1)]
+d1 = [ln(F/K) + s^2 T/2] / (s sqrt T),  d2 = d1 - s sqrt T
 
-Max Sharpe (exact): for every subset A of assets, solve Sigma_A z = mu_A - R_f;
-                    keep solutions with all z > 0, normalise w = z / sum(z), pick the best.
-                    (KKT conditions guarantee the long-only optimum is one of these.)
-Frontier (exact):   for target return R the feasible set {sum w = 1, mu.w = R, w >= 0}
-                    is a line segment w0 + t d; the minimum-variance point is found in closed form.
-CML:                R = R_f + Sharpe* x sigma, through the max-Sharpe portfolio.
-Random portfolios:  Dirichlet(1,1,1), uniform over the weight simplex.
+Forward from parity at K* = argmin |C - P|:  F = K* + (C - P)/D
+Bounds: D max(F-K,0) < C < D F,   D max(K-F,0) < P < D K
+
+Solver: Newton on s with vega; bracket [1e-6, 10] tightened by the sign of the error;
+bisection whenever Newton leaves the bracket or vega < 1e-12; tol 1e-12
+
+Smile per expiry: k = ln(K/F), OTM IV (puts K<F, calls K>=F)
+IV(k) ~ a + b k + c k^2 (least squares): ATM IV = a, skew = b, curvature = c
 ```
 
-## Outputs
+## Output
 
-- Max-Sharpe portfolio: Sharpe ratio, expected return, volatility, weights
-- Minimum-variance portfolio: volatility, return, weights
-- Chart: random portfolios, efficient frontier (solid; inefficient branch dashed), capital market line, single assets
+- Call IV, put IV and OTM composite IV per strike; prices outside the bounds are flagged
+- Per expiry: forward and its source, ATM IV, skew, curvature, number of valid points
+- Charts: smile per expiry vs ln(K/F) or strike, with fitted curves; ATM IV term structure
+- Volatility surface heatmap (log-moneyness x days). Each quoted expiry is a piecewise-linear OTM smile; between expiries, total variance w = IV^2 T is interpolated linearly in T at fixed ln(K/F), with no extrapolation
+- Calendar-arbitrage check: reports any moneyness range where total variance falls from one expiry to the next
+- Optional 3D surface view (Plotly gl3d, about 560 KB, loaded only when requested, with subresource integrity)
 
 ## Validation
 
-Across 167 random parameter sets with correlations from −0.8 to 0.8, the max-Sharpe result matches SciPy SLSQP to within 1.4e−10. No portfolio on a 0.5% weight grid beats it. The frontier minimum variance matches SLSQP at the target return.
+- Round-trip over 466 grid cases covers T from 1 day to 3 years, K/F from 0.5 to 2, and sigma from 3% to 250%. All 466 converge, the price error is at most 1e-12, and no case needs more than 22 iterations.
+- Against SciPy brentq on 300 random cases, the maximum IV difference is 7.6e-7. Both differences come from near-zero-vega cases, where the solver here is closer to the true sigma.
+- A synthetic smile with a hidden 1% dividend yield is recovered exactly: forward, ATM IV, skew and curvature.
 
-## Notes
+## FAQ
 
-- Mean-variance weights are very sensitive to expected-return inputs; small changes can move the allocation a lot.
+- **Why OTM options?** They are almost pure time value, so their IV is less sensitive to forward and quote errors.
+- **Why not plain Newton?** Vega vanishes for deep ITM/OTM and short expiries; the safeguarded solver always converges inside the bounds.
+- **China 50ETF/300ETF options?** European-style; use mid prices and parity-inferred forward.
+- **Skew meaning?** dIV/dk at the money; -0.30 means about +3 vol points at a strike 10% below the forward.
+
+## Limitations
+
+- European exercise only; American options need a tree or PDE pricer.
+- Uses a single discount rate per expiry; no bid/ask weighting in the fit.
 - Educational and analytical use only; not investment advice.
 
 ---
@@ -209,61 +184,86 @@ Returns 1%, -2%, 3%, -1%, 2% with P = 252 and rf = 0: Sharpe 4.5932, Sortino 9.5
 
 ---
 
-# Implied Volatility Smile & Skew Calculator
+# Markowitz Efficient Frontier Calculator
 
-> Client-side implied volatility solver and smile plotter for European options across strikes and expiries.
-> URL: https://quantcore-labs.com/tools/iv-smile/
+> Client-side long-only mean-variance tool for three assets: exact maximum-Sharpe (tangency) portfolio, exact efficient frontier, capital market line and minimum-variance portfolio.
+> URL: https://quantcore-labs.com/tools/portfolio-efficient-frontier/
 
-## Input
+## Inputs
 
-- Rows of `days,strike,call,put` (comma, tab or semicolon). Either price may be blank or `-`.
-- Spot S, rate r and dividend yield q in % p.a. These are used only when the forward cannot be inferred from put-call parity.
-- Option: infer the forward from put-call parity (default on).
-- For USD options, r can be filled in one click from the U.S. Treasury par yield curve at the median expiry (continuous compounding)
+- Expected annual return and volatility for three assets
+- Pairwise correlations rho_12, rho_13, rho_23 (default 0.3). The page rejects combinations that do not form a positive-definite covariance matrix.
+- Risk-free rate R_f (%)
+- Number of random portfolios to display (visual only; it does not affect the optimum)
 
 ## Method
 
 ```
-Black-76, D = e^(-rT), T = days/365
-C = D [F N(d1) - K N(d2)],  P = D [K N(-d2) - F N(-d1)]
-d1 = [ln(F/K) + s^2 T/2] / (s sqrt T),  d2 = d1 - s sqrt T
+Sigma_ij = sigma_i * sigma_j * rho_ij
+R_p      = sum_i w_i * mu_i
+sigma_p  = sqrt( w' Sigma w )
+Sharpe   = (R_p - R_f) / sigma_p
+Weights: w_i >= 0, sum_i w_i = 1   (long-only, fully invested)
 
-Forward from parity at K* = argmin |C - P|:  F = K* + (C - P)/D
-Bounds: D max(F-K,0) < C < D F,   D max(K-F,0) < P < D K
-
-Solver: Newton on s with vega; bracket [1e-6, 10] tightened by the sign of the error;
-bisection whenever Newton leaves the bracket or vega < 1e-12; tol 1e-12
-
-Smile per expiry: k = ln(K/F), OTM IV (puts K<F, calls K>=F)
-IV(k) ~ a + b k + c k^2 (least squares): ATM IV = a, skew = b, curvature = c
+Max Sharpe (exact): for every subset A of assets, solve Sigma_A z = mu_A - R_f;
+                    keep solutions with all z > 0, normalise w = z / sum(z), pick the best.
+                    (KKT conditions guarantee the long-only optimum is one of these.)
+Frontier (exact):   for target return R the feasible set {sum w = 1, mu.w = R, w >= 0}
+                    is a line segment w0 + t d; the minimum-variance point is found in closed form.
+CML:                R = R_f + Sharpe* x sigma, through the max-Sharpe portfolio.
+Random portfolios:  Dirichlet(1,1,1), uniform over the weight simplex.
 ```
 
-## Output
+## Outputs
 
-- Call IV, put IV and OTM composite IV per strike; prices outside the bounds are flagged
-- Per expiry: forward and its source, ATM IV, skew, curvature, number of valid points
-- Charts: smile per expiry vs ln(K/F) or strike, with fitted curves; ATM IV term structure
-- Volatility surface heatmap (log-moneyness x days). Each quoted expiry is a piecewise-linear OTM smile; between expiries, total variance w = IV^2 T is interpolated linearly in T at fixed ln(K/F), with no extrapolation
-- Calendar-arbitrage check: reports any moneyness range where total variance falls from one expiry to the next
-- Optional 3D surface view (Plotly gl3d, about 560 KB, loaded only when requested, with subresource integrity)
+- Max-Sharpe portfolio: Sharpe ratio, expected return, volatility, weights
+- Minimum-variance portfolio: volatility, return, weights
+- Chart: random portfolios, efficient frontier (solid; inefficient branch dashed), capital market line, single assets
 
 ## Validation
 
-- Round-trip over 466 grid cases covers T from 1 day to 3 years, K/F from 0.5 to 2, and sigma from 3% to 250%. All 466 converge, the price error is at most 1e-12, and no case needs more than 22 iterations.
-- Against SciPy brentq on 300 random cases, the maximum IV difference is 7.6e-7. Both differences come from near-zero-vega cases, where the solver here is closer to the true sigma.
-- A synthetic smile with a hidden 1% dividend yield is recovered exactly: forward, ATM IV, skew and curvature.
+Across 167 random parameter sets with correlations from −0.8 to 0.8, the max-Sharpe result matches SciPy SLSQP to within 1.4e−10. No portfolio on a 0.5% weight grid beats it. The frontier minimum variance matches SLSQP at the target return.
 
-## FAQ
+## Notes
 
-- **Why OTM options?** They are almost pure time value, so their IV is less sensitive to forward and quote errors.
-- **Why not plain Newton?** Vega vanishes for deep ITM/OTM and short expiries; the safeguarded solver always converges inside the bounds.
-- **China 50ETF/300ETF options?** European-style; use mid prices and parity-inferred forward.
-- **Skew meaning?** dIV/dk at the money; -0.30 means about +3 vol points at a strike 10% below the forward.
+- Mean-variance weights are very sensitive to expected-return inputs; small changes can move the allocation a lot.
+- Educational and analytical use only; not investment advice.
 
-## Limitations
+---
 
-- European exercise only; American options need a tree or PDE pricer.
-- Uses a single discount rate per expiry; no bid/ask weighting in the fit.
+# Monte Carlo Asset Path Simulator
+
+> Client-side Monte Carlo simulator of asset price paths under Geometric Brownian Motion (GBM), with terminal-price percentiles.
+> URL: https://quantcore-labs.com/tools/monte-carlo-asset-sim/
+
+## Inputs
+
+- Initial price S0
+- Annual drift mu (%) and annual volatility sigma (%)
+- Time horizon T (years) and time steps per year
+- Number of simulated paths
+
+## Model
+
+```
+dS_t = mu * S_t * dt + sigma * S_t * dW_t                      (GBM)
+S_{t+dt} = S_t * exp( (mu - sigma^2/2) * dt + sigma * sqrt(dt) * Z ),  Z ~ N(0, 1)
+```
+
+The exact log-normal step is used, so there is no discretisation bias in the terminal distribution. Normal draws use the Box-Muller transform. Drift and volatility are constant, and increments are independent.
+
+## Outputs
+
+- Chart of the simulated paths
+- Mean terminal price, plus the 5th, 50th and 95th percentiles of the terminal price S_T
+- 95% VaR over the horizon, computed as S0 minus the 5th percentile of S_T (in price units and as % of S0)
+- Exact log-normal mean and percentiles, for comparison with the simulated values
+
+## Notes
+
+- The (mu - sigma^2/2) term comes from Ito's lemma. It makes E[S_T] = S0 * exp(mu * T) while the median is S0 * exp((mu - sigma^2/2) * T).
+- Exact log-normal quantiles are S0 * exp((mu - sigma^2/2) T + z_q sigma sqrt(T)), with z_0.05 = -1.645. With few paths the simulated percentiles are noisy; with 5,000 paths they are within about 1% of the exact values.
+- Simulated paths can be used for path-dependent payoffs such as Asian, barrier or lookback options. Pricing them requires simulating under the risk-neutral drift (r - q) instead of mu.
 - Educational and analytical use only; not investment advice.
 
 ---
@@ -887,6 +887,11 @@ def kupiec_pof(returns, var_series, alpha: float = 0.99) -> dict:
 **Why is Expected Shortfall preferred to VaR?**
 
 VaR says nothing about losses beyond the threshold and is not subadditive, so combining two portfolios can show higher VaR than the sum of their VaRs. ES averages the whole tail and is coherent, which makes it better for limits and capital allocation.
+
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/)
 
 ## Related
 
@@ -1667,6 +1672,11 @@ An annual rate of 2 percent is not 2/252 per day under compound interest. The pe
 
 It means the sample's mean excess return equalled its annualised volatility. Whether that is attractive depends on the sample, the costs that were left out, and the drawdowns. The ratio is not a threshold for taking a position.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Sortino Ratio](https://quantcore-labs.com/glossary/sortino-ratio/)
@@ -1748,6 +1758,10 @@ Those periods contribute a zero, so they dilute the root-mean-square. Dropping t
 
 Only if that is the return you have decided is the minimum you care about. The parameter is a minimum acceptable return, not a funding rate. Leaving it at zero scores any negative periodic return as downside.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+
 ## Related
 
 - [Sharpe Ratio](https://quantcore-labs.com/glossary/sharpe-ratio/)
@@ -1823,6 +1837,11 @@ The information coefficient correlates a cross-section of forecasts with a cross
 
 If the question is what the investor kept versus the benchmark, yes. If the question is whether the holdings differed from the benchmark before costs, no. The function uses the two return series you pass in, so the choice of fees happens before the call.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/)
@@ -1891,6 +1910,10 @@ Yes, if the difference in returns is constant. Standard deviation does not see t
 **Is tracking error the same as active risk?**
 
 In mandate language, active risk usually means this volatility of active returns, sometimes the ex-ante forecast of it. Quote whether the number is realised or predicted. This function is realised.
+
+## Use it in a calculator
+
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
 
 ## Related
 
@@ -1962,6 +1985,11 @@ No. It is a single fraction. The performance calculator on this site also report
 **What if the curve ends at its low?**
 
 The unrecovered decline is included. Maximum drawdown does not require the equity to have made a new high afterwards. A strategy that fell 40 percent and never recovered has a maximum drawdown of at least 40 percent.
+
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/)
 
 ## Related
 
@@ -2042,6 +2070,10 @@ The original Calmar ratio did. This site's performance calculator divides full-s
 **What does NaN mean here?**
 
 The equity curve made no new low relative to a peak, so the denominator would be zero. That includes a curve that only rises. It is not an infinite reward-to-risk ratio.
+
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
 
 ## Related
 
@@ -2200,6 +2232,10 @@ The slope from Cov/Var is exactly the OLS slope when an intercept is allowed. Th
 
 The window, the frequency, the market series and whether returns are excess or raw all change the slope. Two betas are comparable when those choices match. This function documents none of them except the arithmetic, which is sample covariance over sample variance.
 
+## Use it in a calculator
+
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/)
@@ -2276,6 +2312,11 @@ Average the daily sums of squared intraday returns first (that average estimates
 **Why log returns?**
 
 Squared log returns add up to integrated variance for a diffusion. Squared simple returns are close when the moves are small and are a different estimator when they are not. The function uses logs.
+
+## Use it in a calculator
+
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/)
 
 ## Related
 
@@ -2453,6 +2494,10 @@ A Gaussian likelihood, a Student-t likelihood and a robust estimator do not retu
 
 Not in this filter. σ²_t is the variance assigned before ε_t is treated as realised, which is what you want if the next step is to standardise ε_t by σ_t. The update that includes ε_t² lands in σ²_{t+1}.
 
+## Use it in a calculator
+
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+
 ## Related
 
 - [RiskMetrics EWMA Volatility in Numba](https://quantcore-labs.com/code/numba-ewma-volatility/)
@@ -2553,6 +2598,11 @@ The cumulative normal of d1 and d2 depends on σ in a way that does not invert i
 
 It means the premium is high relative to this model's other inputs. Whether that is expensive depends on the volatility you believe the underlying will actually realise, on the smile, and on costs. The number itself is a restatement of the premium.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+
 ## Related
 
 - [Vega](https://quantcore-labs.com/glossary/vega/)
@@ -2629,6 +2679,10 @@ N(d1) is the no-dividend formula. With a continuous yield q the spot delta of a 
 
 No. Under the stock-numeraire measure, N(d1) is a probability related to the share, and N(d2) is the risk-neutral probability that a European call finishes in the money, in this model, with no dividends changing that statement. Neither one is a real-world probability, and neither one is a trading instruction.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Gamma](https://quantcore-labs.com/glossary/gamma/)
@@ -2698,6 +2752,10 @@ Call minus put is a forward under put-call parity, and a forward's second deriva
 **Is a high gamma good?**
 
 It means delta will move quickly if the spot moves, which is a property of that contract in this model. Long gamma and short gamma describe a position. The page does not score either as an advantage.
+
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
 
 ## Related
 
@@ -2769,6 +2827,11 @@ The calculus derivative is the change in price for a change of 1.00 in σ, i.e. 
 **Do calls and puts have the same vega?**
 
 European calls and puts with the same strike and expiry do, in Black-Scholes-Merton. Put-call parity says their difference does not depend on volatility, so the volatility derivatives match.
+
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
 
 ## Related
 
@@ -2851,6 +2914,10 @@ With the other inputs held fixed, less time means less chance of a large move an
 
 Calendar days. The annual Black-Scholes derivative is divided by 365, which is what the Greeks calculator on this site displays. Multiply by 365/252 if you want a per-trading-day figure.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Delta](https://quantcore-labs.com/glossary/delta/)
@@ -2926,6 +2993,10 @@ A higher risk-free rate reduces the present value of the strike the put might re
 
 No. q is held fixed. Rho moves only r. The dividend yield changes d2, so a different q produces a different rho, but the derivative itself is with respect to the interest rate.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Delta](https://quantcore-labs.com/glossary/delta/)
@@ -2996,6 +3067,11 @@ The call-minus-put package pays S_T − K at expiry no matter what path volatili
 **What does a non-zero gap mean?**
 
 At these inputs the two premiums are not consistent with one forward. Causes include a dividend yield you left at zero, American early exercise, stale quotes, or a genuine dislocation larger than the cost of putting the package on. The sign says which side is rich relative to the identity. It does not by itself say there is a trade.
+
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
 
 ## Related
 
@@ -3430,6 +3506,10 @@ Holdings are path-dependent once trading constraints exist: a stock at limit-dow
 
 Shift every signal by at least one period before it can affect positions, and decide the execution price in advance. In this code a signal formed at the close of t trades at the close of t+1 and first earns the t+1 to t+2 return; the test suite checks that a signal built from the t to t+1 return earns nothing.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+
 ## Related
 
 - [Information Coefficient (IC)](https://quantcore-labs.com/glossary/information-coefficient/)
@@ -3715,6 +3795,10 @@ The close that updates the moving averages is the same close that ends the bar's
 **Does a higher equity curve mean the rule works?**
 
 No. The curve is the result of this rule, this cost and this sample, with no market impact. Use it to check the code. Judging whether a rule is worth trading needs a later sample, realistic costs and a risk report.
+
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
 
 ## Related
 

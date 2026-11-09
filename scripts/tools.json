@@ -1,0 +1,23 @@
+[
+ {"id": "option-greeks-calc", "url": "/option-greeks-calc/", "name": "Black-Scholes Option Greeks",
+  "desc": "European call and put prices with Delta, Gamma, Vega, Theta and Rho under Black-Scholes-Merton with dividend yield. Fill the rate from the U.S. Treasury curve in one click.",
+  "chips": ["BSM with dividend yield", "Greeks per day / per vol point", "Treasury rate fill"],
+  "terms": ["delta", "gamma", "vega", "theta", "rho", "put-call-parity", "implied-volatility"], "code": []},
+ {"id": "iv-smile", "url": "/tools/iv-smile/", "name": "Implied Volatility Smile & Surface",
+  "desc": "Back out implied volatility across strikes and expiries, infer the forward from put-call parity, fit skew and curvature, and view the surface with a calendar-arbitrage check.",
+  "chips": ["Guaranteed-convergence solver", "Surface heatmap + optional 3D", "Calendar-arbitrage check"],
+  "terms": ["implied-volatility", "put-call-parity", "vega", "realized-volatility", "garch"], "code": []},
+ {"id": "performance-analytics", "url": "/tools/performance-analytics/", "name": "Performance & Drawdown Analytics",
+  "desc": "Paste an equity curve, returns or PnL to get Sharpe, Sortino, Calmar, max drawdown and its duration, VaR/CVaR and a monthly table, with zoomable charts and statistics for any selected period.",
+  "chips": ["252 / 242 (A-share) annualisation", "Drag-to-zoom period stats", "Data never leaves the browser"],
+  "terms": ["sharpe-ratio", "sortino-ratio", "calmar-ratio", "max-drawdown", "var-expected-shortfall", "information-ratio"],
+  "code": ["vectorized-backtest", "polars-vectorized-backtest"]},
+ {"id": "portfolio-efficient-frontier", "url": "/tools/portfolio-efficient-frontier/", "name": "Markowitz Efficient Frontier",
+  "desc": "Exact long-only maximum-Sharpe portfolio, efficient frontier, capital market line and minimum-variance portfolio for three assets with your own correlations.",
+  "chips": ["Exact optimum (KKT)", "User-set correlations", "Capital market line"],
+  "terms": ["sharpe-ratio", "beta", "tracking-error", "information-ratio"], "code": []},
+ {"id": "monte-carlo-asset-sim", "url": "/tools/monte-carlo-asset-sim/", "name": "Monte Carlo Asset Simulator",
+  "desc": "Simulate price paths under Geometric Brownian Motion with exact log-normal steps; terminal percentiles and horizon VaR compared with closed-form values.",
+  "chips": ["Exact GBM discretisation", "Horizon VaR", "Closed-form benchmarks"],
+  "terms": ["var-expected-shortfall", "realized-volatility", "max-drawdown"], "code": []}
+]

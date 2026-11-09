@@ -65,6 +65,11 @@ The information coefficient correlates a cross-section of forecasts with a cross
 
 If the question is what the investor kept versus the benchmark, yes. If the question is whether the holdings differed from the benchmark before costs, no. The function uses the two return series you pass in, so the choice of fees happens before the call.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Tracking Error](https://quantcore-labs.com/glossary/tracking-error/)

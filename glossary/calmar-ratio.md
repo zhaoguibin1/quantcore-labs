@@ -70,6 +70,10 @@ The original Calmar ratio did. This site's performance calculator divides full-s
 
 The equity curve made no new low relative to a peak, so the denominator would be zero. That includes a curve that only rises. It is not an infinite reward-to-risk ratio.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+
 ## Related
 
 - [Maximum Drawdown](https://quantcore-labs.com/glossary/max-drawdown/)

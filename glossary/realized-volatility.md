@@ -67,6 +67,11 @@ Average the daily sums of squared intraday returns first (that average estimates
 
 Squared log returns add up to integrated variance for a diffusion. Squared simple returns are close when the moves are small and are a different estimator when they are not. The function uses logs.
 
+## Use it in a calculator
+
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/)
+
 ## Related
 
 - [Parkinson Volatility](https://quantcore-labs.com/glossary/parkinson-volatility/)

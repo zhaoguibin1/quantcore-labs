@@ -72,6 +72,11 @@ An annual rate of 2 percent is not 2/252 per day under compound interest. The pe
 
 It means the sample's mean excess return equalled its annualised volatility. Whether that is attractive depends on the sample, the costs that were left out, and the drawdowns. The ratio is not a threshold for taking a position.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+
 ## Related
 
 - [Sortino Ratio](https://quantcore-labs.com/glossary/sortino-ratio/)

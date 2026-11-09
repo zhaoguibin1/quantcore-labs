@@ -89,6 +89,11 @@ The cumulative normal of d1 and d2 depends on σ in a way that does not invert i
 
 It means the premium is high relative to this model's other inputs. Whether that is expensive depends on the volatility you believe the underlying will actually realise, on the smile, and on costs. The number itself is a restatement of the premium.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+- [Implied Volatility Smile & Surface](https://quantcore-labs.com/tools/iv-smile/)
+
 ## Related
 
 - [Vega](https://quantcore-labs.com/glossary/vega/)

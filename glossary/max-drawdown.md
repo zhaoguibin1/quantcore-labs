@@ -61,6 +61,11 @@ No. It is a single fraction. The performance calculator on this site also report
 
 The unrecovered decline is included. Maximum drawdown does not require the equity to have made a new high afterwards. A strategy that fell 40 percent and never recovered has a maximum drawdown of at least 40 percent.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/)
+
 ## Related
 
 - [Calmar Ratio](https://quantcore-labs.com/glossary/calmar-ratio/)

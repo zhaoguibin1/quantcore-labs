@@ -88,6 +88,11 @@ def kupiec_pof(returns, var_series, alpha: float = 0.99) -> dict:
 
 VaR says nothing about losses beyond the threshold and is not subadditive, so combining two portfolios can show higher VaR than the sum of their VaRs. ES averages the whole tail and is coherent, which makes it better for limits and capital allocation.
 
+## Use it in a calculator
+
+- [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
+- [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/)
+
 ## Related
 
 - [Information Coefficient (IC)](https://quantcore-labs.com/glossary/information-coefficient/)

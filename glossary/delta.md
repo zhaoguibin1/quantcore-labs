@@ -65,6 +65,10 @@ N(d1) is the no-dividend formula. With a continuous yield q the spot delta of a 
 
 No. Under the stock-numeraire measure, N(d1) is a probability related to the share, and N(d2) is the risk-neutral probability that a European call finishes in the money, in this model, with no dividends changing that statement. Neither one is a real-world probability, and neither one is a trading instruction.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Gamma](https://quantcore-labs.com/glossary/gamma/)

@@ -71,6 +71,10 @@ With the other inputs held fixed, less time means less chance of a large move an
 
 Calendar days. The annual Black-Scholes derivative is divided by 365, which is what the Greeks calculator on this site displays. Multiply by 365/252 if you want a per-trading-day figure.
 
+## Use it in a calculator
+
+- [Black-Scholes Option Greeks](https://quantcore-labs.com/option-greeks-calc/)
+
 ## Related
 
 - [Delta](https://quantcore-labs.com/glossary/delta/)
