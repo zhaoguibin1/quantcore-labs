@@ -165,17 +165,19 @@
             <span id="statMean" class="font-bold text-cyan-400 text-sm">–</span>
           </div>
           <div>
-            <span class="text-slate-500 block">5th Percentile (VaR)</span>
+            <span class="text-slate-500 block">5th Percentile S_T</span>
             <span id="statP5" class="font-bold text-rose-400 text-sm">–</span>
+            <span id="statVaR" class="block text-[10px] text-slate-500 mt-0.5">–</span>
           </div>
           <div>
             <span class="text-slate-500 block">Median S_T (50th)</span>
             <span id="statMedian" class="font-bold text-amber-400 text-sm">–</span>
           </div>
           <div>
-            <span class="text-slate-500 block">95th Percentile</span>
+            <span class="text-slate-500 block">95th Percentile S_T</span>
             <span id="statP95" class="font-bold text-emerald-400 text-sm">–</span>
           </div>
+          <div class="col-span-2 sm:col-span-4 text-[11px] text-slate-500 border-t border-slate-800 pt-2" id="statExact">–</div>
         </div>
       </section>
     </div>
@@ -241,7 +243,8 @@ S_t = S_0 * exp( (μ - 0.5 * σ²) * t + σ * W_t )
     function runSimulation() {
       const S0 = parseFloat(document.getElementById('initialPrice').value) || 100;
       const mu = (parseFloat(document.getElementById('drift').value) || 0) / 100;
-      const sigma = (parseFloat(document.getElementById('volatility').value) || 20) / 100;
+      const sigmaIn = parseFloat(document.getElementById('volatility').value);
+      const sigma = (isFinite(sigmaIn) && sigmaIn >= 0 ? sigmaIn : 20) / 100;
       const T = parseFloat(document.getElementById('timeHorizon').value) || 1.0;
       const stepsPerYear = parseInt(document.getElementById('timeSteps').value) || 252;
       const numPaths = parseInt(document.getElementById('numPaths').value) || 50;
@@ -280,6 +283,17 @@ S_t = S_0 * exp( (μ - 0.5 * σ²) * t + σ * W_t )
       document.getElementById('statP5').textContent = p5.toFixed(2);
       document.getElementById('statMedian').textContent = p50.toFixed(2);
       document.getElementById('statP95').textContent = p95.toFixed(2);
+      // 95% VaR of the position over the horizon = loss from S0 to the 5th percentile of S_T
+      const varLoss = S0 - p5;
+      document.getElementById('statVaR').textContent = varLoss > 0
+        ? `95% VaR (loss over ${T}y): ${varLoss.toFixed(2)} (${(varLoss / S0 * 100).toFixed(1)}%)`
+        : `95% VaR (loss over ${T}y): none (5th pct ≥ S₀)`;
+      // Exact log-normal values for comparison with the simulation
+      const zq = 1.6448536269514722, m = (mu - 0.5 * sigma * sigma) * T, sq = sigma * Math.sqrt(T);
+      document.getElementById('statExact').textContent =
+        `Exact log-normal: mean ${(S0 * Math.exp(mu * T)).toFixed(2)} · 5th pct ${(S0 * Math.exp(m - zq * sq)).toFixed(2)} · ` +
+        `median ${(S0 * Math.exp(m)).toFixed(2)} · 95th pct ${(S0 * Math.exp(m + zq * sq)).toFixed(2)}. ` +
+        `Simulated values converge to these as the number of paths grows.`;
       document.getElementById('simStatus').textContent = `${numPaths} Paths · ${totalSteps} Steps`;
 
       drawCanvas(paths, totalSteps, S0);

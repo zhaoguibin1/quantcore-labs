@@ -23,10 +23,12 @@ The exact log-normal step is used, so there is no discretisation bias in the ter
 
 - Chart of the simulated paths
 - Mean terminal price, plus the 5th, 50th and 95th percentiles of the terminal price S_T
+- 95% VaR over the horizon, computed as S0 minus the 5th percentile of S_T (in price units and as % of S0)
+- Exact log-normal mean and percentiles, for comparison with the simulated values
 
 ## Notes
 
 - The (mu - sigma^2/2) term comes from Ito's lemma. It makes E[S_T] = S0 * exp(mu * T) while the median is S0 * exp((mu - sigma^2/2) * T).
-- The 5th percentile of S_T is a quantile of the price, not a VaR. Loss VaR is S0 minus that quantile, over the same horizon.
+- Exact log-normal quantiles are S0 * exp((mu - sigma^2/2) T + z_q sigma sqrt(T)), with z_0.05 = -1.645. With few paths the simulated percentiles are noisy; with 5,000 paths they are within about 1% of the exact values.
 - Simulated paths can be used for path-dependent payoffs such as Asian, barrier or lookback options. Pricing them requires simulating under the risk-neutral drift (r - q) instead of mu.
 - Educational and analytical use only; not investment advice.

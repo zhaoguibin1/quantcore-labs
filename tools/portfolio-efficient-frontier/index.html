@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markowitz Portfolio Optimization & Efficient Frontier | QuantCore Labs</title>
-  <meta name="description" content="Compute optimal asset weights, maximum Sharpe ratio portfolios, and plot the Markowitz efficient frontier using multi-asset expected returns and covariance matrices in your browser.">
+  <meta name="description" content="Exact long-only maximum Sharpe (tangency) portfolio, efficient frontier, capital market line and minimum-variance portfolio for three assets from expected returns, volatilities and pairwise correlations. Runs in your browser.">
   <link rel="canonical" href="https://quantcore-labs.com/tools/portfolio-efficient-frontier/">
   <link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/portfolio-efficient-frontier.md" title="Markdown version for LLMs">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +20,7 @@
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "All",
       "browserRequirements": "Requires JavaScript",
-      "description": "Interactive mean-variance portfolio optimization tool modeling the Markowitz efficient frontier and max Sharpe ratio allocation.",
+      "description": "Interactive long-only mean-variance tool for three assets: exact maximum-Sharpe portfolio via KKT active-set enumeration, exact efficient frontier, capital market line, minimum-variance portfolio and user-set pairwise correlations.",
       "author": {
         "@type": "Organization",
         "name": "QuantCore Labs",
@@ -32,6 +32,7 @@
       "@type": "TechArticle",
       "headline": "Mean-Variance Optimization and the Markowitz Efficient Frontier",
       "description": "Mathematical formulation of portfolio risk-return trade-offs, covariance matrices, and Sharpe ratio maximization.",
+      "articleBody": "Covariance: Sigma_ij = sigma_i * sigma_j * rho_ij, checked for positive definiteness. Portfolio return R_p = w.mu, volatility sigma_p = sqrt(w' Sigma w), Sharpe = (R_p - R_f) / sigma_p, with w_i >= 0 and sum w_i = 1. The maximum-Sharpe portfolio is found exactly: for every subset of assets the tangency weights solve Sigma_S z = mu_S - R_f, and candidates with all z > 0 are compared (KKT conditions guarantee the optimum is among them). The efficient frontier is exact: for each target return the feasible weights form a line segment, and the minimum-variance point on it is found in closed form. Random portfolios are drawn uniformly over the weight simplex (Dirichlet(1,1,1)).",
       "author": {
         "@type": "Organization",
         "name": "QuantCore Labs"
@@ -56,6 +57,14 @@
             "@type": "Answer",
             "text": "The efficient frontier represents the set of optimal portfolios that offer the highest expected return for a defined level of risk, or the lowest risk for a given level of expected return."
           }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the maximum Sharpe portfolio found by random sampling?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It is computed exactly by enumerating which assets hold positive weight and solving the tangency equations on each subset, so the answer does not depend on the number of random portfolios. The random portfolios are only drawn to visualise the feasible region."
+          }
         }
       ]
     }
@@ -79,7 +88,7 @@
     <div class="space-y-2">
       <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Markowitz Portfolio Optimization & Efficient Frontier</h1>
       <p class="text-sm text-slate-400 max-w-3xl">
-        Compute optimal asset allocations, locate the Maximum Sharpe Ratio portfolio, and visualize the efficient frontier using simulated multi-asset return distributions. All computations run locally in your browser.
+        Exact long-only maximum-Sharpe (tangency) portfolio, efficient frontier and capital market line for three assets, from expected returns, volatilities and pairwise correlations. Random portfolios sampled uniformly over all weight combinations show the feasible region. All computations run locally in your browser.
       </p>
     </div>
 
@@ -100,7 +109,7 @@
           </div>
 
           <div>
-            <label for="numPortfolios" class="block font-medium text-slate-300 mb-1">Monte Carlo Portfolios</label>
+            <label for="numPortfolios" class="block font-medium text-slate-300 mb-1">Random Portfolios Shown (display only)</label>
             <input type="number" id="numPortfolios" value="2000" step="500" min="500" max="10000" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
           </div>
 
@@ -134,6 +143,16 @@
               </div>
             </div>
           </div>
+
+          <div class="space-y-2 pt-2 border-t border-slate-800">
+            <span class="block font-medium text-slate-300">Correlations ρ (−1 to 1)</span>
+            <div class="grid grid-cols-3 gap-2">
+              <div><label for="rho12" class="text-[10px] text-slate-500 block">ρ 1–2</label><input type="number" id="rho12" value="0.3" step="0.05" min="-1" max="1" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+              <div><label for="rho13" class="text-[10px] text-slate-500 block">ρ 1–3</label><input type="number" id="rho13" value="0.3" step="0.05" min="-1" max="1" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+              <div><label for="rho23" class="text-[10px] text-slate-500 block">ρ 2–3</label><input type="number" id="rho23" value="0.3" step="0.05" min="-1" max="1" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white"></div>
+            </div>
+            <p id="mvErr" class="text-[11px] text-rose-400 min-h-[14px]" role="alert"></p>
+          </div>
         </div>
       </section>
 
@@ -165,13 +184,20 @@
               <span id="optVol" class="font-bold text-amber-400 text-sm">–</span>
             </div>
             <div>
-              <span class="text-slate-500 block">Asset 1 / Asset 2</span>
-              <span id="optWeights12" class="font-bold text-slate-300 text-xs">–</span>
+              <span class="text-slate-500 block">Weights 1 / 2 / 3</span>
+              <span id="optWeights" class="font-bold text-slate-300 text-xs">–</span>
             </div>
             <div>
-              <span class="text-slate-500 block">Asset 3 Weight</span>
-              <span id="optWeights3" class="font-bold text-slate-300 text-xs">–</span>
+              <span class="text-slate-500 block">Min-variance portfolio</span>
+              <span id="minVar" class="font-bold text-slate-300 text-xs">–</span>
             </div>
+          </div>
+          <div class="text-[11px] text-slate-500 flex flex-wrap gap-x-4 gap-y-1 pt-1">
+            <span><span class="inline-block w-3 h-0.5 bg-cyan-400 align-middle"></span> efficient frontier</span>
+            <span><span class="inline-block w-3 h-0.5 bg-amber-400 align-middle"></span> capital market line</span>
+            <span><span class="inline-block w-2 h-2 rounded-full bg-emerald-400 align-middle"></span> max Sharpe</span>
+            <span><span class="inline-block w-2 h-2 rounded-full bg-violet-400 align-middle"></span> min variance</span>
+            <span><span class="inline-block w-2 h-2 rounded-full bg-slate-200 align-middle"></span> single assets</span>
           </div>
         </div>
       </section>
@@ -181,12 +207,19 @@
     <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-3 shadow-xl">
       <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">Formulas & Conventions</h2>
       <div class="bg-slate-950 p-4 rounded border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
-Expected Return: R_p = ∑ (w_i * R_i)
-Portfolio Risk:  σ_p = √( w^T * Σ * w )
-Sharpe Ratio:    S = (R_p - R_f) / σ_p
+Expected return:  R_p = Σ w_i·μ_i
+Portfolio risk:   σ_p = √( wᵀ Σ w ),   Σ_ij = σ_i σ_j ρ_ij
+Sharpe ratio:     S = (R_p − R_f) / σ_p
+Constraints:      w_i ≥ 0,  Σ w_i = 1   (long-only, fully invested)
+
+Max Sharpe (exact): for every subset A of assets solve Σ_A z = μ_A − R_f;
+                    keep solutions with all z > 0, normalise w = z / Σz, take the best.
+Frontier (exact):   for target R, {Σw = 1, μ·w = R, w ≥ 0} is a segment w₀ + t·d;
+                    minimise the quadratic σ²(t) on it in closed form.
+CML:                R = R_f + S* · σ   through the max-Sharpe portfolio
       </div>
       <p class="text-xs text-slate-400">
-        $\Sigma$ represents the covariance matrix constructed using asset standard deviations and an assumed correlation coefficient ($\rho = 0.3$). Weights satisfy $\sum w_i = 1$ and $w_i \ge 0$ (no short-selling).
+        Σ is built from the volatilities and the three pairwise correlations you enter, and must be positive definite (the page rejects impossible combinations such as ρ₁₂ = 0.9, ρ₂₃ = 0.9, ρ₁₃ = −0.9). The optimum does not depend on the random portfolios, which are drawn uniformly over all weight combinations (Dirichlet(1,1,1)) only to show the feasible region.
       </p>
     </section>
 
@@ -198,8 +231,10 @@ Sharpe Ratio:    S = (R_p - R_f) / σ_p
         <p>&gt; Client-side mean-variance optimization calculator for asset allocation and efficient frontier visualization. URL: https://quantcore-labs.com/tools/portfolio-efficient-frontier/</p>
         <p class="font-bold">## Optimization Objectives</p>
         <ul class="list-disc list-inside text-slate-400 space-y-1">
-          <li>Maximization of the Sharpe ratio subject to fully invested budget constraints ($\sum w_i = 1$).</li>
-          <li>Monte Carlo random weight generation over simplex distribution.</li>
+          <li>Exact long-only maximum Sharpe portfolio (KKT active-set enumeration), w_i ≥ 0, Σ w_i = 1.</li>
+          <li>Exact long-only efficient frontier and minimum-variance portfolio; capital market line.</li>
+          <li>User-set pairwise correlations, positive-definiteness checked.</li>
+          <li>Random portfolios sampled uniformly on the simplex for display only.</li>
         </ul>
       </div>
     </section>
@@ -210,11 +245,15 @@ Sharpe Ratio:    S = (R_p - R_f) / σ_p
       <dl class="space-y-4 text-xs">
         <div>
           <dt class="font-bold text-cyan-400">Why does diversification reduce portfolio risk?</dt>
-          <dd class="text-slate-400 mt-1">When assets are not perfectly correlated ($\rho &lt; 1$), combining them smooths out independent return fluctuations, reducing overall portfolio variance below the weighted average of individual variances.</dd>
+          <dd class="text-slate-400 mt-1">When assets are not perfectly correlated (ρ &lt; 1), combining them smooths out independent return fluctuations, so portfolio volatility falls below the weighted average of the individual volatilities.</dd>
         </div>
         <div>
           <dt class="font-bold text-cyan-400">How is the covariance matrix determined in this calculator?</dt>
-          <dd class="text-slate-400 mt-1">Covariances are computed as $\Sigma_{ij} = \sigma_i \sigma_j \rho_{ij}$, assuming a moderate cross-asset correlation coefficient ($\rho = 0.3$) for illustrative multi-asset diversification.</dd>
+          <dd class="text-slate-400 mt-1">Covariances are Σ_ij = σ_i σ_j ρ_ij from the volatilities and the three correlations you enter (default 0.3). The matrix must be positive definite; otherwise the correlations are mutually impossible and the page asks you to change them.</dd>
+        </div>
+        <div>
+          <dt class="font-bold text-cyan-400">Is the maximum Sharpe portfolio found by random sampling?</dt>
+          <dd class="text-slate-400 mt-1">No. It is computed exactly by enumerating which assets hold positive weight and solving the tangency equations on each subset, so it does not depend on the number of random portfolios. The random portfolios only visualise the feasible region.</dd>
         </div>
       </dl>
     </section>
@@ -227,144 +266,170 @@ Sharpe Ratio:    S = (R_p - R_f) / σ_p
 
   <!-- Optimization Logic & Canvas Script -->
   <script>
-    function runOptimization() {
-      const rf = (parseFloat(document.getElementById('riskFreeRate').value) || 0) / 100;
-      const numSims = parseInt(document.getElementById('numPortfolios').value) || 2000;
+/* ===== MV-CORE-BEGIN ===== */
+// Mean-variance helpers for a small long-only universe (exact for n = 3).
+function covMatrix(vols, corr){
+  return vols.map(function(vi, i){ return vols.map(function(vj, j){ return vi * vj * (i === j ? 1 : corr[i][j]); }); });
+}
+function isPosDef3(S){ // leading principal minors
+  var d1 = S[0][0], d2 = S[0][0] * S[1][1] - S[0][1] * S[1][0];
+  var d3 = S[0][0] * (S[1][1] * S[2][2] - S[1][2] * S[2][1]) - S[0][1] * (S[1][0] * S[2][2] - S[1][2] * S[2][0]) + S[0][2] * (S[1][0] * S[2][1] - S[1][1] * S[2][0]);
+  return d1 > 0 && d2 > 0 && d3 > 0;
+}
+function stats(w, mu, S, rf){
+  var r = 0, v = 0, i, j;
+  for (i = 0; i < w.length; i++){ r += w[i] * mu[i]; for (j = 0; j < w.length; j++) v += w[i] * w[j] * S[i][j]; }
+  var vol = Math.sqrt(Math.max(v, 0));
+  return { w: w, ret: r, vol: vol, sharpe: vol > 0 ? (r - rf) / vol : NaN };
+}
+function solveLin(A, b){ // Gaussian elimination with partial pivoting; null if singular
+  var n = b.length, M = A.map(function(row, i){ return row.concat([b[i]]); }), i, j, k;
+  for (i = 0; i < n; i++){
+    var p = i; for (k = i + 1; k < n; k++) if (Math.abs(M[k][i]) > Math.abs(M[p][i])) p = k;
+    if (Math.abs(M[p][i]) < 1e-14) return null;
+    var t = M[i]; M[i] = M[p]; M[p] = t;
+    for (k = 0; k < n; k++) if (k !== i){ var f = M[k][i] / M[i][i]; for (j = i; j <= n; j++) M[k][j] -= f * M[i][j]; }
+  }
+  return M.map(function(row, i){ return row[n] / row[i]; });
+}
+// Exact long-only maximum-Sharpe portfolio: enumerate active sets S (KKT); on each, the
+// tangency weights solve Sigma_S z = mu_S - rf; keep candidates with all z > 0.
+// Single assets are always candidates (covers the case where no asset beats rf).
+function maxSharpeLongOnly(mu, S, rf){
+  var n = mu.length, best = null;
+  for (var mask = 1; mask < (1 << n); mask++){
+    var idx = []; for (var i = 0; i < n; i++) if (mask & (1 << i)) idx.push(i);
+    var z = idx.length === 1 ? [1] : solveLin(idx.map(function(a){ return idx.map(function(b){ return S[a][b]; }); }), idx.map(function(a){ return mu[a] - rf; }));
+    if (!z) continue;
+    var sum = z.reduce(function(a, b){ return a + b; }, 0);
+    if (idx.length > 1 && !(z.every(function(x){ return x > 0; }) && sum > 0)) continue;
+    var w = new Array(n).fill(0); idx.forEach(function(a, k){ w[a] = z[k] / sum; });
+    var s = stats(w, mu, S, rf);
+    if (isFinite(s.sharpe) && (!best || s.sharpe > best.sharpe)) best = s;
+  }
+  return best;
+}
+// Exact long-only minimum-variance weights for a target return (n = 3): the feasible set
+// {sum w = 1, mu.w = R, w >= 0} is a segment w0 + t d; minimise the quadratic along it.
+function minVarForReturn(mu, S, R){
+  var d = [mu[1] - mu[2], mu[2] - mu[0], mu[0] - mu[1]];            // [1,1,1] x mu
+  var dn = Math.hypot(d[0], d[1], d[2]);
+  if (dn < 1e-12) return null;
+  var a11 = 3, a12 = mu[0] + mu[1] + mu[2], a22 = mu[0] * mu[0] + mu[1] * mu[1] + mu[2] * mu[2];
+  var det = a11 * a22 - a12 * a12; if (Math.abs(det) < 1e-18) return null;
+  var l1 = (a22 * 1 - a12 * R) / det, l2 = (-a12 * 1 + a11 * R) / det;  // w0 = A'(AA')^-1 b
+  var w0 = mu.map(function(m){ return l1 + l2 * m; });
+  var lo = -Infinity, hi = Infinity;
+  for (var i = 0; i < 3; i++){
+    if (Math.abs(d[i]) < 1e-15){ if (w0[i] < -1e-12) return null; continue; }
+    var t = -w0[i] / d[i];
+    if (d[i] > 0) lo = Math.max(lo, t); else hi = Math.min(hi, t);
+  }
+  if (lo > hi + 1e-12) return null;
+  var Sd = [0, 0, 0], dSd = 0, dSw = 0;
+  for (i = 0; i < 3; i++) for (var j = 0; j < 3; j++){ dSd += d[i] * S[i][j] * d[j]; dSw += d[i] * S[i][j] * w0[j]; }
+  var tt = Math.min(Math.max(-dSw / dSd, lo), hi);
+  return w0.map(function(x, k){ return Math.max(x + tt * d[k], 0); });
+}
+function frontierLongOnly(mu, S, rf, points){
+  var lo = Math.min.apply(null, mu), hi = Math.max.apply(null, mu), out = [];
+  for (var k = 0; k <= points; k++){
+    var w = minVarForReturn(mu, S, lo + (hi - lo) * k / points);
+    if (w){ var sum = w[0] + w[1] + w[2]; out.push(stats(w.map(function(x){ return x / sum; }), mu, S, rf)); }
+  }
+  var iMin = 0; out.forEach(function(p, i){ if (p.vol < out[iMin].vol) iMin = i; });
+  return { curve: out, minVar: out[iMin], iMin: iMin };
+}
+// Uniform sampling on the simplex: normalised exponentials = Dirichlet(1, ..., 1).
+function dirichletWeights(n, rnd){
+  var e = []; for (var i = 0; i < n; i++) e.push(-Math.log(1 - rnd()));
+  var s = e.reduce(function(a, b){ return a + b; }, 0);
+  return e.map(function(x){ return x / s; });
+}
+/* ===== MV-CORE-END ===== */
 
-      const r1 = (parseFloat(document.getElementById('ret1').value) || 0) / 100;
-      const v1 = (parseFloat(document.getElementById('vol1').value) || 0) / 100;
-      const r2 = (parseFloat(document.getElementById('ret2').value) || 0) / 100;
-      const v2 = (parseFloat(document.getElementById('vol2').value) || 0) / 100;
-      const r3 = (parseFloat(document.getElementById('ret3').value) || 0) / 100;
-      const v3 = (parseFloat(document.getElementById('vol3').value) || 0) / 100;
+    (function(){
+      var $ = function(id){ return document.getElementById(id); };
+      var last = null;
+      var pct = function(x, dp){ return (x * 100).toFixed(dp == null ? 2 : dp) + '%'; };
+      var rng = Math.random;
 
-      const returns = [r1, r2, r3];
-      const vols = [v1, v2, v3];
-      const rho = 0.3; // Assumption for cross-asset correlation
+      function read(){
+        var num = function(id){ return parseFloat($(id).value); };
+        var mu = [num('ret1'), num('ret2'), num('ret3')].map(function(x){ return x / 100; });
+        var vol = [num('vol1'), num('vol2'), num('vol3')].map(function(x){ return x / 100; });
+        var r12 = num('rho12'), r13 = num('rho13'), r23 = num('rho23'), rf = (num('riskFreeRate') || 0) / 100;
+        var n = Math.min(Math.max(parseInt($('numPortfolios').value, 10) || 2000, 0), 20000);
+        if (mu.concat(vol).some(function(x){ return !isFinite(x); })) return { err: 'Enter a return and a volatility for every asset.' };
+        if (vol.some(function(v){ return !(v > 0); })) return { err: 'Volatilities must be greater than 0.' };
+        if ([r12, r13, r23].some(function(r){ return !(r >= -1 && r <= 1); })) return { err: 'Correlations must be between −1 and 1.' };
+        var S = covMatrix(vol, [[1, r12, r13], [r12, 1, r23], [r13, r23, 1]]);
+        if (!isPosDef3(S)) return { err: 'These correlations are mutually inconsistent (covariance matrix not positive definite). Adjust one of them.' };
+        return { mu: mu, vol: vol, S: S, rf: rf, n: n };
+      }
 
-      // Build Covariance Matrix Sigma (3x3)
-      const cov = [
-        [v1*v1, v1*v2*rho, v1*v3*rho],
-        [v2*v1*rho, v2*v2, v2*v3*rho],
-        [v3*v1*rho, v3*v2*rho, v3*v3]
-      ];
+      function run(){
+        var x = read();
+        $('mvErr').textContent = x.err || '';
+        if (x.err){ last = null; draw(); return; }
+        var best = maxSharpeLongOnly(x.mu, x.S, x.rf), fr = frontierLongOnly(x.mu, x.S, x.rf, 200), cloud = [];
+        for (var i = 0; i < x.n; i++) cloud.push(stats(dirichletWeights(3, rng), x.mu, x.S, x.rf));
+        last = { x: x, best: best, fr: fr, cloud: cloud };
+        $('optSharpe').textContent = 'Sharpe: ' + best.sharpe.toFixed(3);
+        $('optReturn').textContent = pct(best.ret);
+        $('optVol').textContent = pct(best.vol);
+        $('optWeights').textContent = best.w.map(function(w){ return pct(w, 1); }).join(' / ');
+        var mv = fr.minVar;
+        $('minVar').textContent = mv ? 'σ ' + pct(mv.vol) + ', R ' + pct(mv.ret) + ' (' + mv.w.map(function(w){ return (w * 100).toFixed(0); }).join('/') + ')' : '–';
+        $('simStatus').textContent = 'Exact optimum · ' + x.n + ' random portfolios shown';
+        draw();
+      }
 
-      const portfolios = [];
-      let bestSharpe = -Infinity;
-      let bestPortfolio = null;
-
-      // Monte Carlo Simulation over Simplex
-      for (let s = 0; s < numSims; s++) {
-        let u1 = Math.random(), u2 = Math.random(), u3 = Math.random();
-        let sum = u1 + u2 + u3;
-        let w1 = u1 / sum, w2 = u2 / sum, w3 = u3 / sum;
-        let w = [w1, w2, w3];
-
-        // Expected Return R_p
-        let rp = w1 * r1 + w2 * r2 + w3 * r3;
-
-        // Portfolio Variance = w^T * Sigma * w
-        let varP = 0;
-        for (let i = 0; i < 3; i++) {
-          for (let j = 0; j < 3; j++) {
-            varP += w[i] * w[j] * cov[i][j];
-          }
+      function draw(){
+        var canvas = $('frontierCanvas'), ctx = canvas.getContext('2d'), dpr = window.devicePixelRatio || 1;
+        var rect = canvas.getBoundingClientRect(), W = rect.width, H = rect.height;
+        canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+        if (!last) return;
+        var x = last.x, pts = last.cloud.concat(last.fr.curve);
+        x.mu.forEach(function(m, i){ pts.push({ vol: x.vol[i], ret: m }); });
+        var v1 = Math.max.apply(null, pts.map(function(p){ return p.vol; })) * 1.08;
+        var r0 = Math.min(x.rf, Math.min.apply(null, pts.map(function(p){ return p.ret; }))), r1 = Math.max.apply(null, pts.map(function(p){ return p.ret; }));
+        var pr = (r1 - r0) * 0.08 || 0.01; r0 -= pr; r1 += pr;
+        var pad = { l: 48, r: 12, t: 12, b: 34 };
+        var X = function(v){ return pad.l + v / v1 * (W - pad.l - pad.r); };
+        var Y = function(r){ return H - pad.b - (r - r0) / (r1 - r0) * (H - pad.t - pad.b); };
+        ctx.font = '10px ui-monospace, Menlo, monospace'; ctx.lineWidth = 1;
+        for (var k = 0; k <= 4; k++){
+          var rv = r0 + (r1 - r0) * k / 4, vv = v1 * k / 4;
+          ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(pad.l, Y(rv)); ctx.lineTo(W - pad.r, Y(rv)); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(X(vv), pad.t); ctx.lineTo(X(vv), H - pad.b); ctx.stroke();
+          ctx.fillStyle = '#64748b'; ctx.fillText(pct(rv, 1), 4, Y(rv) + 3); ctx.fillText(pct(vv, 0), X(vv) - 10, H - pad.b + 14);
         }
-        let volP = Math.sqrt(Math.max(0, varP));
-        let sharpe = volP > 0 ? (rp - rf) / volP : 0;
-
-        portfolios.push({ w, rp, volP, sharpe });
-
-        if (sharpe > bestSharpe) {
-          bestSharpe = sharpe;
-          bestPortfolio = { w, rp, volP, sharpe };
+        ctx.fillText('volatility σ →', W - pad.r - 82, H - 4); ctx.fillText('↑ expected return', pad.l + 4, pad.t + 10);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+        last.cloud.forEach(function(p){ ctx.fillRect(X(p.vol) - 1, Y(p.ret) - 1, 2, 2); });
+        var c = last.fr.curve, im = last.fr.iMin;
+        ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]); ctx.beginPath();
+        c.slice(0, im + 1).forEach(function(p, i){ i ? ctx.lineTo(X(p.vol), Y(p.ret)) : ctx.moveTo(X(p.vol), Y(p.ret)); }); ctx.stroke(); ctx.setLineDash([]);
+        ctx.lineWidth = 2.2; ctx.beginPath();
+        c.slice(im).forEach(function(p, i){ i ? ctx.lineTo(X(p.vol), Y(p.ret)) : ctx.moveTo(X(p.vol), Y(p.ret)); }); ctx.stroke();
+        var b = last.best;
+        if (b.sharpe > 0){
+          ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(X(0), Y(x.rf));
+          var vEnd = Math.min(v1, (r1 - x.rf) / b.sharpe); ctx.lineTo(X(vEnd), Y(x.rf + b.sharpe * vEnd)); ctx.stroke();
         }
+        var dot = function(v, r, color, rad, label){ ctx.beginPath(); ctx.arc(X(v), Y(r), rad, 0, 2 * Math.PI); ctx.fillStyle = color; ctx.fill();
+          if (label){ ctx.fillStyle = '#cbd5e1'; ctx.fillText(label, X(v) + 6, Y(r) - 6); } };
+        x.mu.forEach(function(m, i){ dot(x.vol[i], m, '#e2e8f0', 3.5, 'A' + (i + 1)); });
+        if (last.fr.minVar) dot(last.fr.minVar.vol, last.fr.minVar.ret, '#a78bfa', 5);
+        dot(b.vol, b.ret, '#34d399', 6.5); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
       }
 
-      // Update UI Readouts
-      if (bestPortfolio) {
-        document.getElementById('optSharpe').textContent = `Sharpe: ${bestPortfolio.sharpe.toFixed(3)}`;
-        document.getElementById('optReturn').textContent = `${(bestPortfolio.rp * 100).toFixed(2)}%`;
-        document.getElementById('optVol').textContent = `${(bestPortfolio.volP * 100).toFixed(2)}%`;
-        document.getElementById('optWeights12').textContent = `${(bestPortfolio.w[0]*100).toFixed(1)}% / ${(bestPortfolio.w[1]*100).toFixed(1)}%`;
-        document.getElementById('optWeights3').textContent = `${(bestPortfolio.w[2]*100).toFixed(1)}%`;
-        document.getElementById('simStatus').textContent = `${numSims} Portfolios Simulated`;
-      }
-
-      drawCanvas(portfolios, bestPortfolio);
-    }
-
-    // Render Canvas
-    function drawCanvas(portfolios, best) {
-      const canvas = document.getElementById('frontierCanvas');
-      const ctx = canvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-      
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-
-      const width = rect.width;
-      const height = rect.height;
-
-      ctx.clearRect(0, 0, width, height);
-
-      let minVol = Infinity, maxVol = -Infinity;
-      let minRet = Infinity, maxRet = -Infinity;
-
-      for (const p of portfolios) {
-        if (p.volP < minVol) minVol = p.volP;
-        if (p.volP > maxVol) maxVol = p.volP;
-        if (p.rp < minRet) minRet = p.rp;
-        if (p.rp > maxRet) maxRet = p.rp;
-      }
-
-      const padding = 30;
-      const usableWidth = width - padding * 2;
-      const usableHeight = height - padding * 2;
-
-      // Draw Grid Lines
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(padding, padding);
-      ctx.lineTo(padding, height - padding);
-      ctx.lineTo(width - padding, height - padding);
-      ctx.stroke();
-
-      // Plot Monte Carlo Scatter Points
-      for (const p of portfolios) {
-        const x = padding + ((p.volP - minVol) / (maxVol - minVol || 1)) * usableWidth;
-        const y = height - padding - ((p.rp - minRet) / (maxRet - minRet || 1)) * usableHeight;
-
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
-        ctx.fillRect(x, y, 2, 2);
-      }
-
-      // Plot Optimal Portfolio Point
-      if (best) {
-        const bx = padding + ((best.volP - minVol) / (maxVol - minVol || 1)) * usableWidth;
-        const by = height - padding - ((best.rp - minRet) / (maxRet - minRet || 1)) * usableHeight;
-
-        ctx.fillStyle = '#34d399';
-        ctx.beginPath();
-        ctx.arc(bx, by, 6, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    }
-
-    // Attach Event Listeners
-    const inputs = ['riskFreeRate', 'numPortfolios', 'ret1', 'vol1', 'ret2', 'vol2', 'ret3', 'vol3'];
-    inputs.forEach(id => {
-      document.getElementById(id).addEventListener('input', runOptimization);
-    });
-
-    window.addEventListener('load', runOptimization);
-    window.addEventListener('resize', runOptimization);
+      ['riskFreeRate', 'numPortfolios', 'ret1', 'vol1', 'ret2', 'vol2', 'ret3', 'vol3', 'rho12', 'rho13', 'rho23']
+        .forEach(function(id){ $(id).addEventListener('input', run); });
+      var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(draw, 100); });
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+    })();
   </script>
 </body>
 </html>
