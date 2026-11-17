@@ -19,6 +19,7 @@ BASE, ORG, page, breadcrumb_ld = gg.BASE, gg.ORG, gg.page, gg.breadcrumb_ld
 esc = html.escape
 
 TOOLS = json.loads((REPO / "scripts" / "tools.json").read_text(encoding="utf-8"))
+RESEARCH = json.loads((REPO / "scripts" / "research.json").read_text(encoding="utf-8"))
 DB = json.loads((REPO / "scripts" / "glossary_db.json").read_text(encoding="utf-8"))
 BY = {t["term_id"]: t for t in DB}
 TERMS = [t for t in DB if t.get("kind") != "snippet"]
@@ -93,6 +94,13 @@ def home():
 </div>
 </section>
 
+<section aria-labelledby="res-h">
+<h2 id="res-h">Research</h2>
+<div class="grid2">
+{chr(10).join(tool_card(r) for r in RESEARCH)}
+</div>
+</section>
+
 <section aria-labelledby="kb-h">
 <h2 id="kb-h">Knowledge base</h2>
 <div class="grid2">
@@ -117,7 +125,7 @@ def home():
 <li><strong>Against reference libraries.</strong> Calculators and snippets are cross-checked against SciPy, statsmodels, NumPy and pandas, or against closed-form results. For example, the implied-volatility solver is round-tripped over 466 grid cases, and the efficient-frontier optimum matches SciPy SLSQP to 1e-10.</li>
 <li><strong>On every rebuild.</strong> Each published Python file is executed in a fresh interpreter together with its assertions, so a dependency change that breaks a result stops the build.</li>
 <li><strong>Stated conventions.</strong> Units and day counts (Theta per day, Vega per vol point, 252 or 242 trading days) are written on each page, because most disagreements between tools come from conventions, not maths.</li>
-<li><strong>Public data only.</strong> The only external data is the U.S. Treasury par yield curve, which is public and refreshed each business day. Licensed market data is not redistributed.</li>
+<li><strong>Public data only.</strong> The only data feed is the U.S. Treasury par yield curve, which is public and refreshed each business day. Research notes publish summary statistics only; licensed market data is not redistributed.</li>
 </ul>
 <p>More in <a href="/about/">About &amp; methodology</a>.</p>
 </section>
@@ -164,6 +172,7 @@ def about():
 <li><strong>{len(TOOLS)} calculators</strong> for options, volatility, portfolio construction, simulation and performance analysis. They run entirely in your browser.</li>
 <li><strong>A glossary of {len(TERMS)} terms.</strong> Each has a definition, formula, institutional usage, common pitfalls and a Python implementation.</li>
 <li><strong>{len(SNIPS)} code snippets</strong> for data handling, fast rolling operators and backtesting.</li>
+<li><strong>Research notes</strong>, such as the <a href="/research/china-index-futures-basis/">China index-futures basis study</a>, with the method and its limits written out.</li>
 </ul></section>
 
 <section><h2>Methodology</h2>
@@ -175,7 +184,9 @@ def about():
 </ul></section>
 
 <section><h2>Data</h2>
-<p>The only external data is the U.S. Department of the Treasury daily par yield curve. It is U.S. government data in the public domain, refreshed automatically each business day and used for the one-click risk-free rate. Real-time market quotes are not offered, because exchange and vendor data licences generally do not allow redistribution on a public website. To analyse your own data, paste it into a calculator: it stays in your browser.</p></section>
+<p>The U.S. Department of the Treasury daily par yield curve is U.S. government data in the public domain. It is refreshed automatically each business day and used for the one-click risk-free rate.</p>
+<p>Research notes, such as the <a href="/research/china-index-futures-basis/">China index-futures basis study</a>, are computed offline from daily closing prices and publish only summary statistics: annualised returns, differences and averages. Price series, quotes and index levels are not republished.</p>
+<p>Real-time market quotes are not offered, because exchange and vendor data licences generally do not allow redistribution on a public website. To analyse your own data, paste it into a calculator: it stays in your browser.</p></section>
 
 <section><h2>What this is not</h2>
 <p>Nothing on this site is investment advice, a recommendation or an offer to buy or sell any security. Model outputs depend on the inputs and assumptions you choose. Past performance does not indicate future results.</p></section>
@@ -288,11 +299,28 @@ def patch_tool(t):
         s = s[:i] + "<!-- FOOTER-LINKS -->" + FOOTER_LINKS + s[i:]
     f.write_text(s, encoding="utf-8")
 
+def patch_research(r):
+    f = REPO / r["url"].strip("/") / "index.html"
+    s = f.read_text(encoding="utf-8")
+    ask = gg.ask_ai_block(r["name"], BASE + r["url"], BASE + r["md"])
+    if "<!-- ASKAI:BEGIN" in s:
+        s = re.sub(r"<!-- ASKAI:BEGIN.*?<!-- ASKAI:END -->\n", lambda m: ask, s, flags=re.S)
+    else:
+        assert s.count("</main>") == 1, f
+        s = s.replace("</main>", ask + "</main>")
+    if "<!-- FOOTER-LINKS -->" in s:
+        s = re.sub(r"<!-- FOOTER-LINKS --><p[^>]*>.*?</p>", lambda m: "<!-- FOOTER-LINKS -->" + FOOTER_LINKS, s, count=1, flags=re.S)
+    else:
+        i = s.rfind("</footer>"); assert i > 0, f
+        s = s[:i] + "<!-- FOOTER-LINKS -->" + FOOTER_LINKS + s[i:]
+    f.write_text(s, encoding="utf-8")
+
 def update_llms():
     p = REPO / "llms.txt"
     s = p.read_text(encoding="utf-8")
     tools = [f"- [{t['name']}]({BASE}{t['url']}): {t['desc']} Markdown: {BASE}/{t['id']}.md" for t in TOOLS]
     s = gg._set_section(s, "Tools", tools)
+    s = gg._set_section(s, "Research", [f"- [{r['name']}]({BASE}{r['url']}): {r['desc']} Markdown: {BASE}{r['md']}" for r in RESEARCH])
     s = gg._set_section(s, "Optional", [f"- [About & methodology]({BASE}/about/): how calculators and code are verified; data sources",
                                         f"- [Privacy]({BASE}/privacy/): no accounts, no cookies, inputs stay in the browser",
                                         f"- [Home]({BASE}/): site overview"])
@@ -308,5 +336,8 @@ if __name__ == "__main__":
         (REPO / d / "index.html").write_text(fn(), encoding="utf-8")
     for t in TOOLS:
         patch_tool(t)
+    for r in RESEARCH:
+        assert (REPO / r["md"].lstrip("/")).exists(), f"missing Markdown mirror {r['md']}"
+        patch_research(r)
     update_llms()
     print("site pages: index.html, 404.html, about/, privacy/; related blocks on", len(TOOLS), "tools")

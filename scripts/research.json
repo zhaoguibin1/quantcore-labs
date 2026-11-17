@@ -1,0 +1,14 @@
+[
+ {
+  "id": "china-index-futures-basis",
+  "url": "/research/china-index-futures-basis/",
+  "md": "/research/china-index-futures-basis.md",
+  "name": "China Index Futures Basis: A Ten-Year Study",
+  "desc": "What the discount of the IF, IH, IC and IM futures was worth: a rolled long futures position against the total-return index from 2015 to 2026, by contract and by year, with the method and its risks.",
+  "chips": [
+   "IF · IH · IC · IM",
+   "Rolled long vs total-return index",
+   "2015–2026, by year"
+  ]
+ }
+]

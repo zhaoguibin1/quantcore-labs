@@ -106,6 +106,10 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [Put-Call Parity in Python](https://quantcore-labs.com/glossary/put-call-parity/): standard library. Raw: https://quantcore-labs.com/glossary/put-call-parity/put-call-parity.py Markdown: https://quantcore-labs.com/glossary/put-call-parity.md
 - [Half-Life in Python](https://quantcore-labs.com/glossary/half-life-mean-reversion/): numpy. Raw: https://quantcore-labs.com/glossary/half-life-mean-reversion/half-life-mean-reversion.py Markdown: https://quantcore-labs.com/glossary/half-life-mean-reversion.md
 
+## Research
+
+- [China Index Futures Basis: A Ten-Year Study](https://quantcore-labs.com/research/china-index-futures-basis/): What the discount of the IF, IH, IC and IM futures was worth: a rolled long futures position against the total-return index from 2015 to 2026, by contract and by year, with the method and its risks. Markdown: https://quantcore-labs.com/research/china-index-futures-basis.md
+
 ## Optional
 
 - [About & methodology](https://quantcore-labs.com/about/): how calculators and code are verified; data sources

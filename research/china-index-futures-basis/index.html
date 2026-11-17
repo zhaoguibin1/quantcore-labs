@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>China Index Futures Basis: A Ten-Year Study of IF, IH, IC, IM | QuantCore Labs</title>
+<meta name="description" content="How much the discount of China's IF, IH, IC and IM index futures paid: a rolled long futures position against the total-return index from 2015 to 2026, by contract and by year.">
+<link rel="canonical" href="https://quantcore-labs.com/research/china-index-futures-basis/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/research/china-index-futures-basis.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="China Index Futures Basis: A Ten-Year Study">
+<meta property="og:description" content="What a rolled long position in IF, IH, IC and IM futures earned against the total-return index, 2015 to 2026.">
+<meta property="og:url" content="https://quantcore-labs.com/research/china-index-futures-basis/">
+<meta property="og:image" content="https://quantcore-labs.com/research/china-index-futures-basis/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "Article",
+      "@id": "https://quantcore-labs.com/research/china-index-futures-basis/#article",
+      "headline": "China Index Futures Basis: A Ten-Year Study of Rolled Long Positions",
+      "description": "The return of rolled long IF, IH, IC and IM futures positions against CSI total-return indices from 2015 to 2026, by contract and by year, with the method and its limits.",
+      "inLanguage": "en",
+      "datePublished": "2026-11-17T09:00:00-05:00",
+      "dateModified": "2026-11-17T09:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/research/china-index-futures-basis/",
+      "image": "https://quantcore-labs.com/research/china-index-futures-basis/og-image.png",
+      "about": [
+        "Stock index futures",
+        "Futures basis",
+        "China equity market"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/research/china-index-futures-basis/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the basis of an index future?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The difference between the futures price and the index level, here expressed as a percentage of the index: F / S − 1. A negative basis means the future trades at a discount. Dividing by the days left and multiplying by 365 gives an annualised figure that can be compared across contracts and over time."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do CSI 500 and CSI 1000 futures trade at a larger discount than CSI 300 futures?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Market-neutral funds in China hold baskets of small and mid-cap stocks and hedge them by selling IC and IM futures, so selling pressure concentrates there. Arbitrage that would close the gap needs short sales of the stocks, which are expensive and limited for small caps. CSI 300 and SSE 50 futures have more two-way demand and cheaper stock borrowing."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the discount a free return?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. A long future earns the discount only if the index does not fall by more, and it carries full equity risk. Part of the gap is also the normal cost of carry: a fairly priced future trails the total-return index by roughly the financing rate, because the buyer keeps the cash. The gap can shrink for years, as it did for IC in 2022–2024."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What do hedgers pay?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Roughly the same gap in reverse. Holding stocks and shorting IC to remove market risk cost about the IC gap shown here, which is why hedged stock-selection strategies need a large alpha before they earn anything."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this investment advice?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It is a description of historical data and a stated method. Futures are leveraged instruments and are not suitable for everyone."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "China Index Futures Basis",
+          "item": "https://quantcore-labs.com/research/china-index-futures-basis/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.scroll{overflow-x:auto}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+table.years{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:420px}
+table.years th,table.years td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.years th{color:var(--dim);font-weight:500}
+table.years td:first-child,table.years th:first-child{text-align:left;color:var(--dim)}
+.note{font:12px var(--mono);color:var(--warn);margin-top:8px;min-height:14px}
+ul.read{padding-left:18px}ul.read li{margin:6px 0}
+table.basis,table.res{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:560px;margin:8px 0 4px}
+table.basis th,table.basis td,table.res th,table.res td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--line)}
+table.basis th,table.res th{color:var(--dim);font-weight:500}
+table.basis td:first-child,table.basis th:first-child,table.res td:first-child,table.res th:first-child,table.basis td:nth-child(5),table.basis th:nth-child(5){text-align:left}
+.asof{font:12px var(--mono);color:var(--dim)}
+.ctrl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font:12px var(--mono);margin:10px 0 6px}
+.ctrl button{font:inherit;padding:3px 9px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:6px;cursor:pointer}
+.ctrl button.on{color:var(--text);border-color:var(--acc)}
+.ctrl label{display:inline-flex;gap:4px;align-items:center;margin:0 6px 0 0;color:var(--text);font:12px var(--mono)}
+.sw{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle}
+ol.find li,ul.read li{margin:7px 0}
+.src{font:11px var(--mono);color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / research / china-index-futures-basis</nav>
+  <h1>China Index Futures Basis <span class="tag">RESEARCH NOTE</span></h1>
+  <p class="lede">CSI 500 and CSI 1000 futures have traded below their index for most of the past decade. This note measures what that discount was worth: what a long futures position in each of the four equity index futures on the China Financial Futures Exchange, rolled every quarter, earned against the total-return index from 2015 to 2026.</p>
+</header>
+<main>
+<section aria-labelledby="find-h">
+<h2 id="find-h">Key findings</h2>
+<ol class="find">
+<li><strong>IC paid a large discount for ten years.</strong> From 2015-04-17 to 2026-11-16 a long CSI 500 futures position, rolled each quarter, returned +10.3% a year while the CSI 500 total-return index returned -0.7%: a gap of 11.0 percentage points a year, before any interest on the cash not needed for margin.</li>
+<li><strong>The gap shrank, then came back.</strong> For IC it averaged +14.1% a year in 2016–2020 and +6.1% in 2021–2025, with only +0.8 to +4.0 points a year in 2022–2024 and +11.8%. IM, listed in July 2022, shows +8.8% a year.</li>
+<li><strong>Large-cap futures carry little.</strong> IF (+3.3% a year) and IH (+0.3%) earned far less. Since 2021 IF has moved between −2.3 and +3.2 points a year, and IH was negative in four of those six years.</li>
+<li><strong>It is an equity position.</strong> The rolled long moves with the index. IC fell 52% from June to September 2015, and fell more than a third again from 2017 to 2018 and from 2022 to early 2024. The discount does not protect against that.</li>
+<li><strong>Hedgers pay the same gap.</strong> Holding stocks and shorting IC to remove market risk cost roughly the IC gap above, which is why hedged stock-selection strategies in China need a large stock-picking edge before they earn anything.</li>
+</ol>
+</section>
+
+<section aria-labelledby="why-h">
+<h2 id="why-h">Why the futures trade at a discount</h2>
+<p>A fairly priced index future sits close to the index plus financing cost minus expected dividends over its life. In China the small and mid-cap futures have traded well below that level for most of the period. The explanations usually given are:</p>
+<ul class="read">
+<li><strong>One-sided hedging demand.</strong> Market-neutral funds hold baskets of small and mid-cap stocks and sell IC and IM futures to remove market risk. Their selling is persistent and grows with the assets these funds manage.</li>
+<li><strong>Arbitrage is hard.</strong> Buying the cheap future and shorting the stocks would close the gap, but borrowing small-cap stocks is limited and expensive. Without that arbitrage the discount can persist.</li>
+<li><strong>Dividends.</strong> Contracts that span the May to August dividend season trade lower by the expected dividends. This matters most for IH and IF, whose constituents pay larger dividends, and is a normal part of fair value rather than a discount.</li>
+<li><strong>Trading restrictions.</strong> After the 2015 crash the exchange raised margins and fees and limited intraday trading. Liquidity fell, and the annualised discount of the far IC contracts averaged more than 20% in both 2015 and 2016. The rules were eased in steps from 2017.</li>
+</ul>
+</section>
+
+<section aria-labelledby="study-h">
+<h2 id="study-h">The study: rolled long futures against the total-return index</h2>
+<h3>Method</h3>
+<ul class="read">
+<li><strong>Position.</strong> Long one futures contract with notional equal to capital (no leverage), held in a quarterly contract (March, June, September or December). Three trading days before expiry it is rolled into the next quarterly contract with more than 45 calendar days left.</li>
+<li><strong>Prices and costs.</strong> Daily closing prices, from Sina Finance and, before 2019, CFFEX daily reports. Each roll pays 2 basis points per side on notional. No interest is credited on the cash not used as margin.</li>
+<li><strong>Benchmark.</strong> The CSI total-return index of the same underlying (dividends reinvested): H00905 for IC, H00852 for IM, H00300 for IF and H00016 for IH.</li>
+<li><strong>Gap.</strong> Annual return of the rolled long minus the annual return of the total-return index. Because no interest is credited, a fairly priced future would show a gap of roughly minus the short-term interest rate, about −1.5% to −3% a year over this period. A positive gap is therefore the discount captured above fair value, net of that cost.</li>
+</ul>
+<h3>Results by contract</h3>
+<div class="scroll"><table class="res"><thead><tr><th>Future</th><th>Index</th><th>Period</th><th>Rolled long</th><th>Total-return index</th><th>Gap</th><th>Gap 2016–20</th><th>Gap 2021–25</th><th>Tracking vol</th></tr></thead><tbody>
+<tr><td>IC</td><td>CSI 500</td><td>2015-04-17 → 2026-11-16</td><td>+10.3%</td><td>-0.7%</td><td class="pos">+11.0%</td><td>+14.1%</td><td>+6.1%</td><td>10.8%</td></tr>
+<tr><td>IM</td><td>CSI 1000</td><td>2022-07-25 → 2026-11-16</td><td>+6.8%</td><td>-2.0%</td><td class="pos">+8.8%</td><td>–</td><td>+8.5%</td><td>6.9%</td></tr>
+<tr><td>IF</td><td>CSI 300</td><td>2015-04-17 → 2026-11-11</td><td>+4.8%</td><td>+1.5%</td><td class="pos">+3.3%</td><td>+5.2%</td><td>+0.2%</td><td>8.3%</td></tr>
+<tr><td>IH</td><td>SSE 50</td><td>2015-04-17 → 2026-11-11</td><td>+2.1%</td><td>+1.8%</td><td class="pos">+0.3%</td><td>+1.5%</td><td>-1.4%</td><td>7.0%</td></tr>
+</tbody></table></div>
+<p class="src">Annualised returns over the period shown. Gap = rolled long minus total-return index. Tracking vol = annualised standard deviation of the daily return difference. Study data through 2026-11-16 (IF, IH: 2026-11-11).</p>
+<h3>Gap by calendar year</h3>
+<div class="scroll"><table class="res"><thead><tr><th>Year</th><th>IC</th><th>IM</th><th>IF</th><th>IH</th></tr></thead><tbody>
+<tr><td>2015 (part)</td><td class="pos">+19.4%</td><td>–</td><td class="pos">+8.1%</td><td class="pos">+1.8%</td></tr>
+<tr><td>2016</td><td class="pos">+28.1%</td><td>–</td><td class="pos">+13.4%</td><td class="pos">+7.8%</td></tr>
+<tr><td>2017</td><td class="pos">+12.5%</td><td>–</td><td class="pos">+5.7%</td><td class="pos">+2.2%</td></tr>
+<tr><td>2018</td><td class="pos">+2.7%</td><td>–</td><td class="neg">-0.0%</td><td class="neg">-3.8%</td></tr>
+<tr><td>2019</td><td class="pos">+11.5%</td><td>–</td><td class="neg">-0.6%</td><td class="neg">-1.6%</td></tr>
+<tr><td>2020</td><td class="pos">+15.3%</td><td>–</td><td class="pos">+5.9%</td><td class="pos">+3.6%</td></tr>
+<tr><td>2021</td><td class="pos">+12.8%</td><td>–</td><td class="pos">+2.5%</td><td class="pos">+1.9%</td></tr>
+<tr><td>2022</td><td class="pos">+4.0%</td><td class="pos">+4.4%</td><td class="pos">+1.4%</td><td class="neg">-0.6%</td></tr>
+<tr><td>2023</td><td class="pos">+0.8%</td><td class="pos">+2.9%</td><td class="neg">-2.3%</td><td class="neg">-3.5%</td></tr>
+<tr><td>2024</td><td class="pos">+2.6%</td><td class="pos">+6.7%</td><td class="neg">-2.1%</td><td class="neg">-2.8%</td></tr>
+<tr><td>2025</td><td class="pos">+11.8%</td><td class="pos">+16.5%</td><td class="pos">+1.0%</td><td class="neg">-2.3%</td></tr>
+<tr><td>2026 (part)</td><td class="pos">+5.7%</td><td class="pos">+8.1%</td><td class="pos">+3.2%</td><td class="pos">+0.9%</td></tr>
+</tbody></table></div>
+<p class="src">Year return of the rolled long minus year return of the total-return index, in percentage points. 2015 starts in April; 2026 ends in November. IM starts in July 2022.</p>
+<h3>Average annualised basis by maturity</h3>
+<div class="scroll"><table class="res"><thead><tr><th>Future</th><th>Nearest</th><th>2nd</th><th>3rd</th><th>4th</th></tr></thead><tbody>
+<tr><td>IC</td><td>-15.3% <span class="src">(20d)</span></td><td>-12.4% <span class="src">(44d)</span></td><td>-10.6% <span class="src">(105d)</span></td><td>-9.4% <span class="src">(197d)</span></td></tr>
+<tr><td>IM</td><td>-9.5% <span class="src">(20d)</span></td><td>-9.1% <span class="src">(44d)</span></td><td>-8.7% <span class="src">(106d)</span></td><td>-8.3% <span class="src">(197d)</span></td></tr>
+<tr><td>IF</td><td>-8.4% <span class="src">(20d)</span></td><td>-6.5% <span class="src">(44d)</span></td><td>-5.1% <span class="src">(105d)</span></td><td>-4.2% <span class="src">(197d)</span></td></tr>
+<tr><td>IH</td><td>-5.2% <span class="src">(20d)</span></td><td>-4.2% <span class="src">(44d)</span></td><td>-3.1% <span class="src">(105d)</span></td><td>-2.4% <span class="src">(197d)</span></td></tr>
+</tbody></table></div>
+<p class="src">Mean annualised basis of the nearest to the fourth listed contract over the whole sample, with the average calendar days to expiry in brackets. Contracts with fewer than 10 days left are excluded. The nearest contracts show the deepest annualised discount; quarterly contracts trade at a smaller annualised discount but need fewer rolls.</p>
+</section>
+
+<section aria-labelledby="risk-h">
+<h2 id="risk-h">Risks and practical points</h2>
+<ul class="read">
+<li><strong>Leverage is the main danger.</strong> Exchange margin is a small fraction of notional, so it is easy to hold more notional than capital. A position at three times capital would have lost all its equity in IC during 2015, again from late 2017 to 2018, and from 2022 to February 2024, before counting margin calls.</li>
+<li><strong>Keep cash for margin calls.</strong> Even unlevered, the futures account needs a buffer well above the minimum margin, because a large down day can trigger a call before the remaining cash can be moved.</li>
+<li><strong>The discount can narrow.</strong> When hedging demand falls or arbitrage capacity improves, the basis moves toward fair value and a long position underperforms the index for that period, as in 2022–2024.</li>
+<li><strong>Rules change.</strong> Margin, fees, position limits and intraday rules have been changed several times since 2015, and changes can move the basis quickly.</li>
+<li><strong>Access.</strong> Trading these contracts in mainland China requires a futures account and passing the exchange's suitability requirements, which include minimum funds, a knowledge test and trading experience.</li>
+</ul>
+</section>
+
+<section aria-labelledby="lim-h">
+<h2 id="lim-h">Data notes and limitations</h2>
+<ul class="read">
+<li>Closing prices, not settlement prices; the settlement price is a volume-weighted average of the last hour and can differ from the close.</li>
+<li>For contracts still trading at the end of the sample the expiry is taken as the third Friday of the contract month; postponements for exchange holidays are ignored.</li>
+<li>The basis-by-maturity table uses the price index, not the total-return index, so contracts spanning the dividend season include expected dividends.</li>
+<li>The study ignores taxes, margin interest, position limits and the 2015–2017 trading restrictions, and assumes trading at the close.</li>
+<li>Past basis and past returns do not indicate future results.</li>
+</ul>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># China Index Futures Basis</p>
+<p>&gt; A study of rolled long CFFEX index futures (IF, IH, IC, IM) versus CSI total-return indices, 2015–2026. URL: https://quantcore-labs.com/research/china-index-futures-basis/</p>
+<h3>## Key numbers (study)</h3>
+<ul>
+<li>- IC rolled long +10.3% a year vs CSI 500 total return -0.7% (2015-04-17 to 2026-11-16); gap 2016–2020 +14.1%, 2021–2025 +6.1%</li>
+<li>- IM gap +8.8% a year since July 2022; IF +3.3%; IH +0.3%</li>
+<li>- Gap excludes interest on cash; a fairly priced future would show about minus the financing rate</li>
+</ul>
+<p>Full Markdown: <a href="/research/china-index-futures-basis.md">/research/china-index-futures-basis.md</a></p>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>What is the basis of an index future?</dt>
+<dd>The difference between the futures price and the index level, here expressed as a percentage of the index: F / S − 1. A negative basis means the future trades at a discount. Dividing by the days left and multiplying by 365 gives an annualised figure that can be compared across contracts and over time.</dd>
+<dt>Why do CSI 500 and CSI 1000 futures trade at a larger discount than CSI 300 futures?</dt>
+<dd>Market-neutral funds in China hold baskets of small and mid-cap stocks and hedge them by selling IC and IM futures, so selling pressure concentrates there. Arbitrage that would close the gap needs short sales of the stocks, which are expensive and limited for small caps. CSI 300 and SSE 50 futures have more two-way demand and cheaper stock borrowing.</dd>
+<dt>Is the discount a free return?</dt>
+<dd>No. A long future earns the discount only if the index does not fall by more, and it carries full equity risk. Part of the gap is also the normal cost of carry: a fairly priced future trails the total-return index by roughly the financing rate, because the buyer keeps the cash. The gap can shrink for years, as it did for IC in 2022–2024.</dd>
+<dt>What do hedgers pay?</dt>
+<dd>Roughly the same gap in reverse. Holding stocks and shorting IC to remove market risk cost about the IC gap shown here, which is why hedged stock-selection strategies need a large alpha before they earn anything.</dd>
+<dt>Is this investment advice?</dt>
+<dd>No. It is a description of historical data and a stated method. Futures are leveraged instruments and are not suitable for everyone.</dd>
+</dl>
+</section>
+<!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fchina-index-futures-basis.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fchina-index-futures-basis%2F%29%20and%20explain%20%22China%20Index%20Futures%20Basis%3A%20A%20Ten-Year%20Study%22%20to%20me%3A%20what%20it%20measures%2C%20the%20formula%20and%20its%20conventions%2C%20and%20one%20small%20worked%20example.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fchina-index-futures-basis.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fchina-index-futures-basis%2F%29%20and%20explain%20%22China%20Index%20Futures%20Basis%3A%20A%20Ten-Year%20Study%22%20to%20me%3A%20what%20it%20measures%2C%20the%20formula%20and%20its%20conventions%2C%20and%20one%20small%20worked%20example.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fchina-index-futures-basis.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fchina-index-futures-basis%2F%29%20and%20explain%20%22China%20Index%20Futures%20Basis%3A%20A%20Ten-Year%20Study%22%20to%20me%3A%20what%20it%20measures%2C%20the%20formula%20and%20its%20conventions%2C%20and%20one%20small%20worked%20example.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/research/china-index-futures-basis.md (the Markdown version of https://quantcore-labs.com/research/china-index-futures-basis/) and explain &quot;China Index Futures Basis: A Ten-Year Study&quot; to me: what it measures, the formula and its conventions, and one small worked example. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+</main>
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. Futures are leveraged instruments. Past performance does not indicate future results. © QuantCore Labs.</p><!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</div>
+
+</body>
+</html>
