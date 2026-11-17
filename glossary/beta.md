@@ -69,6 +69,7 @@ The window, the frequency, the market series and whether returns are excess or r
 
 - [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
 - [Factor IC Analyzer](https://quantcore-labs.com/tools/factor-ic/)
+- [Portfolio Style Exposure Analyzer](https://quantcore-labs.com/tools/style-exposure/)
 
 ## Related
 

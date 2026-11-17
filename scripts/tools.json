@@ -23,5 +23,9 @@
  {"id": "factor-ic", "url": "/tools/factor-ic/", "name": "Factor IC Analyzer",
   "desc": "Paste date, asset, factor and forward return to get rank IC, Pearson IC, ICIR, t-stat, hit rate, quantile-group returns and the top-minus-bottom spread, with IC charts and a per-year table.",
   "chips": ["Rank IC + ICIR + t-stat", "Quantile returns & spread", "Checked against pandas / SciPy"],
-  "terms": ["information-coefficient", "information-ratio", "beta"], "code": []}
+  "terms": ["information-coefficient", "information-ratio", "beta"], "code": []},
+ {"id": "style-exposure", "url": "/tools/style-exposure/", "name": "Portfolio Style Exposure Analyzer",
+  "desc": "Paste a universe with your holdings weights and characteristics such as book-to-price, ROE or volatility; get each tilt as a percentile inside the universe, raw and size-adjusted, by date.",
+  "chips": ["Holdings-based tilts", "Size-adjusted percentiles", "Checked against pandas"],
+  "terms": ["beta", "tracking-error", "information-coefficient"], "code": []}
 ]

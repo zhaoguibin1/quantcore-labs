@@ -61,6 +61,7 @@ In mandate language, active risk usually means this volatility of active returns
 ## Use it in a calculator
 
 - [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+- [Portfolio Style Exposure Analyzer](https://quantcore-labs.com/tools/style-exposure/)
 
 ## Related
 

@@ -85,6 +85,7 @@ Rank IC is the default because it is robust to outliers and to the non-normal cr
 ## Use it in a calculator
 
 - [Factor IC Analyzer](https://quantcore-labs.com/tools/factor-ic/)
+- [Portfolio Style Exposure Analyzer](https://quantcore-labs.com/tools/style-exposure/)
 
 ## Related
 

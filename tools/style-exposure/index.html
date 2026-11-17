@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Style Exposure Analyzer: Value, Quality, Size Tilts | QuantCore Labs</title>
+<meta name="description" content="Paste a stock universe with your holdings weights and characteristics such as book-to-price, ROE or volatility. Get each tilt as a percentile inside the universe, raw and size-adjusted. Runs in your browser.">
+<link rel="canonical" href="https://quantcore-labs.com/tools/style-exposure/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/style-exposure.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Portfolio Style Exposure Analyzer">
+<meta property="og:description" content="Holdings-based style tilts as percentiles inside your universe, raw and size-adjusted. Client-side, no upload.">
+<meta property="og:url" content="https://quantcore-labs.com/tools/style-exposure/">
+<meta property="og:image" content="https://quantcore-labs.com/tools/style-exposure/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/tools/style-exposure/#app",
+      "name": "Portfolio Style Exposure Analyzer",
+      "url": "https://quantcore-labs.com/tools/style-exposure/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Portfolio Risk and Style Analysis",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Paste a universe with holdings weights and any number of characteristic columns",
+        "Percentile of each characteristic inside the universe, per date",
+        "Portfolio exposure as the weighted (or equal-weighted) mean percentile of holdings",
+        "Size-adjusted exposure: percentiles inside size buckets (5 or 10)",
+        "Coverage of each characteristic among holdings",
+        "Share of dates above the universe median and exposure through time",
+        "Works for one snapshot or many dates",
+        "Client-side computation, data never leaves the browser"
+      ],
+      "image": "https://quantcore-labs.com/tools/style-exposure/og-image.png",
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://quantcore-labs.com/tools/style-exposure/#article"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/tools/style-exposure/#article",
+      "headline": "Holdings-Based Style Exposure: Percentiles, Size Adjustment and Conventions",
+      "description": "How the analyzer measures a portfolio's tilt on value, quality, volatility or any other characteristic as a percentile inside its universe, with and without size adjustment.",
+      "image": "https://quantcore-labs.com/tools/style-exposure/og-image.png",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-16T21:00:00-05:00",
+      "dateModified": "2026-11-16T21:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/tools/style-exposure/",
+      "articleBody": "On each date every asset in the pasted universe gets a percentile for each characteristic: p = (average rank - 0.5) / n * 100 among assets with a value. The portfolio's exposure is the weighted mean percentile of its holdings (weight > 0), so 50 means the same as the universe. For the size-adjusted exposure assets are first split into B equal-count buckets by the size column, bucket = min(B - 1, floor(B (rank - 0.5) / n)), and the percentile is computed inside each bucket; a bucket with fewer than 20 values gives no percentile. Coverage is the share of holdings weight that has a value. Summary figures are plain averages across dates."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/tools/style-exposure/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What does a percentile of 50 mean?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The holdings look like the pasted universe on that characteristic. Every asset in the universe gets a percentile from 0 to 100, so the universe average is 50 by construction. A weighted average of 70 for your holdings means they sit, on average, at the 70th percentile."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why two numbers, raw and size-adjusted?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Many characteristics are correlated with company size: small caps are usually more volatile, less profitable and cheaper on book value. A portfolio of small caps then looks tilted on all of them without selecting for any. The size-adjusted figure ranks each asset only against assets in the same size bucket, which removes that mechanical part."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What should the universe be?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The set of assets the portfolio could have held on that date, with the same filters the strategy applies: listing age, liquidity, risk-warning status. Percentiles are relative to whatever you paste, so a universe that is too narrow or too broad changes every number."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which direction is 'high'?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A higher value of the column is a higher percentile. If low volatility is the style you care about, paste minus volatility, or read a percentile of 30 on volatility as a low-volatility tilt."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data uploaded anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Parsing and every calculation run in your browser. The page makes no network request with your data."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Style Exposure Analyzer",
+          "item": "https://quantcore-labs.com/tools/style-exposure/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.scroll{overflow-x:auto}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+table.years{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:420px}
+table.years th,table.years td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.years th{color:var(--dim);font-weight:500}
+table.years td:first-child,table.years th:first-child{text-align:left;color:var(--dim)}
+.note{font:12px var(--mono);color:var(--warn);margin-top:8px;min-height:14px}
+ul.read{padding-left:18px}ul.read li{margin:6px 0}
+table.expo{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:520px;margin-top:14px}
+table.expo th,table.expo td{padding:6px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.expo th{color:var(--dim);font-weight:500}
+table.expo td:first-child,table.expo th:first-child{text-align:left}
+table.expo td.t{color:var(--dim)}
+.legend{font:11px var(--mono);color:var(--dim);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / tools / style-exposure</nav>
+  <h1>Portfolio Style Exposure Analyzer <span class="tag">CLIENT-SIDE</span></h1>
+  <p class="lede">What does a portfolio actually hold? Paste the investable universe with your holdings weights and any characteristics you have: book-to-price, ROE, volatility, turnover, market cap. The page ranks every asset inside the universe and reports where your holdings sit, as a percentile from 0 to 100, both raw and against assets of similar size. Your data never leaves the browser.</p>
+</header>
+<noscript><p><strong>JavaScript is disabled.</strong> This analyzer runs in the browser. Formulas and conventions are documented below and in the <a href="/style-exposure.md">Markdown version</a>.</p></noscript>
+<main>
+<section aria-labelledby="calc-h">
+<h2 id="calc-h">Analyzer</h2>
+<div class="grid">
+  <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+    <h3>Input</h3>
+    <label for="data">Header row, then one row per asset: <code>[date,] asset, weight, characteristic…</code>. Weight 0 or blank = in the universe but not held.</label>
+    <textarea id="data" spellcheck="false" wrap="off" placeholder="date,asset,weight,book_to_price,roe,mcap&#10;2026-01-30,AAA,0.04,0.82,0.11,5200000000&#10;2026-01-30,BBB,0,0.35,0.19,91000000000&#10;..."></textarea>
+    <div class="row2">
+      <div><label for="sizecol">Size column</label><select id="sizecol"><option value="-1">none</option></select></div>
+      <div><label for="wt">Holdings weighting</label>
+        <select id="wt"><option value="w">by weight</option><option value="eq">equal weight</option></select></div>
+    </div>
+    <div class="row2">
+      <div><label for="buckets">Size buckets</label>
+        <select id="buckets"><option value="5">5</option><option value="10" selected>10</option></select></div>
+      <div><label for="minu">Min universe per date</label><input type="number" id="minu" value="50" min="20" step="1"></div>
+    </div>
+    <div class="btns">
+      <button type="button" id="sample">Load sample data</button>
+      <button type="button" id="clear">Clear</button>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+    <div class="note" id="note"></div>
+  </form>
+  <div class="panel" aria-live="polite">
+    <h3>Results</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Dates used</div><div class="v" id="kD">–</div><div class="s" id="kDs">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Holdings</div><div class="v" id="kH">–</div><div class="s">average per date</div></div>
+      <div class="kpi"><div class="k">Universe</div><div class="v" id="kU">–</div><div class="s">average per date</div></div>
+      <div class="kpi"><div class="k">Highest tilt</div><div class="v" id="kHi">–</div><div class="s" id="kHis">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Lowest tilt</div><div class="v" id="kLo">–</div><div class="s" id="kLos">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Size-adjusted</div><div class="v" id="kS">–</div><div class="s" id="kSs">&nbsp;</div></div>
+    </div>
+    <div class="ctitle"><span>Exposure by characteristic (percentile, 50 = universe)</span></div>
+    <canvas id="cBar" height="120" role="img" aria-label="Exposure by characteristic"></canvas>
+    <div class="legend"><span><i style="background:var(--acc)"></i>size-adjusted</span><span><i style="background:var(--dim)"></i>raw</span></div>
+    <div class="scroll"><table class="expo"><thead><tr><th>Characteristic</th><th>Raw</th><th>Size-adj.</th><th>Dates &gt; 50</th><th>Coverage</th><th>Tilt</th></tr></thead><tbody id="expo"></tbody></table></div>
+    <div id="tsWrap">
+      <div class="ctitle"><span>Exposure through time</span><span><select id="tschar" aria-label="Characteristic"></select></span></div>
+      <canvas id="cTs" height="170" role="img" aria-label="Exposure through time"></canvas>
+    </div>
+  </div>
+</div>
+</section>
+
+<section aria-labelledby="method-h">
+<h2 id="method-h">Formulas and conventions</h2>
+<div class="formula">p_i,t      = (rank x_i,t − 0.5) / n_t · 100          average ranks for ties; n_t = assets with a value on date t
+Exposure_t = Σ_i w_i,t · p_i,t / Σ_i w_i,t              over holdings (w &gt; 0) that have a value; 50 = same as the universe
+bucket_i,t = min(B − 1, floor(B · (rank size_i,t − 0.5) / N_t))       B equal-count size buckets
+p_adj_i,t  = percentile of x_i,t among assets in the same size bucket (needs ≥ 20 values in the bucket)
+Exposure_adj_t = Σ_i w_i,t · p_adj_i,t / Σ_i w_i,t
+Coverage_t = Σ w of holdings with a value / Σ w of all holdings
+Summary    = plain average of Exposure_t across dates;  "Dates &gt; 50" = share of dates with exposure above 50
+Tilt label : ≥ 60 clearly high · ≥ 54 high · ≤ 46 low · ≤ 40 clearly low · otherwise near universe</div>
+<p>The first column is treated as a date only when its header is <code>date</code>, <code>dt</code>, <code>trade_date</code> or <code>day</code>; without it the paste is one snapshot. A column named <code>size</code>, <code>mcap</code>, <code>market_cap</code>, <code>float_mcap</code> or <code>log_mcap</code> is pre-selected as the size column. A date is used only if the universe has at least the minimum number of assets and at least three holdings. Size adjustment needs 20 assets per bucket, so 200 assets for ten buckets. Negative or unreadable weights count as zero. If an asset repeats on a date the last row wins.</p>
+</section>
+
+<section aria-labelledby="read-h">
+<h2 id="read-h">How to read the output</h2>
+<ul class="read">
+<li><strong>Read the size-adjusted column first.</strong> If a tilt is strong in the raw column and close to 50 after adjustment, the portfolio is holding small (or large) companies, not selecting on that characteristic.</li>
+<li><strong>Exposure is not return.</strong> A percentile of 75 on book-to-price says the holdings are cheap. It does not say cheapness paid. To split returns into style and selection you need a returns-based attribution on top.</li>
+<li><strong>Unintended tilts are the useful finding.</strong> A signal built on turnover and reversal can end up with a strong value tilt, or with low margins and high leverage as a side effect of cheapness. Those are risks nobody chose.</li>
+<li><strong>Check coverage.</strong> An exposure computed from 60% of the holdings weight describes 60% of the portfolio.</li>
+<li><strong>Stability matters.</strong> A tilt above 50 on every date is a design feature; one that flips sign is incidental.</li>
+</ul>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># Portfolio Style Exposure Analyzer</p>
+<p>&gt; Client-side, holdings-based style analysis: each characteristic becomes a 0–100 percentile inside the pasted universe, and the portfolio's exposure is the weighted mean percentile of its holdings, raw and size-adjusted. URL: https://quantcore-labs.com/tools/style-exposure/</p>
+<h3>## Inputs</h3>
+<ul>
+<li>- Header row, then [date,] asset, weight, one or more characteristic columns; weight 0 = universe only</li>
+<li>- Size column (optional), size buckets (5 or 10), weighting (by weight or equal), minimum universe per date</li>
+</ul>
+<h3>## Conventions</h3>
+<ul>
+<li>- Percentile = (average rank − 0.5) / n · 100 among assets with a value; 50 = same as the universe</li>
+<li>- Size-adjusted percentile is computed inside equal-count size buckets with at least 20 values</li>
+<li>- Summary = average across dates; tilt labels at 40, 46, 54, 60</li>
+</ul>
+<h3>## Reference check</h3>
+<ul>
+<li>- Raw, size-adjusted and equal-weighted exposures and coverage match a pandas implementation to 1e-12 on a table with ties, missing values and unequal weights</li>
+</ul>
+<p>Full Markdown: <a href="/style-exposure.md">/style-exposure.md</a> · Core module: <a href="/tools/style-exposure/style-exposure-core.mjs">style-exposure-core.mjs</a></p>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>What does a percentile of 50 mean?</dt>
+<dd>The holdings look like the pasted universe on that characteristic. Every asset in the universe gets a percentile from 0 to 100, so the universe average is 50 by construction. A weighted average of 70 for your holdings means they sit, on average, at the 70th percentile.</dd>
+<dt>Why two numbers, raw and size-adjusted?</dt>
+<dd>Many characteristics are correlated with company size: small caps are usually more volatile, less profitable and cheaper on book value. A portfolio of small caps then looks tilted on all of them without selecting for any. The size-adjusted figure ranks each asset only against assets in the same size bucket, which removes that mechanical part.</dd>
+<dt>What should the universe be?</dt>
+<dd>The set of assets the portfolio could have held on that date, with the same filters the strategy applies: listing age, liquidity, risk-warning status. Percentiles are relative to whatever you paste, so a universe that is too narrow or too broad changes every number.</dd>
+<dt>Which direction is &#x27;high&#x27;?</dt>
+<dd>A higher value of the column is a higher percentile. If low volatility is the style you care about, paste minus volatility, or read a percentile of 30 on volatility as a low-volatility tilt.</dd>
+<dt>Is my data uploaded anywhere?</dt>
+<dd>No. Parsing and every calculation run in your browser. The page makes no network request with your data.</dd>
+</dl>
+</section>
+<!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fstyle-exposure.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fstyle-exposure%2F%29%20and%20explain%20%22Portfolio%20Style%20Exposure%20Analyzer%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fstyle-exposure.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fstyle-exposure%2F%29%20and%20explain%20%22Portfolio%20Style%20Exposure%20Analyzer%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fstyle-exposure.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fstyle-exposure%2F%29%20and%20explain%20%22Portfolio%20Style%20Exposure%20Analyzer%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/style-exposure.md (the Markdown version of https://quantcore-labs.com/tools/style-exposure/) and explain &quot;Portfolio Style Exposure Analyzer&quot; to me: what it computes, the formulas and conventions it uses, and how to read its output. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+<!-- RELATED:BEGIN (generated by scripts/build_site_pages.py) -->
+<section aria-label="Related concepts" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;font-size:15px">Related concepts</h2><p style="margin:0 0 8px"><a href="/glossary/beta/" style="color:#22d3ee">Beta</a> · <a href="/glossary/tracking-error/" style="color:#22d3ee">Tracking Error</a> · <a href="/glossary/information-coefficient/" style="color:#22d3ee">Information Coefficient (IC)</a></p>
+<p style="margin:0">Other calculators: <a href="/option-greeks-calc/" style="color:#22d3ee">Black-Scholes Option Greeks</a> · <a href="/tools/iv-smile/" style="color:#22d3ee">Implied Volatility Smile &amp; Surface</a> · <a href="/tools/performance-analytics/" style="color:#22d3ee">Performance &amp; Drawdown Analytics</a> · <a href="/tools/portfolio-efficient-frontier/" style="color:#22d3ee">Markowitz Efficient Frontier</a> · <a href="/tools/monte-carlo-asset-sim/" style="color:#22d3ee">Monte Carlo Asset Simulator</a> · <a href="/tools/factor-ic/" style="color:#22d3ee">Factor IC Analyzer</a></p>
+</section>
+<!-- RELATED:END -->
+</main>
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. Past performance does not indicate future results. © QuantCore Labs.</p><!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</div>
+
+<script type="module">
+import { parseTable, analyse, sampleTable, tilt } from './style-exposure-core.mjs';
+const $ = id => document.getElementById(id);
+let last = null, lastChars = '';
+const f0 = x => Number.isFinite(x) ? x.toFixed(0) : '–';
+const f1 = x => Number.isFinite(x) ? x.toFixed(1) : '–';
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function setup(c, height) {
+  if (height) c.setAttribute('height', height);
+  const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = +c.getAttribute('height');
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.height = h + 'px';
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  g.font = '11px ui-monospace,Menlo,Consolas,monospace';
+  return { g, w, h };
+}
+function drawBars() {
+  const S = last.summary, n = S.length, rowH = 34, c = $('cBar');
+  const { g, w, h } = setup(c, n * rowH + 26);
+  let lw = 0; S.forEach(s => { lw = Math.max(lw, g.measureText(s.name).width); });
+  const l = Math.min(Math.max(70, lw + 14), w * 0.42), r = 34, pw = w - l - r, x = v => l + v / 100 * pw;
+  g.strokeStyle = css('--line'); g.fillStyle = css('--dim'); g.textBaseline = 'alphabetic';
+  [0, 25, 50, 75, 100].forEach(v => { const xx = Math.round(x(v)) + 0.5; g.strokeStyle = v === 50 ? css('--dim') : css('--line');
+    g.beginPath(); g.moveTo(xx, 4); g.lineTo(xx, h - 20); g.stroke(); g.textAlign = 'center'; g.fillText(String(v), xx, h - 6); });
+  S.forEach((s, i) => {
+    const y = 6 + i * rowH; g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillStyle = css('--text');
+    let name = s.name; while (g.measureText(name).width > l - 12 && name.length > 4) name = name.slice(0, -2); if (name !== s.name) name += '…';
+    g.fillText(name, l - 8, y + rowH / 2 - 3);
+    const bar = (v, yy, hh, col, a) => { if (!Number.isFinite(v)) return; g.globalAlpha = a; g.fillStyle = col;
+      g.fillRect(Math.min(x(50), x(v)), yy, Math.max(1, Math.abs(x(v) - x(50))), hh); g.globalAlpha = 1; };
+    const adjV = i === last.opts.sizeCol ? NaN : s.adj, main = Number.isFinite(adjV) ? adjV : s.raw;
+    bar(s.raw, y + 4, 8, css('--dim'), 0.7); bar(adjV, y + 15, 10, css('--acc'), 0.9);
+    g.fillStyle = css('--text'); g.textAlign = 'left'; g.fillText(f0(main), Math.max(x(main), x(50)) + 5 > w - 22 ? w - 22 : Math.max(x(main), x(50)) + 5, y + (Number.isFinite(adjV) ? 20 : 8));
+  });
+}
+function drawTs() {
+  const A = last, wrap = $('tsWrap'); wrap.style.display = A.dates.length > 1 ? '' : 'none';
+  if (A.dates.length < 2) return;
+  const k = Math.max(0, +$('tschar').value || 0), { g, w, h } = setup($('cTs'));
+  const l = 34, r = 8, t = 8, b = 20, raw = A.raw[k], adj = A.adj[k], all = [...raw, ...adj].filter(Number.isFinite);
+  let lo = Math.min(40, ...all), hi = Math.max(60, ...all); lo = Math.floor(lo / 10) * 10; hi = Math.ceil(hi / 10) * 10;
+  const y = v => t + (hi - v) / (hi - lo) * (h - t - b), x = i => l + i / (A.dates.length - 1) * (w - l - r);
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let v = lo; v <= hi; v += (hi - lo) > 40 ? 20 : 10) { const yy = Math.round(y(v)) + 0.5; g.strokeStyle = v === 50 ? css('--dim') : css('--line');
+    g.beginPath(); g.moveTo(l, yy); g.lineTo(w - r, yy); g.stroke(); g.fillStyle = css('--dim'); g.fillText(String(v), l - 5, yy); }
+  const line = (s, col, lw) => { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); let on = false;
+    s.forEach((v, i) => { if (!Number.isFinite(v)) { on = false; return; } on ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v)); on = true; }); g.stroke(); g.lineWidth = 1; };
+  line(raw, css('--dim'), 1.3); line(adj, css('--acc'), 1.8);
+  g.fillStyle = css('--dim'); g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillText(A.dates[0], l, h - 5);
+  g.textAlign = 'right'; g.fillText(A.dates[A.dates.length - 1], w - r, h - 5);
+}
+function drawAll() { if (!last) return; drawBars(); drawTs(); }
+function fillSelect(sel, names, first, value) {
+  sel.textContent = '';
+  if (first) { const o = document.createElement('option'); o.value = '-1'; o.textContent = first; sel.appendChild(o); }
+  names.forEach((n, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = n; sel.appendChild(o); });
+  sel.value = String(value);
+}
+function reset(text, err) {
+  last = null;
+  ['kD', 'kH', 'kU', 'kHi', 'kLo', 'kS'].forEach(id => { $(id).textContent = '–'; $(id).className = 'v'; });
+  ['kDs', 'kHis', 'kLos', 'kSs'].forEach(id => { $(id).textContent = '\u00a0'; });
+  $('expo').textContent = ''; $('note').textContent = ''; $('tsWrap').style.display = 'none';
+  setup($('cBar'), 120);
+  const m = $('msg'); m.textContent = text; m.className = 'msg' + (err ? ' err' : '');
+}
+function run() {
+  const text = $('data').value;
+  if (!text.trim()) return reset('Paste a table or load the sample data.', false);
+  const T = parseTable(text);
+  if (T.error) return reset(T.error, true);
+  const key = T.chars.join('\u0001');
+  if (key !== lastChars) { lastChars = key; fillSelect($('sizecol'), T.chars, 'none', T.sizeGuess); fillSelect($('tschar'), T.chars, null, 0); }
+  const sizeCol = +$('sizecol').value;
+  const A = analyse(T, { sizeCol, buckets: +$('buckets').value, equalWeight: $('wt').value === 'eq', minUniverse: +$('minu').value || 50 });
+  if (A.error) return reset(A.error, true);
+  last = A;
+  const avg = x => x.reduce((a, b) => a + b, 0) / x.length;
+  $('kD').textContent = String(A.dates.length); $('kDs').textContent = A.dates.length > 1 ? A.dates[0] + ' → ' + A.dates[A.dates.length - 1] : A.dates[0];
+  $('kH').textContent = f1(avg(A.nHeld)); $('kU').textContent = f0(avg(A.nUniverse));
+  const val = s => (Number.isFinite(s.adj) ? s.adj : s.raw), S = A.summary.filter((s, i) => i !== sizeCol && Number.isFinite(val(s)));
+  const hi = S.length ? S.reduce((a, b) => (val(b) > val(a) ? b : a)) : null, lo = S.length ? S.reduce((a, b) => (val(b) < val(a) ? b : a)) : null;
+  if (hi) { $('kHi').textContent = f0(val(hi)); $('kHi').className = 'v' + (val(hi) >= 54 ? ' pos' : ''); $('kHis').textContent = hi.name; }
+  if (lo) { $('kLo').textContent = f0(val(lo)); $('kLo').className = 'v' + (val(lo) <= 46 ? ' neg' : ''); $('kLos').textContent = lo.name; }
+  $('kS').textContent = A.sizeAdjDates ? 'yes' : 'no';
+  $('kSs').textContent = sizeCol < 0 ? 'no size column' : A.sizeAdjDates ? A.opts.buckets + ' buckets by ' + T.chars[sizeCol] : 'universe too small';
+  const tb = $('expo'); tb.textContent = '';
+  A.summary.forEach((s, i) => { const tr = tb.insertRow();
+    [s.name + (i === sizeCol ? ' (size)' : ''), f1(s.raw), i === sizeCol ? '–' : f1(s.adj), A.dates.length > 1 ? ((i === sizeCol ? A.raw[i].filter(v => v > 50).length / A.raw[i].length : s.shareAbove50) * 100).toFixed(0) + '%' : '–', (s.coverage * 100).toFixed(0) + '%', tilt(i === sizeCol ? s.raw : val(s))]
+      .forEach((x, j) => { const td = tr.insertCell(); td.textContent = x; if (j === 5) td.className = 't'; }); });
+  const m = $('msg'); m.className = 'msg';
+  m.textContent = T.rows.length + ' rows, ' + T.chars.length + ' characteristics, ' + A.dates.length + ' date(s) used' + (T.skipped ? ', ' + T.skipped + ' unreadable rows skipped' : '') + (A.duplicates ? ', ' + A.duplicates + ' duplicate rows replaced' : '') + '.';
+  const notes = [];
+  if (A.skippedDates) notes.push(A.skippedDates + ' date(s) skipped: universe too small or fewer than 3 holdings.');
+  if (sizeCol >= 0 && !A.sizeAdjDates) notes.push('Size adjustment needs at least ' + A.opts.buckets * 20 + ' assets with a size value per date.');
+  if (sizeCol < 0) notes.push('No size column selected, so only raw percentiles are shown.');
+  if (A.summary.some(s => s.coverage < 0.8)) notes.push('Some characteristics cover less than 80% of holdings weight.');
+  if (!A.sorted && T.hasDate) notes.push('Dates could not be parsed, so input order is used.');
+  $('note').textContent = notes.join(' ');
+  drawAll();
+}
+let timer; const later = () => { clearTimeout(timer); timer = setTimeout(run, 200); };
+$('data').addEventListener('input', later);
+['sizecol', 'wt', 'buckets', 'minu'].forEach(id => $(id).addEventListener('input', run));
+$('tschar').addEventListener('change', drawTs);
+$('sample').addEventListener('click', () => { $('data').value = sampleTable(); lastChars = ''; run(); });
+$('clear').addEventListener('click', () => { $('data').value = ''; run(); });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 100); });
+$('sample').click();
+</script>
+</body>
+</html>
