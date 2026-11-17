@@ -82,6 +82,10 @@ For daily or weekly equity factors, a mean rank IC around 0.03–0.05 is typical
 
 Rank IC is the default because it is robust to outliers and to the non-normal cross-section of returns. Pearson IC is closer to what a linear model captures and is useful when factor values are already standardised and winsorised.
 
+## Use it in a calculator
+
+- [Factor IC Analyzer](https://quantcore-labs.com/tools/factor-ic/)
+
 ## Related
 
 - [Hurst Exponent (H)](https://quantcore-labs.com/glossary/hurst-exponent/)

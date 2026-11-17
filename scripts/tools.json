@@ -19,5 +19,9 @@
  {"id": "monte-carlo-asset-sim", "url": "/tools/monte-carlo-asset-sim/", "name": "Monte Carlo Asset Simulator",
   "desc": "Simulate price paths under Geometric Brownian Motion with exact log-normal steps; terminal percentiles and horizon VaR compared with closed-form values.",
   "chips": ["Exact GBM discretisation", "Horizon VaR", "Closed-form benchmarks"],
-  "terms": ["var-expected-shortfall", "realized-volatility", "max-drawdown"], "code": []}
+  "terms": ["var-expected-shortfall", "realized-volatility", "max-drawdown"], "code": []},
+ {"id": "factor-ic", "url": "/tools/factor-ic/", "name": "Factor IC Analyzer",
+  "desc": "Paste date, asset, factor and forward return to get rank IC, Pearson IC, ICIR, t-stat, hit rate, quantile-group returns and the top-minus-bottom spread, with IC charts and a per-year table.",
+  "chips": ["Rank IC + ICIR + t-stat", "Quantile returns & spread", "Checked against pandas / SciPy"],
+  "terms": ["information-coefficient", "information-ratio", "beta"], "code": []}
 ]

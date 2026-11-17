@@ -69,6 +69,7 @@ If the question is what the investor kept versus the benchmark, yes. If the ques
 
 - [Performance & Drawdown Analytics](https://quantcore-labs.com/tools/performance-analytics/)
 - [Markowitz Efficient Frontier](https://quantcore-labs.com/tools/portfolio-efficient-frontier/)
+- [Factor IC Analyzer](https://quantcore-labs.com/tools/factor-ic/)
 
 ## Related
 

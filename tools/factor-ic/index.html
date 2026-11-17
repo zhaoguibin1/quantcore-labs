@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Factor IC Analyzer: Rank IC, ICIR &amp; Quantile Returns | QuantCore Labs</title>
+<meta name="description" content="Paste date, asset, factor and forward return to get rank IC, Pearson IC, ICIR, t-stat, hit rate, quantile-group returns and the top-minus-bottom spread. Runs entirely in your browser.">
+<link rel="canonical" href="https://quantcore-labs.com/tools/factor-ic/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/factor-ic.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Factor IC Analyzer">
+<meta property="og:description" content="Rank IC, ICIR, t-stat, hit rate and quantile returns from a pasted factor panel. Client-side, no upload.">
+<meta property="og:url" content="https://quantcore-labs.com/tools/factor-ic/">
+<meta property="og:image" content="https://quantcore-labs.com/tools/factor-ic/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/tools/factor-ic/#app",
+      "name": "Factor IC Analyzer",
+      "url": "https://quantcore-labs.com/tools/factor-ic/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Alpha Factor Research",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Paste long-format rows: date, asset, factor value, forward return",
+        "Rank IC (Spearman) and Pearson IC per date",
+        "Mean IC, IC standard deviation, ICIR, t-stat with overlap correction, hit rate",
+        "Quantile-group mean forward returns (3, 5 or 10 groups) and top-minus-bottom spread",
+        "Monotonicity of group returns",
+        "IC time series with rolling mean, cumulative IC and per-year table",
+        "Minimum assets per date filter; dates below it are skipped and counted",
+        "Client-side computation, data never leaves the browser"
+      ],
+      "image": "https://quantcore-labs.com/tools/factor-ic/og-image.png",
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://quantcore-labs.com/tools/factor-ic/#article"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/tools/factor-ic/#article",
+      "headline": "Information Coefficient, ICIR and Quantile Returns: Formulas and Conventions",
+      "description": "How the analyzer computes rank IC, Pearson IC, ICIR, the overlap-corrected t-stat and quantile-group returns from a pasted factor panel.",
+      "image": "https://quantcore-labs.com/tools/factor-ic/og-image.png",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-16T20:00:00-05:00",
+      "dateModified": "2026-11-16T20:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/tools/factor-ic/",
+      "articleBody": "On each date t the information coefficient is the cross-sectional correlation between factor values f_i,t and the returns r_i earned over the following holding period. Rank IC is the Pearson correlation of average ranks (Spearman). Mean IC is the average over dates, ICIR = mean(IC) / stdev(IC, sample), and t = ICIR * sqrt(n / h) where n is the number of dates used and h the holding horizon in sampling periods. Hit rate is the share of dates with IC > 0. Quantile groups use average ranks: bucket = floor(Q (rank - 0.5) / n); group returns are equal-weighted per date and averaged across dates. Spread is the top bucket minus the bottom bucket; its annualised value is mean spread * P / h, a simple scaling that ignores compounding, costs and turnover."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/tools/factor-ic/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a good IC?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There is no universal threshold. For daily or weekly cross-sectional equity factors a mean rank IC of a few hundredths that keeps its sign across years is already useful, because the fundamental law scales it by the square root of breadth. Stability matters more than the level: look at ICIR, the hit rate and the per-year table before the mean."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why rank IC and not Pearson IC?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Rank IC is the Spearman correlation, so a handful of extreme returns or factor values cannot dominate it. Pearson IC is shown next to it; a large gap between the two usually means outliers are driving the linear correlation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why is the t-stat divided by the square root of the horizon?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If you sample every period but hold for h periods, consecutive forward returns overlap and the IC series is autocorrelated. Taking the effective sample as n / h is a simple correction. If your dates are already h periods apart, leave the horizon at 1."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How are the quantile groups formed?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "On each date assets are ranked by factor value with average ranks for ties, and rank r out of n goes to bucket floor(Q (r - 0.5) / n). Buckets are equal-count up to ties, tied values always share a bucket, and returns are equal-weighted inside a bucket and then averaged across dates."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data uploaded anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Parsing and every calculation run in your browser. The page makes no network request with your data."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Factor IC Analyzer",
+          "item": "https://quantcore-labs.com/tools/factor-ic/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.scroll{overflow-x:auto}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+table.years{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:420px}
+table.years th,table.years td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.years th{color:var(--dim);font-weight:500}
+table.years td:first-child,table.years th:first-child{text-align:left;color:var(--dim)}
+.note{font:12px var(--mono);color:var(--warn);margin-top:8px;min-height:14px}
+ul.read{padding-left:18px}ul.read li{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / tools / factor-ic</nav>
+  <h1>Factor IC Analyzer <span class="tag">CLIENT-SIDE</span></h1>
+  <p class="lede">Paste a factor panel: one row per asset per date with the factor value and the return that asset earned over the following holding period. The page computes rank IC and Pearson IC per date, their mean, ICIR, t-stat and hit rate, the mean forward return of each quantile group and the top-minus-bottom spread. Your data never leaves the browser.</p>
+</header>
+<noscript><p><strong>JavaScript is disabled.</strong> This analyzer runs in the browser. Formulas and conventions are documented below and in the <a href="/factor-ic.md">Markdown version</a>.</p></noscript>
+<main>
+<section aria-labelledby="calc-h">
+<h2 id="calc-h">Analyzer</h2>
+<div class="grid">
+  <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+    <h3>Input</h3>
+    <label for="data">Rows: <code>date, asset, factor, forward return</code>. Comma, tab, semicolon or spaces; header row optional.</label>
+    <textarea id="data" spellcheck="false" placeholder="2025-01-31,AAA,0.42,0.013&#10;2025-01-31,BBB,-1.10,-0.021&#10;2025-01-31,CCC,0.07,0.004&#10;..."></textarea>
+    <div class="row2">
+      <div><label for="unit">Forward returns are in</label>
+        <select id="unit"><option value="dec">decimal (0.013)</option><option value="pct">percent (1.3)</option></select></div>
+      <div><label for="minobs">Min assets per date</label><input type="number" id="minobs" value="20" min="3" step="1"></div>
+    </div>
+    <div class="row3">
+      <div><label for="q">Quantiles</label>
+        <select id="q"><option value="3">3</option><option value="5" selected>5</option><option value="10">10</option></select></div>
+      <div><label for="h">Horizon h</label><input type="number" id="h" value="1" min="1" step="1"></div>
+      <div><label for="ppy">Periods / year</label>
+        <select id="ppy"><option value="252">252</option><option value="242">242 (A-share)</option><option value="52">52</option><option value="12">12</option></select></div>
+    </div>
+    <div class="btns">
+      <button type="button" id="sample">Load sample data</button>
+      <button type="button" id="clear">Clear</button>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+    <div class="note" id="note"></div>
+  </form>
+  <div class="panel" aria-live="polite">
+    <h3>Results</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Mean rank IC</div><div class="v" id="kRic">–</div><div class="s" id="kN">&nbsp;</div></div>
+      <div class="kpi"><div class="k">ICIR</div><div class="v" id="kIcir">–</div><div class="s">mean / stdev</div></div>
+      <div class="kpi"><div class="k">t-stat</div><div class="v" id="kT">–</div><div class="s" id="kTs">ICIR · √(n/h)</div></div>
+      <div class="kpi"><div class="k">Hit rate</div><div class="v" id="kHit">–</div><div class="s">dates with IC &gt; 0</div></div>
+      <div class="kpi"><div class="k">Mean Pearson IC</div><div class="v" id="kPic">–</div><div class="s">linear correlation</div></div>
+      <div class="kpi"><div class="k">Top − bottom</div><div class="v" id="kSp">–</div><div class="s" id="kSps">per period</div></div>
+    </div>
+    <table class="stats"><tbody id="stats"></tbody></table>
+    <div class="ctitle"><span>Rank IC per date, with rolling mean</span><span><select id="rollw" aria-label="Rolling window"><option value="6">6 dates</option><option value="12" selected>12 dates</option><option value="24">24 dates</option><option value="60">60 dates</option></select></span></div>
+    <canvas id="cIc" height="200" role="img" aria-label="Rank IC per date"></canvas>
+    <div class="readout" id="readout" aria-live="off">&nbsp;</div>
+    <div class="ctitle"><span>Cumulative rank IC</span></div>
+    <canvas id="cCum" height="140" role="img" aria-label="Cumulative rank IC"></canvas>
+    <div class="ctitle"><span>Mean forward return by factor quantile (1 = lowest factor)</span></div>
+    <canvas id="cQ" height="170" role="img" aria-label="Mean forward return by quantile group"></canvas>
+  </div>
+</div>
+<div class="panel" style="margin-top:16px">
+  <h3>Rank IC by year</h3>
+  <div class="scroll" id="years"><p class="msg">Use parseable dates (YYYY-MM-DD, YYYY/MM/DD or YYYYMMDD) to see the per-year table.</p></div>
+</div>
+</section>
+
+<section aria-labelledby="method-h">
+<h2 id="method-h">Formulas and conventions</h2>
+<div class="formula">IC_t        = corr( f_i,t , r_i,t→t+h )                 across assets i on date t   (Pearson)
+Rank IC_t   = corr( rank f_i,t , rank r_i,t→t+h )       average ranks for ties      (Spearman)
+Mean IC     = (1/n) Σ_t IC_t                            n = dates used
+ICIR        = mean(IC) / stdev(IC, sample)
+t-stat      = ICIR · √(n / h)                           h = holding horizon in sampling periods
+Hit rate    = share of dates with IC_t &gt; 0
+bucket_i,t  = min(Q − 1, floor(Q · (rank f_i,t − 0.5) / N_t))      N_t = assets on date t
+G_q         = mean over dates of the equal-weighted return of bucket q
+Spread_t    = G_Q,t − G_1,t          Annualised spread = mean(Spread) · P / h
+Monotonicity = Spearman correlation between q and G_q</div>
+<p>The forward return on a row must be the return earned <em>after</em> the factor value was known: for a signal at the close of t that is traded at t+1 and held h periods, r = close(t+1+h) / close(t+1) − 1. A date is used only if it has at least the minimum number of assets with both a factor value and a return, and at least as many assets as quantile groups; other dates are skipped and counted. If the same asset appears twice on one date the last row wins. When every date parses, dates are sorted; otherwise the order of first appearance is kept and the per-year table is hidden.</p>
+</section>
+
+<section aria-labelledby="read-h">
+<h2 id="read-h">How to read the output</h2>
+<ul class="read">
+<li><strong>Level and stability together.</strong> A mean rank IC of 0.03 with ICIR 0.5 is usually worth more than 0.06 with ICIR 0.15. The per-year table shows whether the sign holds outside one regime.</li>
+<li><strong>The t-stat is a first filter, not a verdict.</strong> It assumes roughly independent dates after the n / h correction. If the factor was chosen after looking at many candidates on the same history, a t of 2 is weak evidence.</li>
+<li><strong>Quantile bars should line up.</strong> An IC that comes only from one extreme bucket, or a non-monotonic pattern, points to a non-linear or outlier-driven factor.</li>
+<li><strong>The spread is before costs.</strong> It ignores turnover, trading costs, price limits and capacity, and the annualised figure is a simple scaling. Short legs are often not tradable at all.</li>
+<li><strong>Raw IC can be a size or industry bet.</strong> Neutralise the factor against industry and log market cap before pasting if you want the stock-selection part only.</li>
+</ul>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># Factor IC Analyzer</p>
+<p>&gt; Client-side analyzer for rank IC, Pearson IC, ICIR, t-stat, hit rate, quantile-group returns and top-minus-bottom spread from a pasted factor panel. URL: https://quantcore-labs.com/tools/factor-ic/</p>
+<h3>## Inputs</h3>
+<ul>
+<li>- Rows of date, asset, factor value, forward return (decimal or percent); header optional</li>
+<li>- Minimum assets per date (default 20), quantile groups (3, 5, 10), horizon h, periods per year</li>
+</ul>
+<h3>## Conventions</h3>
+<ul>
+<li>- Rank IC = Pearson correlation of average ranks (Spearman); ICIR uses the sample standard deviation</li>
+<li>- t-stat = ICIR · √(n / h); hit rate = share of dates with IC &gt; 0</li>
+<li>- bucket = min(Q − 1, floor(Q (rank − 0.5) / N)); equal-weighted within bucket, averaged across dates</li>
+<li>- Annualised spread = mean spread · P / h, before costs</li>
+</ul>
+<h3>## Reference check</h3>
+<ul>
+<li>- Rank IC, Pearson IC and bucket means match pandas rank(method="average") and SciPy spearmanr / pearsonr to 1e-12 on a panel with tied values</li>
+</ul>
+<p>Full Markdown: <a href="/factor-ic.md">/factor-ic.md</a> · Core module: <a href="/tools/factor-ic/factor-ic-core.mjs">factor-ic-core.mjs</a></p>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>What is a good IC?</dt>
+<dd>There is no universal threshold. For daily or weekly cross-sectional equity factors a mean rank IC of a few hundredths that keeps its sign across years is already useful, because the fundamental law scales it by the square root of breadth. Stability matters more than the level: look at ICIR, the hit rate and the per-year table before the mean.</dd>
+<dt>Why rank IC and not Pearson IC?</dt>
+<dd>Rank IC is the Spearman correlation, so a handful of extreme returns or factor values cannot dominate it. Pearson IC is shown next to it; a large gap between the two usually means outliers are driving the linear correlation.</dd>
+<dt>Why is the t-stat divided by the square root of the horizon?</dt>
+<dd>If you sample every period but hold for h periods, consecutive forward returns overlap and the IC series is autocorrelated. Taking the effective sample as n / h is a simple correction. If your dates are already h periods apart, leave the horizon at 1.</dd>
+<dt>How are the quantile groups formed?</dt>
+<dd>On each date assets are ranked by factor value with average ranks for ties, and rank r out of n goes to bucket floor(Q (r - 0.5) / n). Buckets are equal-count up to ties, tied values always share a bucket, and returns are equal-weighted inside a bucket and then averaged across dates.</dd>
+<dt>Is my data uploaded anywhere?</dt>
+<dd>No. Parsing and every calculation run in your browser. The page makes no network request with your data.</dd>
+</dl>
+</section>
+<!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Ffactor-ic.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Ffactor-ic%2F%29%20and%20explain%20%22Factor%20IC%20Analyzer%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Ffactor-ic.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Ffactor-ic%2F%29%20and%20explain%20%22Factor%20IC%20Analyzer%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Ffactor-ic.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Ffactor-ic%2F%29%20and%20explain%20%22Factor%20IC%20Analyzer%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/factor-ic.md (the Markdown version of https://quantcore-labs.com/tools/factor-ic/) and explain &quot;Factor IC Analyzer&quot; to me: what it computes, the formulas and conventions it uses, and how to read its output. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+<!-- RELATED:BEGIN (generated by scripts/build_site_pages.py) -->
+<section aria-label="Related concepts" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;font-size:15px">Related concepts</h2><p style="margin:0 0 8px"><a href="/glossary/information-coefficient/" style="color:#22d3ee">Information Coefficient (IC)</a> · <a href="/glossary/information-ratio/" style="color:#22d3ee">Information Ratio</a> · <a href="/glossary/beta/" style="color:#22d3ee">Beta</a></p>
+<p style="margin:0">Other calculators: <a href="/option-greeks-calc/" style="color:#22d3ee">Black-Scholes Option Greeks</a> · <a href="/tools/iv-smile/" style="color:#22d3ee">Implied Volatility Smile &amp; Surface</a> · <a href="/tools/performance-analytics/" style="color:#22d3ee">Performance &amp; Drawdown Analytics</a> · <a href="/tools/portfolio-efficient-frontier/" style="color:#22d3ee">Markowitz Efficient Frontier</a> · <a href="/tools/monte-carlo-asset-sim/" style="color:#22d3ee">Monte Carlo Asset Simulator</a></p>
+</section>
+<!-- RELATED:END -->
+</main>
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. Past performance does not indicate future results. © QuantCore Labs.</p><!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</div>
+
+<script type="module">
+import { parseRows, analyse, samplePanel } from './factor-ic-core.mjs';
+const $ = id => document.getElementById(id);
+let last = null, hover = -1;
+const f3 = x => Number.isFinite(x) ? (x >= 0 ? '' : '−') + Math.abs(x).toFixed(3) : '–';
+const f2 = x => Number.isFinite(x) ? (x >= 0 ? '' : '−') + Math.abs(x).toFixed(2) : '–';
+const pc = (x, d = 2) => Number.isFinite(x) ? (x >= 0 ? '' : '−') + (Math.abs(x) * 100).toFixed(d) + '%' : '–';
+function setKpi(id, text, v) { const e = $(id); e.textContent = text; e.className = 'v' + (Number.isFinite(v) ? (v > 0 ? ' pos' : v < 0 ? ' neg' : '') : ''); }
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function setup(c) {
+  const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = +c.getAttribute('height');
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.height = h + 'px';
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  g.font = '11px ui-monospace,Menlo,Consolas,monospace';
+  return { g, w, h, l: 46, r: 8, t: 8, b: 20 };
+}
+function axis(p, lo, hi, fmt) {
+  const { g, w, h, l, r, t, b } = p, y = v => t + (hi - v) / (hi - lo) * (h - t - b);
+  g.strokeStyle = css('--line'); g.fillStyle = css('--dim'); g.lineWidth = 1; g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, yy = Math.round(y(v)) + 0.5;
+    g.beginPath(); g.moveTo(l, yy); g.lineTo(w - r, yy); g.stroke(); g.fillText(fmt(v), l - 5, yy); }
+  if (lo < 0 && hi > 0) { g.strokeStyle = css('--dim'); const y0 = Math.round(y(0)) + 0.5; g.beginPath(); g.moveTo(l, y0); g.lineTo(w - r, y0); g.stroke(); }
+  return y;
+}
+function xlabels(p, labels) {
+  const { g, w, h, l, r } = p, n = labels.length; if (!n) return;
+  g.fillStyle = css('--dim'); g.textBaseline = 'alphabetic';
+  g.textAlign = 'left'; g.fillText(labels[0], l, h - 5);
+  if (n > 1) { g.textAlign = 'right'; g.fillText(labels[n - 1], w - r, h - 5); }
+}
+function pad(lo, hi) { if (!(hi > lo)) { const d = Math.abs(lo) || 1; return [lo - d * 0.1, hi + d * 0.1]; } const d = (hi - lo) * 0.08; return [lo - d, hi + d]; }
+
+function drawIC() {
+  const A = last, p = setup($('cIc')), n = A.rankIC.length, win = +$('rollw').value;
+  const [lo, hi] = pad(Math.min(0, ...A.rankIC), Math.max(0, ...A.rankIC));
+  const y = axis(p, lo, hi, v => v.toFixed(2)), g = p.g, pw = p.w - p.l - p.r, bw = pw / n;
+  for (let i = 0; i < n; i++) { const v = A.rankIC[i], x = p.l + i * bw, y0 = y(0), y1 = y(v);
+    g.fillStyle = v >= 0 ? css('--pos') : css('--neg'); g.globalAlpha = i === hover ? 1 : 0.55;
+    g.fillRect(x + (bw > 3 ? 0.5 : 0), Math.min(y0, y1), Math.max(1, bw - (bw > 3 ? 1 : 0)), Math.max(1, Math.abs(y1 - y0))); }
+  g.globalAlpha = 1; g.strokeStyle = css('--acc'); g.lineWidth = 1.6; g.beginPath();
+  let s = 0, started = false;
+  for (let i = 0; i < n; i++) { s += A.rankIC[i]; if (i >= win) s -= A.rankIC[i - win];
+    if (i >= win - 1) { const x = p.l + (i + 0.5) * bw, yy = y(s / win); started ? g.lineTo(x, yy) : g.moveTo(x, yy); started = true; } }
+  g.stroke(); xlabels(p, A.dates);
+  $('cIc')._geo = { l: p.l, bw, n };
+}
+function drawCum() {
+  const A = last, p = setup($('cCum')), n = A.cumRankIC.length;
+  const [lo, hi] = pad(Math.min(0, ...A.cumRankIC), Math.max(0, ...A.cumRankIC));
+  const y = axis(p, lo, hi, v => v.toFixed(1)), g = p.g, pw = p.w - p.l - p.r;
+  g.strokeStyle = css('--acc'); g.lineWidth = 1.6; g.beginPath();
+  A.cumRankIC.forEach((v, i) => { const x = p.l + (n > 1 ? i / (n - 1) : 0.5) * pw; i ? g.lineTo(x, y(v)) : g.moveTo(x, y(v)); });
+  g.stroke(); xlabels(p, A.dates);
+}
+function drawQ() {
+  const A = last, p = setup($('cQ')), q = A.quantileMeans, n = q.length, ok = q.filter(Number.isFinite);
+  const [lo, hi] = pad(Math.min(0, ...ok), Math.max(0, ...ok));
+  const y = axis(p, lo, hi, v => (v * 100).toFixed(2) + '%'), g = p.g, pw = p.w - p.l - p.r, bw = pw / n;
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  q.forEach((v, i) => { const x = p.l + i * bw + bw * 0.18, w = bw * 0.64;
+    if (Number.isFinite(v)) { g.fillStyle = v >= 0 ? css('--pos') : css('--neg'); g.globalAlpha = 0.75; g.fillRect(x, Math.min(y(0), y(v)), w, Math.max(1, Math.abs(y(v) - y(0)))); g.globalAlpha = 1; }
+    g.fillStyle = css('--dim'); g.fillText(String(i + 1), x + w / 2, p.h - 5); });
+}
+function drawAll() { if (!last) return; drawIC(); drawCum(); drawQ(); }
+function blank() { ['cIc', 'cCum', 'cQ'].forEach(id => setup($(id))); }
+
+function row(tb, a, b, c, d) { const tr = tb.insertRow(); [a, b, c, d].forEach(t => { tr.insertCell().textContent = t; }); }
+function render(A, P) {
+  setKpi('kRic', f3(A.rank.mean), A.rank.mean); $('kN').textContent = A.rank.n + ' dates used';
+  setKpi('kIcir', f2(A.rank.icir), A.rank.icir); setKpi('kT', f2(A.rank.t), A.rank.t);
+  $('kTs').textContent = 'ICIR · √(' + A.rank.n + '/' + A.opts.horizon + ')';
+  setKpi('kHit', pc(A.rank.hit, 0), A.rank.hit - 0.5); setKpi('kPic', f3(A.pearson.mean), A.pearson.mean);
+  setKpi('kSp', pc(A.spreadStats.mean), A.spreadStats.mean);
+  $('kSps').textContent = 'per period · ' + pc(A.spreadStats.annualised, 1) + ' ann.';
+  const tb = $('stats'); tb.textContent = '';
+  row(tb, 'Dates used', String(A.rank.n), 'Dates skipped', String(A.skippedDates));
+  row(tb, 'Avg assets per date', A.avgAssets.toFixed(1), 'Rows read', String(P.rows.length));
+  row(tb, 'Rank IC stdev', f3(A.rank.std), 'Rank IC min / max', f3(A.rank.min) + ' / ' + f3(A.rank.max));
+  row(tb, 'Pearson ICIR', f2(A.pearson.icir), 'Pearson t-stat', f2(A.pearson.t));
+  row(tb, 'Spread t-stat', f2(A.spreadStats.t), 'Spread hit rate', pc(A.spreadStats.hit, 0));
+  row(tb, 'Monotonicity', f2(A.monotonicity), 'Quantile groups', String(A.opts.quantiles));
+  const Y = $('years'); Y.textContent = '';
+  if (A.years.length) {
+    const t = document.createElement('table'); t.className = 'years';
+    const hr = t.createTHead().insertRow(); ['Year', 'Dates', 'Mean rank IC', 'ICIR', 't-stat', 'Hit rate'].forEach(x => { const th = document.createElement('th'); th.textContent = x; hr.appendChild(th); });
+    const b = t.createTBody();
+    A.years.forEach(y => { const tr = b.insertRow(); [String(y.year), String(y.n), f3(y.mean), f2(y.icir), f2(y.t), pc(y.hit, 0)].forEach((x, i) => { const td = tr.insertCell(); td.textContent = x; if (i === 2) td.className = y.mean > 0 ? 'pos' : y.mean < 0 ? 'neg' : ''; }); });
+    Y.appendChild(t);
+  } else { const m = document.createElement('p'); m.className = 'msg'; m.textContent = 'Use parseable dates (YYYY-MM-DD, YYYY/MM/DD or YYYYMMDD) to see the per-year table.'; Y.appendChild(m); }
+}
+function reset(text, err) {
+  last = null; hover = -1;
+  ['kRic', 'kIcir', 'kT', 'kHit', 'kPic', 'kSp'].forEach(id => setKpi(id, '–', NaN));
+  $('kN').textContent = '\u00a0'; $('kSps').textContent = 'per period'; $('kTs').textContent = 'ICIR · √(n/h)';
+  $('stats').textContent = ''; $('readout').textContent = '\u00a0'; $('note').textContent = '';
+  const m = $('msg'); m.textContent = text; m.className = 'msg' + (err ? ' err' : ''); blank();
+}
+function run() {
+  const text = $('data').value;
+  if (!text.trim()) return reset('Paste rows or load the sample data.', false);
+  const P = parseRows(text, { returnsInPercent: $('unit').value === 'pct' });
+  if (P.error) return reset(P.error, true);
+  const A = analyse(P.rows, { minObs: +$('minobs').value || 20, quantiles: +$('q').value, horizon: +$('h').value || 1, periodsPerYear: +$('ppy').value });
+  if (A.error) return reset(A.error, true);
+  last = A; hover = -1;
+  const m = $('msg'); m.className = 'msg';
+  m.textContent = P.rows.length + ' rows, ' + A.rank.n + ' dates used' + (P.skipped ? ', ' + P.skipped + ' unreadable rows skipped' : '') + (A.duplicates ? ', ' + A.duplicates + ' duplicate (date, asset) rows replaced' : '') + '.';
+  const notes = [];
+  if (A.skippedDates) notes.push(A.skippedDates + ' date(s) skipped: too few assets or a constant column.');
+  if (!A.sorted) notes.push('Dates could not be parsed, so input order is used.');
+  if (A.rank.n < 30) notes.push('Fewer than 30 dates: ICIR and the t-stat are very noisy.');
+  $('note').textContent = notes.join(' ');
+  $('readout').textContent = 'Hover the IC chart to read a single date.';
+  render(A, P); drawAll();
+}
+let timer; const later = () => { clearTimeout(timer); timer = setTimeout(run, 200); };
+$('data').addEventListener('input', later);
+['unit', 'minobs', 'q', 'h', 'ppy'].forEach(id => $(id).addEventListener('input', run));
+$('rollw').addEventListener('change', drawAll);
+$('sample').addEventListener('click', () => { $('data').value = samplePanel(); $('unit').value = 'dec'; $('ppy').value = '12'; $('h').value = '1'; run(); });
+$('clear').addEventListener('click', () => { $('data').value = ''; run(); });
+function onMove(x) {
+  const c = $('cIc'), geo = c._geo; if (!last || !geo) return;
+  const i = Math.floor((x - c.getBoundingClientRect().left - geo.l) / geo.bw);
+  if (i < 0 || i >= geo.n) { if (hover !== -1) { hover = -1; drawIC(); } return; }
+  if (i !== hover) { hover = i; drawIC(); }
+  $('readout').textContent = last.dates[i] + '   rank IC ' + f3(last.rankIC[i]) + '   Pearson IC ' + f3(last.pearsonIC[i]) + '   assets ' + last.nAssets[i] + '   top−bottom ' + pc(last.spread[i]);
+}
+$('cIc').addEventListener('mousemove', e => onMove(e.clientX));
+$('cIc').addEventListener('touchmove', e => onMove(e.touches[0].clientX), { passive: true });
+$('cIc').addEventListener('mouseleave', () => { if (hover !== -1) { hover = -1; drawIC(); } });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 100); });
+$('sample').click();
+</script>
+</body>
+</html>
