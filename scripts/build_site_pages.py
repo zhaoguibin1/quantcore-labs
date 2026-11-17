@@ -268,6 +268,11 @@ def patch_tool(t):
     else:
         assert s.count("</main>") == 1, f
         s = s.replace("</main>", block + "</main>")
+    ask = gg.ask_ai_block(t["name"], BASE + t["url"], f"{BASE}/{t['id']}.md", kind="calculator")
+    if "<!-- ASKAI:BEGIN" in s:
+        s = re.sub(r"<!-- ASKAI:BEGIN.*?<!-- ASKAI:END -->\n", lambda m: ask, s, flags=re.S)
+    else:
+        s = s.replace("<!-- RELATED:BEGIN", ask + "<!-- RELATED:BEGIN", 1)
     if "<!-- FOOTER-LINKS -->" in s:
         s = re.sub(r"<!-- FOOTER-LINKS --><p[^>]*>.*?</p>", lambda m: "<!-- FOOTER-LINKS -->" + FOOTER_LINKS, s, count=1, flags=re.S)
     else:
