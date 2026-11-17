@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://quantcore-labs.com/</loc><lastmod>2026-11-17T08:08:12-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/about/</loc><lastmod>2026-11-09T10:07:59+08:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/</loc><lastmod>2026-11-17T08:31:45-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/about/</loc><lastmod>2026-11-17T08:31:45-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/</loc><lastmod>2026-11-09T10:07:59+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/</loc><lastmod>2026-11-09T10:07:59+08:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/option-greeks-calc/</loc><lastmod>2026-11-17T08:08:12-05:00</lastmod></url>
@@ -55,6 +55,7 @@
   <url><loc>https://quantcore-labs.com/glossary/vega/</loc><lastmod>2026-11-16T19:35:54-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/vpin/</loc><lastmod>2026-11-16T19:35:54-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/vwap/</loc><lastmod>2026-11-16T19:35:54-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/research/china-index-futures-basis/</loc><lastmod>2026-11-17T08:31:45-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/factor-ic/</loc><lastmod>2026-11-17T08:08:12-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/iv-smile/</loc><lastmod>2026-11-17T08:08:12-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/monte-carlo-asset-sim/</loc><lastmod>2026-11-09T10:07:59+08:00</lastmod></url>
