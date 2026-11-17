@@ -10,7 +10,7 @@
 
 Run from the repo root (generate_glossary.py calls it automatically).
 """
-import html, importlib.util, json, pathlib, re
+import html, importlib.util, json, pathlib, re, urllib.parse
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location("gg", REPO / "scripts" / "generate_glossary.py")
@@ -60,6 +60,13 @@ def tool_card(t):
 <p>{esc(t['desc'])}</p>
 <div class="chips">{chips}</div>
 </article>"""
+
+SITE_ASK_PROMPT = (f"Read {BASE}/llms.txt and tell me what QuantCore Labs offers: its calculators, its quant glossary and its "
+                   "tested Python code. Then ask what I am working on and point me to the most relevant page.")
+
+def site_ask_links():
+    q = urllib.parse.quote(SITE_ASK_PROMPT, safe="")
+    return " · ".join(f'<a href="{base}{q}" target="_blank" rel="noopener nofollow">{label}</a>' for label, base in gg.ASK_AI_TARGETS)
 
 def home():
     groups = []
@@ -120,6 +127,7 @@ def home():
 <p>- Index: <a href="/llms.txt">/llms.txt</a> · full content in one file: <a href="/llms-full.txt">/llms-full.txt</a></p>
 <p>- Every page has a Markdown version (link rel="alternate" type="text/markdown"), e.g. <a href="/glossary/sharpe-ratio.md">/glossary/sharpe-ratio.md</a></p>
 <p>- Raw Python for every implementation, e.g. <a href="/glossary/information-coefficient/information-coefficient.py">information-coefficient.py</a> · <a href="/sitemap.xml">sitemap.xml</a></p>
+<p>- Ask an AI about this site (opens in a new tab with the question typed in; uses your own account): {site_ask_links()}</p>
 </section>
 <script>
 (function(){{
