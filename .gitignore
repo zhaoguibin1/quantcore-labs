@@ -1,0 +1,5 @@
+# Local-only files that must never be committed
+.venv/
+.workbuddy/
+.publish-hold
+__pycache__/

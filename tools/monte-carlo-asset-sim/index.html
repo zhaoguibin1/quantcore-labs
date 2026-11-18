@@ -81,6 +81,7 @@
     }
   ]
   </script>
+<!-- ICONS --><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- /ICONS -->
 </head>
 <body class="bg-slate-950 text-slate-100 font-mono antialiased min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
 
@@ -90,7 +91,7 @@
       <nav aria-label="Breadcrumb" class="text-xs text-slate-400">
         <a href="/" class="hover:text-cyan-400 transition-colors">quantcore-labs</a> / <span class="text-slate-200">monte-carlo-asset-sim</span>
       </nav>
-      <div class="text-xs font-semibold text-cyan-400 tracking-wider">GBM · REAL-TIME MONTE CARLO</div>
+      <div class="text-xs font-semibold text-cyan-400 tracking-wider">GBM · MONTE CARLO · SEEDED</div>
     </div>
   </header>
 
@@ -99,7 +100,7 @@
     <div class="space-y-2">
       <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">Monte Carlo Asset Path Simulator</h1>
       <p class="text-sm text-slate-400 max-w-3xl">
-        Simulate multi-path asset price trajectories using exact discrete-time Geometric Brownian Motion (GBM). Results update instantly in your browser — zero server calls, zero data transfer.
+        Simulate multi-path asset price trajectories using exact discrete-time Geometric Brownian Motion (GBM). Up to 20,000 paths run in a background thread in your browser, with a fixed seed for exact replay — zero server calls, zero data transfer.
       </p>
     </div>
 
@@ -110,7 +111,7 @@
       <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4 shadow-xl">
         <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 flex items-center justify-between">
           <span>Parameters</span>
-          <span class="text-xs text-slate-500 font-normal">Real-Time Sync</span>
+          <span class="text-xs text-slate-500 font-normal">Manual Run</span>
         </h2>
 
         <div class="space-y-4 text-xs">
@@ -141,9 +142,21 @@
 
           <div>
             <label for="numPaths" class="block font-medium text-slate-300 mb-1">Number of Trajectories (Paths)</label>
-            <input type="number" id="numPaths" value="50" step="10" min="5" max="300" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+            <input type="number" id="numPaths" value="5000" step="500" min="5" max="20000" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+          </div>
+
+          <div>
+            <label for="seed" class="block font-medium text-slate-300 mb-1">Random Seed (uint32)</label>
+            <input type="number" id="seed" value="" step="1" min="0" max="4294967295" placeholder="blank = generate once" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-mono">
+            <p class="text-[10px] text-slate-500 mt-1">A fixed seed reproduces the same paths exactly. Leave blank to generate one seed per run.</p>
           </div>
         </div>
+
+        <div style="display:flex;gap:8px">
+          <button type="button" id="runButton" style="flex:1 1 0%;padding:8px 12px;border-radius:6px;border:1px solid #0891b2;background:#0e7490;color:#ecfeff;font:inherit;font-size:12px;font-weight:600;cursor:pointer">Run simulation</button>
+          <button type="button" id="cancelButton" disabled style="flex:0 0 auto;padding:8px 12px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#cbd5e1;font:inherit;font-size:12px;cursor:pointer">Cancel</button>
+        </div>
+        <p id="errorBox" role="alert" style="min-height:1.2em;margin:0;font-size:11px;line-height:1.5;color:#fb7185"></p>
       </section>
 
       <!-- Visualization & Statistics Output -->
@@ -151,10 +164,19 @@
         <div>
           <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 mb-4 flex items-center justify-between">
             <span>Trajectory Canvas</span>
-            <span class="text-xs text-slate-400 font-normal" id="simStatus">Rendered Paths</span>
+            <span class="text-xs text-slate-400 font-normal" id="simStatus">Idle — press Run</span>
           </h2>
           <div class="relative w-full h-64 md:h-80 bg-slate-950 rounded border border-slate-800 overflow-hidden">
-            <canvas id="simCanvas" class="w-full h-full block"></canvas>
+            <div id="pathsNote" style="position:absolute;left:8px;top:6px;font-size:10px;line-height:1.4;color:#64748b;pointer-events:none">–</div>
+            <canvas id="simCanvas" class="w-full h-full block" style="display:block;width:100%;height:100%"></canvas>
+          </div>
+        </div>
+
+        <!-- Terminal Distribution Canvas -->
+        <div>
+          <h2 class="text-base font-semibold text-cyan-400 border-b border-slate-800 pb-2 mb-4">Terminal Distribution</h2>
+          <div class="relative w-full h-48 bg-slate-950 rounded border border-slate-800 overflow-hidden" style="position:relative;width:100%;height:192px;background:#020617;border:1px solid #1e293b;border-radius:4px;overflow:hidden">
+            <canvas id="distCanvas" class="w-full h-full block" style="display:block;width:100%;height:100%"></canvas>
           </div>
         </div>
 
@@ -178,6 +200,30 @@
             <span id="statP95" class="font-bold text-emerald-400 text-sm">–</span>
           </div>
           <div class="col-span-2 sm:col-span-4 text-[11px] text-slate-500 border-t border-slate-800 pt-2" id="statExact">–</div>
+
+          <!-- Run metadata: N / M / T / algorithm identity, filled from the P1 result only -->
+          <div class="col-span-2 sm:col-span-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-slate-800 pt-2 text-[11px] text-slate-500" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+            <div>Paths N <span id="statN" class="font-bold text-slate-200">–</span></div>
+            <div>Steps M <span id="statM" class="font-bold text-slate-200">–</span></div>
+            <div>Horizon T (years) <span id="statT" class="font-bold text-slate-200">–</span></div>
+            <div>Algorithm <span id="statAlgo" class="font-bold text-slate-200">–</span></div>
+          </div>
+
+          <!-- Max drawdown statistics, read verbatim from summary -->
+          <div class="col-span-2 sm:col-span-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-slate-800 pt-2" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+            <div>
+              <span class="text-slate-500 block">Mean Max Drawdown</span>
+              <span id="statMddMean" class="font-bold text-sky-400 text-sm">–</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Median Max Drawdown</span>
+              <span id="statMddP50" class="font-bold text-sky-400 text-sm">–</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">95th Pct Max Drawdown</span>
+              <span id="statMddP95" class="font-bold text-sky-400 text-sm">–</span>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -222,10 +268,17 @@ S_t = S_0 * exp( (μ - 0.5 * σ²) * t + σ * W_t )
         </div>
       </dl>
     </section>
-  <!-- RELATED:BEGIN (generated by scripts/build_site_pages.py) -->
+  <!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fmonte-carlo-asset-sim.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fmonte-carlo-asset-sim%2F%29%20and%20explain%20%22Monte%20Carlo%20Asset%20Simulator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fmonte-carlo-asset-sim.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fmonte-carlo-asset-sim%2F%29%20and%20explain%20%22Monte%20Carlo%20Asset%20Simulator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fmonte-carlo-asset-sim.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fmonte-carlo-asset-sim%2F%29%20and%20explain%20%22Monte%20Carlo%20Asset%20Simulator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/monte-carlo-asset-sim.md (the Markdown version of https://quantcore-labs.com/tools/monte-carlo-asset-sim/) and explain &quot;Monte Carlo Asset Simulator&quot; to me: what it computes, the formulas and conventions it uses, and how to read its output. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+<!-- RELATED:BEGIN (generated by scripts/build_site_pages.py) -->
 <section aria-label="Related concepts" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
 <h2 style="margin:0 0 6px;font-size:15px">Related concepts</h2><p style="margin:0 0 8px"><a href="/glossary/var-expected-shortfall/" style="color:#22d3ee">Value at Risk (VaR) and Expected Shortfall (ES)</a> · <a href="/glossary/realized-volatility/" style="color:#22d3ee">Realized Volatility</a> · <a href="/glossary/max-drawdown/" style="color:#22d3ee">Maximum Drawdown</a></p>
-<p style="margin:0">Other calculators: <a href="/option-greeks-calc/" style="color:#22d3ee">Black-Scholes Option Greeks</a> · <a href="/tools/iv-smile/" style="color:#22d3ee">Implied Volatility Smile &amp; Surface</a> · <a href="/tools/performance-analytics/" style="color:#22d3ee">Performance &amp; Drawdown Analytics</a> · <a href="/tools/portfolio-efficient-frontier/" style="color:#22d3ee">Markowitz Efficient Frontier</a></p>
+<p style="margin:0">Other calculators: <a href="/option-greeks-calc/" style="color:#22d3ee">Black-Scholes Option Greeks</a> · <a href="/tools/iv-smile/" style="color:#22d3ee">Implied Volatility Smile &amp; Surface</a> · <a href="/tools/performance-analytics/" style="color:#22d3ee">Performance &amp; Drawdown Analytics</a> · <a href="/tools/portfolio-efficient-frontier/" style="color:#22d3ee">Markowitz Efficient Frontier</a> · <a href="/tools/factor-ic/" style="color:#22d3ee">Factor IC Analyzer</a> · <a href="/tools/style-exposure/" style="color:#22d3ee">Portfolio Style Exposure Analyzer</a> · <a href="/tools/a-share-costs/" style="color:#22d3ee">A-Share Trading Cost Calculator</a> · <a href="/tools/capacity/" style="color:#22d3ee">Strategy Capacity Calculator</a></p>
 </section>
 <!-- RELATED:END -->
 </main>
@@ -235,151 +288,7 @@ S_t = S_0 * exp( (μ - 0.5 * σ²) * t + σ * W_t )
     <p>For educational and quantitative research use only. Not investment advice. Model outputs depend on specified parameters. © QuantCore Labs.</p>
   <!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
 
-  <!-- Simulation Logic & Canvas Script -->
-  <script>
-    // Box-Muller Transformation for standard normal random variable sampling
-    function sampleNormal() {
-      let u = 0, v = 0;
-      while (u === 0) u = Math.random();
-      while (v === 0) v = Math.random();
-      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-    }
-
-    // Main Run Function
-    function runSimulation() {
-      const S0 = parseFloat(document.getElementById('initialPrice').value) || 100;
-      const mu = (parseFloat(document.getElementById('drift').value) || 0) / 100;
-      const sigmaIn = parseFloat(document.getElementById('volatility').value);
-      const sigma = (isFinite(sigmaIn) && sigmaIn >= 0 ? sigmaIn : 20) / 100;
-      const T = parseFloat(document.getElementById('timeHorizon').value) || 1.0;
-      const stepsPerYear = parseInt(document.getElementById('timeSteps').value) || 252;
-      const numPaths = parseInt(document.getElementById('numPaths').value) || 50;
-
-      const totalSteps = Math.max(2, Math.round(T * stepsPerYear));
-      const dt = T / totalSteps;
-      const driftTerm = (mu - 0.5 * sigma * sigma) * dt;
-      const volTerm = sigma * Math.sqrt(dt);
-
-      const paths = [];
-      const terminalPrices = [];
-
-      for (let p = 0; p < numPaths; p++) {
-        const path = new Float64Array(totalSteps + 1);
-        path[0] = S0;
-        let currentS = S0;
-
-        for (let i = 1; i <= totalSteps; i++) {
-          const z = sampleNormal();
-          currentS = currentS * Math.exp(driftTerm + volTerm * z);
-          path[i] = currentS;
-        }
-        paths.push(path);
-        terminalPrices.push(currentS);
-      }
-
-      // Calculate Statistics
-      terminalPrices.sort((a, b) => a - b);
-      const sum = terminalPrices.reduce((acc, val) => acc + val, 0);
-      const mean = sum / numPaths;
-      const p5 = terminalPrices[Math.floor(numPaths * 0.05)];
-      const p50 = terminalPrices[Math.floor(numPaths * 0.50)];
-      const p95 = terminalPrices[Math.floor(numPaths * 0.95)];
-
-      document.getElementById('statMean').textContent = mean.toFixed(2);
-      document.getElementById('statP5').textContent = p5.toFixed(2);
-      document.getElementById('statMedian').textContent = p50.toFixed(2);
-      document.getElementById('statP95').textContent = p95.toFixed(2);
-      // 95% VaR of the position over the horizon = loss from S0 to the 5th percentile of S_T
-      const varLoss = S0 - p5;
-      document.getElementById('statVaR').textContent = varLoss > 0
-        ? `95% VaR (loss over ${T}y): ${varLoss.toFixed(2)} (${(varLoss / S0 * 100).toFixed(1)}%)`
-        : `95% VaR (loss over ${T}y): none (5th pct ≥ S₀)`;
-      // Exact log-normal values for comparison with the simulation
-      const zq = 1.6448536269514722, m = (mu - 0.5 * sigma * sigma) * T, sq = sigma * Math.sqrt(T);
-      document.getElementById('statExact').textContent =
-        `Exact log-normal: mean ${(S0 * Math.exp(mu * T)).toFixed(2)} · 5th pct ${(S0 * Math.exp(m - zq * sq)).toFixed(2)} · ` +
-        `median ${(S0 * Math.exp(m)).toFixed(2)} · 95th pct ${(S0 * Math.exp(m + zq * sq)).toFixed(2)}. ` +
-        `Simulated values converge to these as the number of paths grows.`;
-      document.getElementById('simStatus').textContent = `${numPaths} Paths · ${totalSteps} Steps`;
-
-      drawCanvas(paths, totalSteps, S0);
-    }
-
-    // Render Canvas
-    function drawCanvas(paths, totalSteps, S0) {
-      const canvas = document.getElementById('simCanvas');
-      const ctx = canvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-      
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-
-      const width = rect.width;
-      const height = rect.height;
-
-      ctx.clearRect(0, 0, width, height);
-
-      // Find Min & Max bounds for scaling
-      let minS = S0, maxS = S0;
-      for (const path of paths) {
-        for (let i = 0; i <= totalSteps; i++) {
-          if (path[i] < minS) minS = path[i];
-          if (path[i] > maxS) maxS = path[i];
-        }
-      }
-
-      const padding = 20;
-      const usableHeight = height - padding * 2;
-      const usableWidth = width - padding * 2;
-
-      // Draw Grid Lines
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(padding, padding);
-      ctx.lineTo(padding, height - padding);
-      ctx.lineTo(width - padding, height - padding);
-      ctx.stroke();
-
-      // Draw Initial Price Baseline
-      const initialY = height - padding - ((S0 - minS) / (maxS - minS || 1)) * usableHeight;
-      ctx.strokeStyle = '#475569';
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(padding, initialY);
-      ctx.lineTo(width - padding, initialY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Draw Paths
-      ctx.lineWidth = 1;
-      for (let p = 0; p < paths.length; p++) {
-        const path = paths[p];
-        const isUp = path[totalSteps] >= S0;
-        ctx.strokeStyle = isUp ? 'rgba(52, 211, 153, 0.35)' : 'rgba(251, 113, 133, 0.35)';
-
-        ctx.beginPath();
-        for (let i = 0; i <= totalSteps; i++) {
-          const x = padding + (i / totalSteps) * usableWidth;
-          const y = height - padding - ((path[i] - minS) / (maxS - minS || 1)) * usableHeight;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-    }
-
-    // Attach Input Event Listeners for Instant Calculation
-    const inputs = ['initialPrice', 'drift', 'volatility', 'timeHorizon', 'timeSteps', 'numPaths'];
-    inputs.forEach(id => {
-      document.getElementById(id).addEventListener('input', runSimulation);
-    });
-
-    // Initial Trigger on Load
-    window.addEventListener('load', runSimulation);
-    window.addEventListener('resize', runSimulation);
-  </script>
+  <!-- Manual-run bridge: controller wiring and canvas rendering live in mc-v2-ui.mjs -->
+  <script type="module" src="./mc-v2-ui.mjs"></script>
 </body>
 </html>
