@@ -514,6 +514,7 @@ function surfaceGrid(E, nk, nt){
     var S = parseFloat($('S').value), r = (parseFloat($('r').value) || 0) / 100, q = (parseFloat($('q').value) || 0) / 100;
     var useParity = $('parity').checked;
     if (!(S > 0) && !useParity){ msg.className = 'msg err'; msg.textContent = 'Spot S must be > 0.'; return; }
+    if (Math.abs(r) > 1 || Math.abs(q) > 1){ msg.className = 'msg err'; msg.textContent = 'Rate r and yield q must be within ±100%.'; last = null; draw(); fill(); return; }
     var E = analyse(P.rows, S > 0 ? S : NaN, r, q, useParity);
     var bad = 0; E.forEach(function(e){ e.pts.forEach(function(p){
       if ((p.callIV && !isFinite(p.callIV.iv)) || (p.putIV && !isFinite(p.putIV.iv))) bad++; }); });

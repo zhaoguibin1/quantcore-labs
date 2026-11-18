@@ -386,7 +386,7 @@ function draw(S, cap, bud, A, alpha, budget) {
   const l = 44, r = 10, t = 8, b = 20, dec = Math.log10(hi / lo);
   const X = v => l + Math.log10(v / lo) / dec * (w - l - r), Y = v => t + (yMax - Math.min(v, yMax)) / yMax * (h - t - b);
   g.textAlign = 'right'; g.textBaseline = 'middle';
-  const step = yMax > 0.4 ? 0.1 : yMax > 0.2 ? 0.05 : yMax > 0.08 ? 0.02 : 0.01;
+  const step = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1].find(x => yMax / x <= 8) || yMax / 8;   // at most ~8 gridlines
   for (let v = 0; v <= yMax + 1e-9; v += step) { const yy = Math.round(Y(v)) + 0.5; g.strokeStyle = css('--line'); g.beginPath(); g.moveTo(l, yy); g.lineTo(w - r, yy); g.stroke(); g.fillStyle = css('--dim'); g.fillText((v * 100).toFixed(0) + '%', l - 5, yy); }
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   for (let e = Math.ceil(Math.log10(lo)); e <= Math.log10(hi); e++) { const v = Math.pow(10, e); g.fillStyle = css('--dim'); g.fillText(v >= 1e9 ? v / 1e9 + 'bn' : v >= 1e6 ? v / 1e6 + 'M' : v / 1e3 + 'k', Math.min(Math.max(X(v), l + 12), w - r - 14), h - 5); }
@@ -404,6 +404,10 @@ function run() {
   if (!(turnover > 0)) return clear('Enter a turnover above zero.');
   if (!(every >= 1) || !(days >= 1)) return clear('Rebalance interval and days to trade must be at least 1.');
   if (!(capP > 0)) return clear('Enter a participation cap above zero.');
+  if (capP > 1) return clear('Participation cap must be at most 100% of ADV.');
+  if (!(turnover <= 1000) || !(every <= 1000) || !(days <= 250)) return clear('Out of range: turnover up to 1,000×, rebalance interval up to 1,000 days, days to trade up to 250.');
+  if (num('alpha') > 1000 || num('alpha') < 0 || num('Y') > 10 || num('sig') > 100) return clear('Out of range: gross alpha 0 to 1,000%, Y up to 10, daily volatility up to 100%.');
+  if (num('aum') > 1e13) return clear('Portfolio size must be below 10 trillion CNY.');
   const S = setup(p.rows, { turnover, every, days, cap: capP, Y: Yc >= 0 ? Yc : 0.7, sigma: sig > 0 ? sig : 0.025 });
   const alpha = (num('alpha') || 0) / 100, budget = Math.min(1, (num('share') || 0) / 100), A = num('aum') > 0 ? num('aum') : NaN;
   const cap = capacity(S), bud = aumForDrag(S, alpha * budget), notes = [];

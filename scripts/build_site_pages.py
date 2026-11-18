@@ -222,7 +222,6 @@ def privacy():
 <ul class="plain">
 <li><strong>quantcore-labs.com</strong> serves the pages and <code>/data/rates.json</code> (the Treasury curve). No personal data is included in these requests.</li>
 <li><strong>cdn.jsdelivr.net</strong> is contacted only when you click "3D view" on the implied-volatility page, to load the Plotly charting library.</li>
-<li><strong>cdn.tailwindcss.com</strong> is contacted by the efficient-frontier and Monte Carlo pages to load their styling.</li>
 </ul>
 <p>Like any website, these servers receive your IP address and browser details in order to deliver files.</p></section>
 <section><h2>Hosting and statistics</h2>
