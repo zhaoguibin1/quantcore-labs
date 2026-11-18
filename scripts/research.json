@@ -1,5 +1,17 @@
 [
  {
+  "id": "complex-vs-simple",
+  "url": "/research/complex-vs-simple/",
+  "md": "/research/complex-vs-simple.md",
+  "name": "Complex vs Simple: A Multi-Signal A-Share Model Against Three Plain Styles",
+  "desc": "A pre-registered test of a multi-signal A-share stock model against a portfolio built from value, low turnover and low volatility alone, with the same engine and costs, 2018 to 2026.",
+  "chips": [
+   "Pre-registered test",
+   "Same engine, same costs",
+   "Turnover vs edge"
+  ]
+ },
+ {
   "id": "china-index-futures-basis",
   "url": "/research/china-index-futures-basis/",
   "md": "/research/china-index-futures-basis.md",

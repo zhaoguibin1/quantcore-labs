@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complex vs Simple: A Multi-Signal A-Share Model Against Three Plain Styles | QuantCore Labs</title>
+<meta name="description" content="A pre-registered test: did a multi-signal A-share stock model beat a portfolio built from value, low turnover and low volatility alone, with the same engine and costs, 2018 to 2026? Not by enough to count.">
+<link rel="canonical" href="https://quantcore-labs.com/research/complex-vs-simple/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/research/complex-vs-simple.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Complex vs Simple: A Multi-Signal A-Share Model Against Three Plain Styles">
+<meta property="og:description" content="Same engine, same costs, criteria fixed in advance. The extra signals earned their keep in 2019 to 2021 and gave most of it back after.">
+<meta property="og:url" content="https://quantcore-labs.com/research/complex-vs-simple/">
+<meta property="og:image" content="https://quantcore-labs.com/research/complex-vs-simple/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "Article",
+      "@id": "https://quantcore-labs.com/research/complex-vs-simple/#article",
+      "headline": "Complex vs Simple: Did a Multi-Signal A-Share Model Beat Three Plain Styles?",
+      "description": "A pre-registered test of a multi-signal A-share stock-selection model against a portfolio built from value, low turnover and low volatility alone, in the same backtest engine with the same costs, 2018 to 2026.",
+      "inLanguage": "en",
+      "datePublished": "2026-11-18T09:00:00-05:00",
+      "dateModified": "2026-11-18T09:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/research/complex-vs-simple/",
+      "image": "https://quantcore-labs.com/research/complex-vs-simple/og-image.png",
+      "about": [
+        "Factor investing",
+        "China A-shares",
+        "Backtest overfitting",
+        "Transaction costs"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/research/complex-vs-simple/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does this mean simple factor models are better?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Both models were built with knowledge of the same history, and the simple one was assembled after looking at what the complex one held. The test shows that, on this history, the complex model's extra signals did not add return a simple version could not get, net of costs. It says nothing about which will do better next."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why compare against three styles and not against an index?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An index comparison credits the model with every style tilt it happens to have. A strategy that is mostly cheap, quiet, low-volatility stocks should beat the index in a market that rewards those traits. The question that matters for the extra complexity is whether it beats a plain portfolio with the same tilts."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What would have counted as success?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Fixed before the results: the complex model had to beat the simple one by at least 2 percentage points a year with a t-statistic of at least 2, and be ahead in both halves of the sample. In the regression, the unexplained return had to be at least 2% a year with t of at least 2."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I run the same checks on my own strategy?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The holdings exposure step is available as the Style Exposure Analyzer and the per-signal step as the Factor IC Analyzer on this site. The head-to-head test needs your own backtest engine, run twice with only the score changed."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Complex vs Simple",
+          "item": "https://quantcore-labs.com/research/complex-vs-simple/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.scroll{overflow-x:auto}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+table.years{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:420px}
+table.years th,table.years td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.years th{color:var(--dim);font-weight:500}
+table.years td:first-child,table.years th:first-child{text-align:left;color:var(--dim)}
+.note{font:12px var(--mono);color:var(--warn);margin-top:8px;min-height:14px}
+ul.read{padding-left:18px}ul.read li{margin:6px 0}
+table.basis,table.res{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:560px;margin:8px 0 4px}
+table.basis th,table.basis td,table.res th,table.res td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--line)}
+table.basis th,table.res th{color:var(--dim);font-weight:500}
+table.basis td:first-child,table.basis th:first-child,table.res td:first-child,table.res th:first-child,table.basis td:nth-child(5),table.basis th:nth-child(5){text-align:left}
+.asof{font:12px var(--mono);color:var(--dim)}
+.ctrl{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font:12px var(--mono);margin:10px 0 6px}
+.ctrl button{font:inherit;padding:3px 9px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:6px;cursor:pointer}
+.ctrl button.on{color:var(--text);border-color:var(--acc)}
+.ctrl label{display:inline-flex;gap:4px;align-items:center;margin:0 6px 0 0;color:var(--text);font:12px var(--mono)}
+.sw{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle}
+ol.find li,ul.read li{margin:7px 0}
+.src{font:11px var(--mono);color:var(--dim)}
+</style>
+<!-- ICONS --><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- /ICONS -->
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / research / complex-vs-simple</nav>
+  <h1>Complex vs Simple <span class="tag">RESEARCH NOTE</span></h1>
+  <p class="lede">A multi-signal stock-selection model for A-shares showed a 21% annual return in its backtest. How much of that needed the model? We rebuilt the portfolio from the three plain styles it turned out to hold, ran both through the same engine with the same costs, and fixed the pass mark before looking. The extra signals did not clear it.</p>
+</header>
+<main>
+<section aria-labelledby="find-h">
+<h2 id="find-h">Key findings</h2>
+<ol class="find">
+<li><strong>The model was mostly three known styles.</strong> Its holdings sat around the 74th percentile of the market on cheapness, the 68th on low volatility and the 28th on trading activity, after adjusting for company size. On profitability it was average, and on gross margin and leverage it was worse than average.</li>
+<li><strong>A plain version came close.</strong> An equal-weight score of value, low turnover and low volatility, run through the same engine, returned 19.8% a year against 21.3% for the full model from 2018-07 to 2026-11, with a higher Sharpe ratio (1.03 against 0.95) and a smaller worst drawdown.</li>
+<li><strong>The gap was not significant.</strong> The full model was ahead by +2.0% a year with a t-statistic of 0.63. The pass mark fixed in advance was +2.0 points with t ≥ 2 and a lead in both halves; it led by +8.8% a year in the first half and trailed by 4.1% in the second.</li>
+<li><strong>Its edge was concentrated in one period.</strong> The model was 44% ahead of the simple version by August 2022, built mostly from 2019 to 2021, and by November 2026 the lead was down to 11%. That is the pattern to expect when signals are chosen on the same history they are tested on.</li>
+<li><strong>Turnover cost was the clearest difference.</strong> The full model traded 8.6 times its capital each way per year against 1.6 for the simple one, which cost about 2.3 percentage points a year more in fees and slippage.</li>
+</ol>
+</section>
+
+<section aria-labelledby="setup-h">
+<h2 id="setup-h">Setup</h2>
+<ul class="read">
+<li><strong>The model.</strong> A multi-signal composite score used to run a concentrated long-only A-share portfolio of a few dozen stocks, rebalanced every two weeks. Its signals are not described here; the test treats it as a black box.</li>
+<li><strong>The simple model.</strong> Three plain characteristics, each neutralised against industry and company size and converted to a cross-sectional z-score, then averaged with equal weight: value (earnings, book value, sales and operating cash flow relative to market value), low turnover (20-day average turnover) and low volatility (60-day return volatility).</li>
+<li><strong>Same engine.</strong> Both scores went through the identical backtest: the same investable universe, number of holdings, rebalancing dates, trading rules for price limits and suspensions, and the same cost model for commission, stamp duty and slippage.</li>
+<li><strong>Criteria fixed in advance.</strong> The complex model counted as adding value only if it beat the simple one by at least 2 percentage points a year with a t-statistic of at least 2 on daily return differences, and was ahead in both halves of the sample (to June 2022 and after).</li>
+<li><strong>Sample.</strong> Daily returns from 2018-07-03 to 2026-11-13, 2030 trading days.</li>
+</ul>
+</section>
+
+<section aria-labelledby="exp-h">
+<h2 id="exp-h">Step 1: what the model actually held</h2>
+<p>For every rebalancing date, each holding was ranked against all investable stocks on a set of characteristics, and the portfolio's exposure is the value-weighted average percentile: 50 means the same as the market. The size-adjusted figure ranks each stock only against stocks of similar market value. The method is available as the <a href="/tools/style-exposure/">Style Exposure Analyzer</a>.</p>
+<div class="scroll"><table class="res"><thead><tr><th>Characteristic</th><th>Percentile, size-adjusted</th><th>Share of dates above 50</th></tr></thead><tbody>
+<tr><td>Value (four ratios combined)</td><td>74</td><td>100%</td></tr>
+<tr><td>Low volatility (60-day and 250-day beta combined)</td><td>68</td><td>100%</td></tr>
+<tr><td>Trading activity (20-day turnover)</td><td>28</td><td>0%</td></tr>
+<tr><td>Return on equity</td><td>51</td><td>56%</td></tr>
+<tr><td>Gross margin</td><td>37</td><td>0%</td></tr>
+<tr><td>Low leverage</td><td>38</td><td>1%</td></tr>
+<tr><td>Market value (raw percentile)</td><td>39</td><td>–</td></tr>
+<tr><td>20-day return</td><td>50</td><td>50%</td></tr>
+</tbody></table></div>
+<p class="src">203 rebalancing dates from July 2018 to November 2026. The tilts held on every date: this was a design feature, not chance. The low gross margin and high leverage are a side effect of buying cheap stocks, since thin-margin and highly indebted companies look cheap on sales and book value.</p>
+</section>
+
+<section aria-labelledby="h2h-h">
+<h2 id="h2h-h">Step 2: head to head</h2>
+<div class="scroll"><table class="res"><thead><tr><th>Portfolio</th><th>Annual return</th><th>Sharpe</th><th>Max drawdown</th><th>To Jun 2022</th><th>From Jul 2022</th><th>Turnover / yr</th><th>Cost / yr</th></tr></thead><tbody>
+<tr><td>Multi-signal model</td><td>21.3%</td><td>0.95</td><td>-30.3%</td><td>31.0%</td><td>13.0%</td><td>8.6×</td><td>−2.8%</td></tr>
+<tr><td>Simple three-style model</td><td>19.8%</td><td>1.03</td><td>-25.6%</td><td>20.5%</td><td>19.1%</td><td>1.6×</td><td>−0.5%</td></tr>
+<tr><td>Value only</td><td>11.1%</td><td>0.65</td><td>-21.2%</td><td>17.4%</td><td>5.7%</td><td>0.6×</td><td>−0.2%</td></tr>
+<tr><td>Low turnover only</td><td>17.5%</td><td>0.76</td><td>-43.4%</td><td>23.6%</td><td>12.1%</td><td>3.0×</td><td>−1.0%</td></tr>
+<tr><td>Low volatility only</td><td>9.9%</td><td>0.62</td><td>-28.7%</td><td>9.1%</td><td>10.5%</td><td>2.1×</td><td>−0.7%</td></tr>
+</tbody></table></div>
+<p class="src">Backtest after costs, 2018-07-03 to 2026-11-13. Turnover is one-way, as a multiple of capital. All five portfolios use the same engine; only the score differs.</p>
+<div class="panel" style="margin:14px 0"><svg viewBox="0 0 720 220" role="img" aria-label="Cumulative return of the multi-signal model relative to the simple three-style model" style="width:100%;height:auto;font-family:ui-monospace,Menlo,Consolas,monospace"><line x1="46" x2="710" y1="196.0" y2="196.0" stroke="#1b2430"/><text x="40" y="200.0" text-anchor="end" fill="#94a3b8" font-size="11">-20%</text><line x1="46" x2="710" y1="149.5" y2="149.5" stroke="#64748b"/><text x="40" y="153.5" text-anchor="end" fill="#94a3b8" font-size="11">+0%</text><line x1="46" x2="710" y1="103.0" y2="103.0" stroke="#1b2430"/><text x="40" y="107.0" text-anchor="end" fill="#94a3b8" font-size="11">+20%</text><line x1="46" x2="710" y1="56.5" y2="56.5" stroke="#1b2430"/><text x="40" y="60.5" text-anchor="end" fill="#94a3b8" font-size="11">+40%</text><line x1="46" x2="710" y1="10.0" y2="10.0" stroke="#1b2430"/><text x="40" y="14.0" text-anchor="end" fill="#94a3b8" font-size="11">+60%</text><text x="84.9" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2019</text><text x="164.2" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2020</text><text x="243.5" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2021</text><text x="324.4" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2022</text><text x="402.1" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2023</text><text x="481.4" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2024</text><text x="560.7" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2025</text><text x="641.6" y="214" text-anchor="middle" fill="#94a3b8" font-size="11">2026</text><line x1="361.7" x2="361.7" y1="10" y2="196" stroke="#f6ad55" stroke-dasharray="4 4"/><path d="M46.0,149.5 L47.6,150.6 L49.1,149.9 L50.7,150.3 L52.2,153.5 L53.8,156.7 L55.3,154.2 L56.9,155.1 L58.4,155.7 L60.0,153.5 L61.6,152.6 L63.1,154.5 L64.7,160.9 L66.2,162.1 L67.8,156.9 L69.3,158.0 L70.9,155.2 L72.4,154.0 L74.0,151.2 L75.5,155.1 L77.1,159.1 L78.7,157.0 L80.2,154.6 L81.8,156.7 L83.3,154.7 L84.9,154.1 L86.4,152.6 L88.0,151.5 L89.5,151.1 L91.1,153.5 L92.7,153.7 L94.2,153.8 L95.8,154.2 L97.3,158.4 L98.9,156.1 L100.4,157.5 L102.0,154.3 L103.5,150.8 L105.1,151.8 L106.6,152.0 L108.2,147.2 L109.8,149.4 L111.3,141.3 L112.9,141.7 L114.4,143.1 L116.0,140.4 L117.5,144.0 L119.1,140.8 L120.6,139.5 L122.2,143.3 L123.8,142.6 L125.3,145.2 L126.9,142.8 L128.4,142.3 L130.0,137.2 L131.5,141.5 L133.1,139.7 L134.6,136.6 L136.2,133.3 L137.7,130.6 L139.3,129.1 L140.9,124.6 L142.4,132.8 L144.0,134.5 L145.5,132.1 L147.1,130.8 L148.6,131.5 L150.2,135.3 L151.7,135.3 L153.3,140.5 L154.9,138.7 L156.4,139.5 L158.0,141.5 L159.5,141.5 L161.1,144.4 L162.6,143.9 L164.2,142.4 L165.7,138.5 L167.3,140.0 L168.8,143.0 L170.4,148.4 L172.0,143.5 L173.5,141.3 L175.1,139.4 L176.6,139.4 L178.2,146.8 L179.7,150.2 L181.3,148.5 L182.8,147.9 L184.4,147.5 L186.0,145.4 L187.5,145.0 L189.1,146.5 L190.6,145.0 L192.2,146.4 L193.7,144.5 L195.3,141.6 L196.8,137.8 L198.4,143.9 L199.9,140.3 L201.5,136.8 L203.1,138.9 L204.6,136.7 L206.2,135.7 L207.7,134.9 L209.3,133.0 L210.8,124.9 L212.4,119.5 L213.9,119.1 L215.5,113.3 L217.1,112.2 L218.6,109.6 L220.2,110.9 L221.7,110.3 L223.3,110.6 L224.8,111.4 L226.4,112.5 L227.9,116.1 L229.5,116.6 L231.0,115.4 L232.6,115.2 L234.2,112.0 L235.7,109.8 L237.3,100.4 L238.8,105.1 L240.4,102.2 L241.9,96.5 L243.5,95.3 L245.0,94.7 L246.6,91.2 L248.2,92.8 L249.7,93.5 L251.3,94.1 L252.8,94.2 L254.4,90.3 L255.9,91.1 L257.5,85.7 L259.0,85.3 L260.6,82.6 L262.1,88.3 L263.7,82.4 L265.3,83.0 L266.8,84.3 L268.4,86.0 L269.9,81.8 L271.5,82.3 L273.0,89.9 L274.6,94.6 L276.1,96.6 L277.7,98.2 L279.3,97.8 L280.8,97.2 L282.4,86.2 L283.9,85.2 L285.5,77.9 L287.0,77.8 L288.6,72.8 L290.1,68.4 L291.7,67.7 L293.3,64.2 L294.8,61.6 L296.4,55.9 L297.9,61.4 L299.5,62.1 L301.0,64.0 L302.6,70.4 L304.1,73.2 L305.7,72.2 L307.2,67.7 L308.8,70.3 L310.4,76.9 L311.9,71.0 L313.5,66.8 L315.0,62.2 L316.6,69.2 L318.1,73.8 L319.7,72.1 L321.2,77.0 L322.8,75.3 L324.4,77.3 L325.9,77.6 L327.5,70.9 L329.0,70.4 L330.6,72.0 L332.1,76.3 L333.7,80.1 L335.2,86.8 L336.8,83.0 L338.3,89.8 L339.9,87.5 L341.5,85.8 L343.0,88.2 L344.6,86.8 L346.1,86.7 L347.7,83.9 L349.2,85.1 L350.8,83.7 L352.3,76.6 L353.9,73.6 L355.5,73.3 L357.0,68.3 L358.6,67.4 L360.1,63.7 L361.7,57.9 L363.2,57.7 L364.8,57.2 L366.3,56.5 L367.9,55.7 L369.4,55.0 L371.0,48.3 L372.6,47.3 L374.1,53.8 L375.7,62.7 L377.2,62.3 L378.8,59.6 L380.3,63.3 L381.9,67.1 L383.4,66.7 L385.0,68.2 L386.6,65.3 L388.1,73.4 L389.7,72.8 L391.2,68.3 L392.8,70.0 L394.3,77.8 L395.9,76.4 L397.4,78.5 L399.0,77.8 L400.5,72.1 L402.1,70.7 L403.7,73.6 L405.2,74.0 L406.8,74.6 L408.3,69.0 L409.9,67.7 L411.4,66.9 L413.0,65.4 L414.5,66.2 L416.1,67.7 L417.7,75.0 L419.2,71.8 L420.8,74.6 L422.3,77.0 L423.9,80.4 L425.4,87.8 L427.0,101.0 L428.5,108.2 L430.1,102.4 L431.6,98.7 L433.2,96.9 L434.8,100.9 L436.3,108.9 L437.9,106.9 L439.4,107.6 L441.0,102.4 L442.5,100.6 L444.1,100.2 L445.6,103.1 L447.2,96.6 L448.8,99.2 L450.3,97.7 L451.9,96.1 L453.4,99.8 L455.0,100.7 L456.5,100.6 L458.1,104.1 L459.6,101.4 L461.2,102.1 L462.7,104.9 L464.3,110.0 L465.9,117.2 L467.4,112.7 L469.0,113.5 L470.5,113.2 L472.1,114.1 L473.6,113.4 L475.2,112.9 L476.7,115.7 L478.3,112.0 L479.9,110.7 L481.4,113.9 L483.0,113.9 L484.5,116.4 L486.1,114.2 L487.6,126.4 L489.2,138.5 L490.7,130.1 L492.3,131.9 L493.9,134.4 L495.4,128.8 L497.0,130.2 L498.5,133.3 L500.1,130.3 L501.6,133.0 L503.2,143.2 L504.7,138.7 L506.3,134.2 L507.8,131.7 L509.4,128.4 L511.0,131.5 L512.5,134.2 L514.1,143.3 L515.6,148.6 L517.2,154.7 L518.7,150.6 L520.3,153.3 L521.8,150.9 L523.4,155.5 L525.0,152.5 L526.5,151.3 L528.1,153.6 L529.6,153.2 L531.2,152.6 L532.7,152.0 L534.3,153.6 L535.8,154.7 L537.4,153.5 L538.9,149.7 L540.5,146.6 L542.1,151.1 L543.6,146.4 L545.2,141.4 L546.7,138.5 L548.3,132.5 L549.8,135.7 L551.4,138.6 L552.9,135.7 L554.5,135.3 L556.1,127.8 L557.6,127.4 L559.2,123.9 L560.7,128.8 L562.3,127.1 L563.8,125.5 L565.4,128.8 L566.9,130.0 L568.5,128.0 L570.0,131.1 L571.6,128.1 L573.2,128.6 L574.7,125.2 L576.3,125.0 L577.8,116.3 L579.4,115.8 L580.9,116.8 L582.5,122.6 L584.0,121.3 L585.6,121.4 L587.2,118.7 L588.7,116.5 L590.3,116.5 L591.8,114.8 L593.4,115.5 L594.9,111.1 L596.5,111.9 L598.0,112.8 L599.6,110.7 L601.1,114.3 L602.7,116.6 L604.3,117.4 L605.8,116.0 L607.4,115.1 L608.9,114.9 L610.5,113.9 L612.0,113.7 L613.6,118.4 L615.1,118.0 L616.7,117.7 L618.3,117.1 L619.8,114.2 L621.4,112.9 L622.9,114.0 L624.5,118.0 L626.0,115.0 L627.6,116.1 L629.1,114.2 L630.7,116.6 L632.2,117.7 L633.8,118.4 L635.4,120.9 L636.9,119.7 L638.5,120.2 L640.0,117.6 L641.6,117.4 L643.1,114.9 L644.7,114.1 L646.2,113.7 L647.8,119.3 L649.4,115.5 L650.9,117.4 L652.5,118.9 L654.0,119.3 L655.6,121.8 L657.1,127.9 L658.7,124.9 L660.2,130.3 L661.8,129.5 L663.3,123.9 L664.9,123.8 L666.5,121.8 L668.0,117.8 L669.6,114.5 L671.1,110.7 L672.7,122.0 L674.2,123.2 L675.8,127.3 L677.3,122.1 L678.9,122.4 L680.5,120.5 L682.0,125.1 L683.6,131.4 L685.1,137.0 L686.7,133.3 L688.2,125.8 L689.8,122.9 L691.3,120.7 L692.9,118.9 L694.4,121.3 L696.0,120.8 L697.6,121.1 L699.1,122.8 L700.7,121.6 L702.2,122.0 L703.8,125.6 L705.3,125.5 L706.9,134.2 L708.4,130.2 L710.0,124.2" fill="none" stroke="#22d3ee" stroke-width="2"/></svg></div>
+<p class="src">Cumulative return of the multi-signal model relative to the simple three-style model, weekly. The dashed line marks the split between the two halves of the sample.</p>
+<h3>By calendar year</h3>
+<div class="scroll"><table class="res"><thead><tr><th>Year</th><th>Multi-signal</th><th>Simple</th><th>Difference</th></tr></thead><tbody>
+<tr><td>2018 (part)</td><td>-7.5%</td><td>-5.4%</td><td class="neg">-2.1%</td></tr>
+<tr><td>2019</td><td>+36.1%</td><td>+29.4%</td><td class="pos">+6.8%</td></tr>
+<tr><td>2020</td><td>+43.9%</td><td>+20.1%</td><td class="pos">+23.9%</td></tr>
+<tr><td>2021</td><td>+49.4%</td><td>+40.5%</td><td class="pos">+8.8%</td></tr>
+<tr><td>2022</td><td>+13.1%</td><td>+10.7%</td><td class="pos">+2.4%</td></tr>
+<tr><td>2023</td><td>+24.9%</td><td>+43.3%</td><td class="neg">-18.4%</td></tr>
+<tr><td>2024</td><td>+3.6%</td><td>+9.4%</td><td class="neg">-5.9%</td></tr>
+<tr><td>2025</td><td>+29.4%</td><td>+25.6%</td><td class="pos">+3.9%</td></tr>
+<tr><td>2026 (part)</td><td>-3.0%</td><td>-0.4%</td><td class="neg">-2.6%</td></tr>
+</tbody></table></div>
+<h3>Against the pass mark</h3>
+<div class="scroll"><table class="res"><thead><tr><th>Period</th><th>Annual difference</th><th>t-statistic</th><th>Required</th></tr></thead><tbody>
+<tr><td>Full sample</td><td>+2.0%</td><td>0.63</td><td>≥ +2.0% and t ≥ 2</td></tr>
+<tr><td>To June 2022</td><td>+8.8%</td><td>2.13</td><td>&gt; 0</td></tr>
+<tr><td>From July 2022</td><td>-4.1%</td><td>-0.83</td><td>&gt; 0</td></tr>
+</tbody></table></div>
+</section>
+
+<section aria-labelledby="reg-h">
+<h2 id="reg-h">Step 3: what the styles cannot explain</h2>
+<p>The model's daily return above an equal-weighted market was regressed on the daily excess returns of five style portfolios (top fifth of stocks by value, low turnover, low volatility, quality and small size), with Newey-West standard errors.</p>
+<div class="scroll"><table class="res"><thead><tr><th>Period</th><th>Unexplained, per year</th><th>t</th><th>Value</th><th>Low turnover</th><th>Low vol</th><th>Quality</th><th>Small size</th><th>R²</th></tr></thead><tbody>
+<tr><td>Full sample</td><td>−4.1%</td><td>−1.78</td><td>0.65</td><td>0.61</td><td>0.34</td><td>−0.24</td><td>0.05</td><td>0.47</td></tr>
+<tr><td>To June 2022</td><td>+1.1%</td><td>0.33</td><td>0.60</td><td>0.55</td><td>0.40</td><td>−0.19</td><td>0.02</td><td>0.46</td></tr>
+<tr><td>From July 2022</td><td>−8.3%</td><td>−2.63</td><td>0.71</td><td>0.64</td><td>0.29</td><td>−0.31</td><td>0.07</td><td>0.49</td></tr>
+</tbody></table></div>
+<p class="src">The style portfolios are before costs and the model is after costs of about 2.8% a year, so the unexplained return is biased against the model by roughly that amount. Even adding it back, nothing positive is left over the full sample, and the second half stays negative.</p>
+</section>
+
+<section aria-labelledby="less-h">
+<h2 id="less-h">What we take from it</h2>
+<ul class="read">
+<li><strong>Benchmark a model against its own tilts.</strong> Beating an index is easy for a portfolio of cheap, quiet stocks in a market that rewarded them. The useful hurdle is a plain portfolio with the same tilts.</li>
+<li><strong>Fix the pass mark first.</strong> With the criteria written down, a model that is "+2.0% a year" cannot be talked into a success.</li>
+<li><strong>Complexity has a running cost.</strong> Extra signals that change the ranking every two weeks buy turnover. Here that cost was about 2.3 points a year, more than the model's whole lead.</li>
+<li><strong>Look at when the edge was earned.</strong> A lead built in the years the signals were chosen on, and lost after, is the signature of fitting the past.</li>
+<li><strong>Simple is not proven either.</strong> The three styles were picked after seeing the model's holdings, and all three did well in A-shares over these years. A plain version earns a place as the comparison, not as a forecast.</li>
+</ul>
+</section>
+
+<section aria-labelledby="lim-h">
+<h2 id="lim-h">Limitations</h2>
+<ul class="read">
+<li>Both models are in-sample: the complex one was built on this history, and the simple one was chosen after seeing the complex one's exposures.</li>
+<li>One market, one period, one portfolio construction. Different holding counts or rebalancing could change the turnover gap.</li>
+<li>The benchmark for excess returns is an equal-weighted index of investable stocks before costs.</li>
+<li>Backtest results, not live trading. Past results do not indicate future results.</li>
+</ul>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># Complex vs Simple: a multi-signal A-share model against three plain styles</p>
+<p>&gt; Pre-registered backtest comparison, 2018-07 to 2026-11: multi-signal model 21.3% a year (Sharpe 0.95, turnover 8.6×) vs value + low turnover + low volatility 19.8% (Sharpe 1.03, turnover 1.6×); difference +2.0% a year, t = 0.63; criterion not met. URL: https://quantcore-labs.com/research/complex-vs-simple/</p>
+<p>Full Markdown: <a href="/research/complex-vs-simple.md">/research/complex-vs-simple.md</a></p>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>Does this mean simple factor models are better?</dt>
+<dd>No. Both models were built with knowledge of the same history, and the simple one was assembled after looking at what the complex one held. The test shows that, on this history, the complex model&#x27;s extra signals did not add return a simple version could not get, net of costs. It says nothing about which will do better next.</dd>
+<dt>Why compare against three styles and not against an index?</dt>
+<dd>An index comparison credits the model with every style tilt it happens to have. A strategy that is mostly cheap, quiet, low-volatility stocks should beat the index in a market that rewards those traits. The question that matters for the extra complexity is whether it beats a plain portfolio with the same tilts.</dd>
+<dt>What would have counted as success?</dt>
+<dd>Fixed before the results: the complex model had to beat the simple one by at least 2 percentage points a year with a t-statistic of at least 2, and be ahead in both halves of the sample. In the regression, the unexplained return had to be at least 2% a year with t of at least 2.</dd>
+<dt>Can I run the same checks on my own strategy?</dt>
+<dd>Yes. The holdings exposure step is available as the Style Exposure Analyzer and the per-signal step as the Factor IC Analyzer on this site. The head-to-head test needs your own backtest engine, run twice with only the score changed.</dd>
+</dl>
+</section>
+<!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fcomplex-vs-simple.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fcomplex-vs-simple%2F%29%20and%20explain%20%22Complex%20vs%20Simple%3A%20A%20Multi-Signal%20A-Share%20Model%20Against%20Three%20Plain%20Styles%22%20to%20me%3A%20what%20it%20measures%2C%20the%20formula%20and%20its%20conventions%2C%20and%20one%20small%20worked%20example.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fcomplex-vs-simple.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fcomplex-vs-simple%2F%29%20and%20explain%20%22Complex%20vs%20Simple%3A%20A%20Multi-Signal%20A-Share%20Model%20Against%20Three%20Plain%20Styles%22%20to%20me%3A%20what%20it%20measures%2C%20the%20formula%20and%20its%20conventions%2C%20and%20one%20small%20worked%20example.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fcomplex-vs-simple.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Fresearch%2Fcomplex-vs-simple%2F%29%20and%20explain%20%22Complex%20vs%20Simple%3A%20A%20Multi-Signal%20A-Share%20Model%20Against%20Three%20Plain%20Styles%22%20to%20me%3A%20what%20it%20measures%2C%20the%20formula%20and%20its%20conventions%2C%20and%20one%20small%20worked%20example.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/research/complex-vs-simple.md (the Markdown version of https://quantcore-labs.com/research/complex-vs-simple/) and explain &quot;Complex vs Simple: A Multi-Signal A-Share Model Against Three Plain Styles&quot; to me: what it measures, the formula and its conventions, and one small worked example. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+</main>
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. Backtest results; past performance does not indicate future results. © QuantCore Labs.</p><!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</div>
+</body>
+</html>
