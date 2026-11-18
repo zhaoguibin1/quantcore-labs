@@ -1,5 +1,5 @@
 {
- "as_of": "2026-11-16",
+ "as_of": "2026-11-17",
  "source": "U.S. Department of the Treasury, Daily Treasury Par Yield Curve Rates",
  "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve",
  "basis": "par_bey = published CMT par yield (% , semiannual bond-equivalent); continuous = 2*ln(1+y/2); effective_annual = (1+y/2)^2-1. Par yields are used as zero-rate approximations.",
@@ -7,93 +7,93 @@
   {
    "label": "1 Mo",
    "years": 0.083333,
-   "par_bey": 4.1,
-   "continuous": 4.058541,
-   "effective_annual": 4.142025
+   "par_bey": 4.09,
+   "continuous": 4.048741,
+   "effective_annual": 4.13182
   },
   {
    "label": "1.5 Month",
    "years": 0.125,
-   "par_bey": 4.19,
-   "continuous": 4.146713,
-   "effective_annual": 4.23389
+   "par_bey": 4.24,
+   "continuous": 4.195681,
+   "effective_annual": 4.284944
   },
   {
    "label": "2 Mo",
    "years": 0.166667,
-   "par_bey": 4.27,
-   "continuous": 4.225056,
-   "effective_annual": 4.315582
+   "par_bey": 4.26,
+   "continuous": 4.215265,
+   "effective_annual": 4.305369
   },
   {
    "label": "3 Mo",
    "years": 0.25,
-   "par_bey": 4.34,
-   "continuous": 4.293581,
-   "effective_annual": 4.387089
-  },
-  {
-   "label": "4 Mo",
-   "years": 0.333333,
    "par_bey": 4.33,
    "continuous": 4.283793,
    "effective_annual": 4.376872
   },
   {
+   "label": "4 Mo",
+   "years": 0.333333,
+   "par_bey": 4.32,
+   "continuous": 4.274005,
+   "effective_annual": 4.366656
+  },
+  {
    "label": "6 Mo",
    "years": 0.5,
-   "par_bey": 4.42,
-   "continuous": 4.371867,
-   "effective_annual": 4.468841
+   "par_bey": 4.41,
+   "continuous": 4.362083,
+   "effective_annual": 4.45862
   },
   {
    "label": "1 Yr",
    "years": 1.0,
-   "par_bey": 4.62,
-   "continuous": 4.567447,
-   "effective_annual": 4.673361
+   "par_bey": 4.6,
+   "continuous": 4.547897,
+   "effective_annual": 4.6529
   },
   {
    "label": "2 Yr",
    "years": 2.0,
-   "par_bey": 4.83,
-   "continuous": 4.7726,
-   "effective_annual": 4.888322
+   "par_bey": 4.8,
+   "continuous": 4.743305,
+   "effective_annual": 4.8576
   },
   {
    "label": "3 Yr",
    "years": 3.0,
-   "par_bey": 4.87,
-   "continuous": 4.811653,
-   "effective_annual": 4.929292
+   "par_bey": 4.84,
+   "continuous": 4.782364,
+   "effective_annual": 4.898564
   },
   {
    "label": "5 Yr",
    "years": 5.0,
-   "par_bey": 4.93,
-   "continuous": 4.870218,
-   "effective_annual": 4.990762
+   "par_bey": 4.9,
+   "continuous": 4.840938,
+   "effective_annual": 4.960025
   },
   {
    "label": "7 Yr",
    "years": 7.0,
-   "par_bey": 5.01,
-   "continuous": 4.948278,
-   "effective_annual": 5.07275
+   "par_bey": 4.99,
+   "continuous": 4.928766,
+   "effective_annual": 5.05225
   },
   {
    "label": "10 Yr",
    "years": 10.0,
-   "par_bey": 5.12,
-   "continuous": 5.055561,
-   "effective_annual": 5.185536
+   "par_bey": 5.1,
+   "continuous": 5.03606,
+   "effective_annual": 5.165025
   },
   {
    "label": "20 Yr",
    "years": 20.0,
-   "par_bey": 5.51,
-   "continuous": 5.435466,
-   "effective_annual": 5.5859
+   "par_bey": 5.5,
+   "continuous": 5.425733,
+   "effective_annual": 5.575625
   },
   {
    "label": "30 Yr",
