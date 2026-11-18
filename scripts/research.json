@@ -1,5 +1,17 @@
 [
  {
+  "id": "us-sector-residual-reversion",
+  "url": "/research/us-sector-residual-reversion/",
+  "md": "/research/us-sector-residual-reversion.md",
+  "name": "US Sector Residual Mean Reversion After 2020",
+  "desc": "The textbook stat-arb strategy, Avellaneda-Lee sector-ETF residual reversion, run untuned on US stocks 2016 to 2025: out of sample, after costs and excluding interest on cash, the edge of 2016 to 2020 was gone in 2021 to 2025.",
+  "chips": [
+   "Out-of-sample sectors",
+   "Net of costs and cash",
+   "2016–20 vs 2021–25"
+  ]
+ },
+ {
   "id": "complex-vs-simple",
   "url": "/research/complex-vs-simple/",
   "md": "/research/complex-vs-simple.md",
@@ -23,4 +35,4 @@
    "2015–2026, by year"
   ]
  }
-]
+]
