@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://quantcore-labs.com/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/about/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/about/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/option-greeks-calc/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/option-greeks-calc/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/privacy/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/cython-rolling-mean/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/duckdb-asof-vwap/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
@@ -21,7 +21,7 @@
   <url><loc>https://quantcore-labs.com/code/rolling-window-numba/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/code/vectorized-backtest/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/adf-test/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/almgren-chriss/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/almgren-chriss/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/amihud-illiquidity/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/arrival-price/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/beta/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
@@ -32,7 +32,7 @@
   <url><loc>https://quantcore-labs.com/glossary/garch/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/half-life-mean-reversion/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/hurst-exponent/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/implementation-shortfall/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/implementation-shortfall/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/implied-volatility/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/information-coefficient/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/information-ratio/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
@@ -41,7 +41,7 @@
   <url><loc>https://quantcore-labs.com/glossary/max-drawdown/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/ofi/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/parkinson-volatility/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/glossary/participation-rate/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/glossary/participation-rate/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/pin-informed-trading/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/put-call-parity/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/realized-volatility/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
@@ -56,10 +56,11 @@
   <url><loc>https://quantcore-labs.com/glossary/vpin/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/glossary/vwap/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/research/china-index-futures-basis/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/factor-ic/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/iv-smile/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/a-share-costs/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/factor-ic/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/iv-smile/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
   <url><loc>https://quantcore-labs.com/tools/monte-carlo-asset-sim/</loc><lastmod>2026-11-09T10:07:59+08:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/performance-analytics/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/portfolio-efficient-frontier/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
-  <url><loc>https://quantcore-labs.com/tools/style-exposure/</loc><lastmod>2026-11-17T19:31:15-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/performance-analytics/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/portfolio-efficient-frontier/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
+  <url><loc>https://quantcore-labs.com/tools/style-exposure/</loc><lastmod>2026-11-17T20:10:22-05:00</lastmod></url>
 </urlset>
