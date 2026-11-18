@@ -61,6 +61,10 @@ POV (percent of volume) is the schedule that tries to keep participation near a 
 
 There is no universal rate. Higher participation finishes sooner and usually moves the price more. The function does not choose ρ. It only converts a chosen rate and an observed volume into a child quantity.
 
+## Use it in a calculator
+
+- [A-Share Trading Cost Calculator](https://quantcore-labs.com/tools/a-share-costs/)
+
 ## Related
 
 - [Time-Weighted Average Price (TWAP)](https://quantcore-labs.com/glossary/twap/)

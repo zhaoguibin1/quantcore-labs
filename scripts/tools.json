@@ -27,5 +27,9 @@
  {"id": "style-exposure", "url": "/tools/style-exposure/", "name": "Portfolio Style Exposure Analyzer",
   "desc": "Paste a universe with your holdings weights and characteristics such as book-to-price, ROE or volatility; get each tilt as a percentile inside the universe, raw and size-adjusted, by date.",
   "chips": ["Holdings-based tilts", "Size-adjusted percentiles", "Checked against pandas"],
-  "terms": ["beta", "tracking-error", "information-coefficient"], "code": []}
+  "terms": ["beta", "tracking-error", "information-coefficient"], "code": []},
+ {"id": "a-share-costs", "url": "/tools/a-share-costs/", "name": "A-Share Trading Cost Calculator",
+  "desc": "Stamp duty, transfer fee, exchange fees and commission on a Shanghai or Shenzhen A-share trade: buy, sell and round-trip cost, where the minimum commission binds, and annual drag from turnover, at the fee schedule for any date since 2015.",
+  "chips": ["Fee schedules 2015, 2022, 2023", "Minimum-commission effect", "Annual drag from turnover"],
+  "terms": ["implementation-shortfall", "participation-rate", "almgren-chriss"], "code": []}
 ]

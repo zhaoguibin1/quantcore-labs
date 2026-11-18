@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A-Share Trading Cost Calculator: Stamp Duty, Fees, Commission | QuantCore Labs</title>
+<meta name="description" content="Stamp duty, transfer fee, exchange fees and commission on a Shanghai or Shenzhen A-share trade: buy, sell and round-trip cost, the minimum-commission effect and annual drag, at the fee schedule for any date since 2015.">
+<link rel="canonical" href="https://quantcore-labs.com/tools/a-share-costs/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/a-share-costs.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="A-Share Trading Cost Calculator">
+<meta property="og:description" content="Stamp duty, transfer fee, exchange fees and commission on an A-share trade, round trip and annual drag. Client-side.">
+<meta property="og:url" content="https://quantcore-labs.com/tools/a-share-costs/">
+<meta property="og:image" content="https://quantcore-labs.com/tools/a-share-costs/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/tools/a-share-costs/#app",
+      "name": "A-Share Trading Cost Calculator",
+      "url": "https://quantcore-labs.com/tools/a-share-costs/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Transaction Cost Analysis",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Commission with per-order minimum, all-in or plus exchange and CSRC fees",
+        "Stamp duty, transfer fee, exchange handling fee and CSRC management fee at the schedule in force on a chosen date",
+        "Fee schedules from 2015-08-01, 2022-04-29 and 2023-08-28",
+        "Board lots: 100 shares on the main board and ChiNext; at least 200 shares on the STAR Market",
+        "Buy, sell and round-trip cost in CNY and basis points",
+        "Round-trip cost by order size, showing where the minimum commission binds",
+        "Annual cost drag from one-way turnover",
+        "Client-side computation, data never leaves the browser"
+      ],
+      "image": "https://quantcore-labs.com/tools/a-share-costs/og-image.png",
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://quantcore-labs.com/tools/a-share-costs/#article"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/tools/a-share-costs/#article",
+      "headline": "A-Share Trading Costs: Stamp Duty, Transfer Fee, Exchange Fees and Commission",
+      "description": "The fees on a Shanghai or Shenzhen A-share trade, how they changed in 2015, 2022 and 2023, and how they add up to a round-trip cost and an annual drag.",
+      "image": "https://quantcore-labs.com/tools/a-share-costs/og-image.png",
+      "inLanguage": "en",
+      "proficiencyLevel": "Beginner",
+      "datePublished": "2026-11-17T21:00:00-05:00",
+      "dateModified": "2026-11-17T21:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/tools/a-share-costs/",
+      "articleBody": "Each order pays commission = max(value x rate, minimum), rounded to 0.01 CNY; a transfer fee of 0.001% (0.002% before 2022-04-29); and, on sales only, stamp duty of 0.05% (0.1% before 2023-08-28). If the commission is quoted net, the exchange handling fee (0.00341%, 0.00487% before 2023-08-28) and the CSRC management fee (0.002%) are added. Each fee is rounded to 0.01 CNY. Round-trip cost is the buy and the sell of the same value. Annual drag = one-way turnover x round-trip cost."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/tools/a-share-costs/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What does it cost to buy and sell an A-share stock?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "At the fee schedule in force since 28 August 2023, a round trip of 100,000 CNY with a commission of 2.5 basis points (including exchange fees) and a 5 CNY minimum costs about 102 CNY: 25 CNY commission on each side, 1 CNY transfer fee on each side and 50 CNY stamp duty on the sale. That is 10.2 basis points before any market impact."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who pays stamp duty?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Only the seller. It has been 0.05% of the traded value since 28 August 2023 and was 0.1% before that, back to September 2008."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the exchange handling fee included in my commission?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Usually yes. Most brokers quote an all-in commission that already contains the exchange handling fee (0.00341%) and the CSRC management fee (0.002%), together 0.00541%. Some institutional and low-cost accounts quote a net commission and charge these fees on top; choose that option if your contract notes list them separately."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why are small orders so expensive?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Because of the minimum commission. With a 5 CNY minimum and a 2.5 basis point rate, every order below 20,000 CNY pays the minimum, so a 5,000 CNY order pays 10 basis points of commission on each side instead of 2.5."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which fee schedule should a backtest use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The one in force on each trade date. A backtest that applies today's 0.05% stamp duty to trades before 28 August 2023 understates the cost of every sale by 5 basis points."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data uploaded?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Everything is computed in your browser."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "A-Share Trading Cost Calculator",
+          "item": "https://quantcore-labs.com/tools/a-share-costs/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.scroll{overflow-x:auto}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+table.years{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:420px}
+table.years th,table.years td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.years th{color:var(--dim);font-weight:500}
+table.years td:first-child,table.years th:first-child{text-align:left;color:var(--dim)}
+.note{font:12px var(--mono);color:var(--warn);margin-top:8px;min-height:14px}
+ul.read{padding-left:18px}ul.read li{margin:6px 0}
+table.brk,table.sched{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:460px;margin-top:12px}
+table.brk th,table.brk td,table.sched th,table.sched td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--line)}
+table.brk th,table.sched th{color:var(--dim);font-weight:500}
+table.brk td:first-child,table.brk th:first-child,table.sched td:first-child,table.sched th:first-child{text-align:left}
+table.brk tr.tot td{color:var(--text);font-weight:600;border-top:1px solid var(--dim)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.presets button{font:12px var(--mono);padding:4px 9px}
+.src{font:11px var(--mono);color:var(--dim)}
+</style>
+<!-- ICONS --><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- /ICONS -->
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / tools / a-share-costs</nav>
+  <h1>A-Share Trading Cost Calculator <span class="tag">CLIENT-SIDE</span></h1>
+  <p class="lede">What a Shanghai or Shenzhen A-share trade really costs: commission with its per-order minimum, stamp duty on the sale, the transfer fee, and the exchange and CSRC fees, at the schedule in force on any date since August 2015. See the buy, the sell and the round trip in CNY and basis points, where the minimum commission starts to hurt, and what a strategy's turnover costs per year.</p>
+</header>
+<noscript><p><strong>JavaScript is disabled.</strong> The fee schedule and formulas are below and in the <a href="/a-share-costs.md">Markdown version</a>.</p></noscript>
+<main>
+<section aria-labelledby="calc-h">
+<h2 id="calc-h">Calculator</h2>
+<div class="grid">
+  <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+    <h3>Inputs</h3>
+    <div class="presets" id="presets" aria-label="Account presets"></div>
+    <div class="row2">
+      <div><label for="regime">Fee schedule in force</label><select id="regime"></select></div>
+      <div><label for="incl" title="All-in: includes exchange and CSRC fees. Net: those fees are charged on top.">Commission quoted</label>
+        <select id="incl"><option value="1">All-in</option><option value="0">Net + fees</option></select></div>
+    </div>
+    <div class="row2">
+      <div><label for="comm">Commission rate (bp)</label><input type="number" id="comm" value="2.5" min="0" max="30" step="0.1"></div>
+      <div><label for="minc">Minimum per order (CNY)</label><input type="number" id="minc" value="5" min="0" step="1"></div>
+    </div>
+    <div class="row2">
+      <div><label for="amt">Order amount (CNY)</label><input type="number" id="amt" value="100000" min="0" step="1000"></div>
+      <div><label for="slip">Market impact per side (bp)</label><input type="number" id="slip" value="0" min="0" step="0.5"></div>
+    </div>
+    <div class="row3">
+      <div><label for="px">Price (optional)</label><input type="number" id="px" value="" min="0" step="0.01" placeholder="e.g. 12.34"></div>
+      <div><label for="board">Board</label><select id="board"><option value="main">Main, ChiNext</option><option value="star">STAR</option></select></div>
+      <div><label for="shares">Shares</label><input type="text" id="shares" value="–" readonly></div>
+    </div>
+    <div class="row2">
+      <div><label for="turn">One-way turnover per year (×)</label><input type="number" id="turn" value="8" min="0" step="0.5"></div>
+      <div><label for="port">Portfolio value (CNY)</label><input type="number" id="port" value="1000000" min="0" step="10000"></div>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+    <div class="note" id="note"></div>
+  </form>
+  <div class="panel" aria-live="polite">
+    <h3>Results</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Round trip</div><div class="v" id="kRt">–</div><div class="s" id="kRtc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Buy</div><div class="v" id="kB">–</div><div class="s" id="kBc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Sell</div><div class="v" id="kS">–</div><div class="s" id="kSc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Annual drag</div><div class="v" id="kD">–</div><div class="s" id="kDc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Minimum binds below</div><div class="v" id="kM">–</div><div class="s">order value</div></div>
+      <div class="kpi"><div class="k">Stamp duty share</div><div class="v" id="kSt">–</div><div class="s">of round-trip cost</div></div>
+    </div>
+    <div class="scroll"><table class="brk"><thead><tr><th>CNY</th><th>Buy</th><th>Sell</th><th>Round trip</th></tr></thead><tbody id="brk"></tbody></table></div>
+    <div class="ctitle"><span>Round-trip cost by order size (bp, log scale)</span></div>
+    <canvas id="cCurve" height="200" role="img" aria-label="Round-trip cost by order size"></canvas>
+    <div class="readout" id="readout" aria-live="off">&nbsp;</div>
+  </div>
+</div>
+</section>
+
+<section aria-labelledby="sched-h">
+<h2 id="sched-h">Fee schedule since 2015</h2>
+<div class="scroll"><table class="sched"><thead><tr><th>Fee</th><th>Paid by</th><th>From 2023-08-28</th><th>2022-04-29 to 2023-08-27</th><th>2015-08-01 to 2022-04-28</th><th>Collected by</th></tr></thead><tbody>
+<tr><td>Stamp duty</td><td>seller</td><td>0.05%</td><td>0.1%</td><td>0.1%</td><td>tax authority</td></tr>
+<tr><td>Transfer fee</td><td>both</td><td>0.001%</td><td>0.001%</td><td>0.002%</td><td>China Securities Depository and Clearing</td></tr>
+<tr><td>Handling fee</td><td>both</td><td>0.00341%</td><td>0.00487%</td><td>0.00487%*</td><td>exchange, usually inside the commission</td></tr>
+<tr><td>Management fee</td><td>both</td><td>0.002%</td><td>0.002%</td><td>0.002%*</td><td>CSRC, usually inside the commission</td></tr>
+<tr><td>Commission</td><td>both</td><td colspan="3" style="text-align:center">set by the broker, at most 0.3%, often with a 5 CNY minimum per order</td><td>broker</td></tr>
+</tbody></table></div>
+<p class="src">Rates as a share of traded value, Shanghai and Shenzhen A-share stocks in the continuous auction. * Taken from the 2022 schedule; earlier changes to the handling and management fees are not modelled. ETFs, bonds, block trades and Beijing Stock Exchange shares have different fees. Sources: Ministry of Finance and State Taxation Administration announcement of 27 August 2023 on halving stamp duty; <a href="https://www.csrc.gov.cn/csrc/c100028/c7426794/content.shtml" rel="nofollow">CSRC notice on the August 2023 handling-fee cut</a>; China Securities Depository and Clearing notices on the transfer fee of July 2015 and April 2022; <a href="https://www.hkex.com.hk/-/media/HKEX-Market/Services/Circulars-and-Notices/Participant-and-Members-Circulars/SEHK/2023/CT13423B.pdf" rel="nofollow">HKEX Stock Connect circular, August 2023</a>.</p>
+</section>
+
+<section aria-labelledby="method-h">
+<h2 id="method-h">Formulas and conventions</h2>
+<div class="formula">commission   = max(value × rate, minimum)                   per order, rounded to 0.01 CNY
+regulatory   = value × (handling + management)              only when the commission is quoted net
+transfer     = value × transfer rate                        both sides
+stamp duty   = value × stamp rate                           sells only
+impact       = value × impact bp / 10,000                   both sides, your estimate
+round trip   = buy costs + sell costs at the same value;    bp = round trip / value × 10,000
+annual drag  = one-way turnover × round-trip cost           as a share of the portfolio
+minimum binds when value &lt; minimum / rate</div>
+<p>“All-in” means the commission already includes the exchange handling fee and the CSRC management fee, as most brokers quote it; “Net + fees” adds them on top. Each fee is rounded to 0.01 CNY separately, as on a broker's contract note. One-way turnover of 8 means the portfolio is bought 8 times and sold 8 times a year. The annual drag uses the round-trip cost of the order amount entered, so a portfolio traded in small orders also shows the cost of the minimum commission. With a share price, the order amount is rounded down to whole lots: 100 shares on the main board and ChiNext; on the STAR Market at least 200 shares, then single shares.</p>
+</section>
+
+<section aria-labelledby="read-h">
+<h2 id="read-h">What the numbers say</h2>
+<ul class="read">
+<li><strong>Stamp duty dominates at normal commission rates.</strong> At 2.5 bp commission, stamp duty is about half of a round trip; below 1 bp it is more than two thirds.</li>
+<li><strong>Small orders pay for the minimum.</strong> With a 5 CNY minimum and 2.5 bp, orders below 20,000 CNY pay a higher rate. Splitting a portfolio into many small orders raises costs even when the headline rate is low.</li>
+<li><strong>Turnover is the multiplier.</strong> A round trip of 10 bp is small; eight round trips a year is 0.8% of the portfolio every year, before market impact, which for small caps is often larger than all the fees together.</li>
+<li><strong>Backtests need the schedule by date.</strong> Before 28 August 2023 every sale paid 5 bp more stamp duty, and before 29 April 2022 both sides paid another 0.1 bp transfer fee.</li>
+</ul>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># A-Share Trading Cost Calculator</p>
+<p>&gt; Client-side calculator for the cost of buying and selling Shanghai and Shenzhen A-share stocks: commission with minimum, stamp duty, transfer fee, exchange and CSRC fees, by fee schedule date. URL: https://quantcore-labs.com/tools/a-share-costs/</p>
+<h3>## Current fees (from 2023-08-28)</h3>
+<ul>
+<li>- Stamp duty 0.05%, seller only (0.1% before 2023-08-28)</li>
+<li>- Transfer fee 0.001%, both sides (0.002% from 2015-08-01 to 2022-04-28)</li>
+<li>- Exchange handling fee 0.00341% and CSRC management fee 0.002%, both sides, usually inside the commission</li>
+<li>- Commission set by the broker, at most 0.3%, often with a 5 CNY minimum</li>
+</ul>
+<h3>## Worked example</h3>
+<ul>
+<li>- 100,000 CNY round trip at 2.5 bp all-in commission, 5 CNY minimum: 25 + 1 (buy) + 25 + 1 + 50 (sell) = 102 CNY = 10.2 bp</li>
+</ul>
+<p>Full Markdown: <a href="/a-share-costs.md">/a-share-costs.md</a> · Core module: <a href="/tools/a-share-costs/a-share-costs-core.mjs">a-share-costs-core.mjs</a></p>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>What does it cost to buy and sell an A-share stock?</dt>
+<dd>At the fee schedule in force since 28 August 2023, a round trip of 100,000 CNY with a commission of 2.5 basis points (including exchange fees) and a 5 CNY minimum costs about 102 CNY: 25 CNY commission on each side, 1 CNY transfer fee on each side and 50 CNY stamp duty on the sale. That is 10.2 basis points before any market impact.</dd>
+<dt>Who pays stamp duty?</dt>
+<dd>Only the seller. It has been 0.05% of the traded value since 28 August 2023 and was 0.1% before that, back to September 2008.</dd>
+<dt>Is the exchange handling fee included in my commission?</dt>
+<dd>Usually yes. Most brokers quote an all-in commission that already contains the exchange handling fee (0.00341%) and the CSRC management fee (0.002%), together 0.00541%. Some institutional and low-cost accounts quote a net commission and charge these fees on top; choose that option if your contract notes list them separately.</dd>
+<dt>Why are small orders so expensive?</dt>
+<dd>Because of the minimum commission. With a 5 CNY minimum and a 2.5 basis point rate, every order below 20,000 CNY pays the minimum, so a 5,000 CNY order pays 10 basis points of commission on each side instead of 2.5.</dd>
+<dt>Which fee schedule should a backtest use?</dt>
+<dd>The one in force on each trade date. A backtest that applies today&#x27;s 0.05% stamp duty to trades before 28 August 2023 understates the cost of every sale by 5 basis points.</dd>
+<dt>Is my data uploaded?</dt>
+<dd>No. Everything is computed in your browser.</dd>
+</dl>
+</section>
+<!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fa-share-costs.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fa-share-costs%2F%29%20and%20explain%20%22A-Share%20Trading%20Cost%20Calculator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fa-share-costs.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fa-share-costs%2F%29%20and%20explain%20%22A-Share%20Trading%20Cost%20Calculator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fa-share-costs.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fa-share-costs%2F%29%20and%20explain%20%22A-Share%20Trading%20Cost%20Calculator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/a-share-costs.md (the Markdown version of https://quantcore-labs.com/tools/a-share-costs/) and explain &quot;A-Share Trading Cost Calculator&quot; to me: what it computes, the formulas and conventions it uses, and how to read its output. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+<!-- RELATED:BEGIN (generated by scripts/build_site_pages.py) -->
+<section aria-label="Related concepts" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;font-size:15px">Related concepts</h2><p style="margin:0 0 8px"><a href="/glossary/implementation-shortfall/" style="color:#22d3ee">Implementation Shortfall</a> · <a href="/glossary/participation-rate/" style="color:#22d3ee">Participation Rate (Percent of Volume)</a> · <a href="/glossary/almgren-chriss/" style="color:#22d3ee">Almgren-Chriss Optimal Execution Trajectory</a></p>
+<p style="margin:0">Other calculators: <a href="/option-greeks-calc/" style="color:#22d3ee">Black-Scholes Option Greeks</a> · <a href="/tools/iv-smile/" style="color:#22d3ee">Implied Volatility Smile &amp; Surface</a> · <a href="/tools/performance-analytics/" style="color:#22d3ee">Performance &amp; Drawdown Analytics</a> · <a href="/tools/portfolio-efficient-frontier/" style="color:#22d3ee">Markowitz Efficient Frontier</a> · <a href="/tools/monte-carlo-asset-sim/" style="color:#22d3ee">Monte Carlo Asset Simulator</a> · <a href="/tools/factor-ic/" style="color:#22d3ee">Factor IC Analyzer</a> · <a href="/tools/style-exposure/" style="color:#22d3ee">Portfolio Style Exposure Analyzer</a></p>
+</section>
+<!-- RELATED:END -->
+</main>
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment or tax advice. Fees are the statutory rates as published; your broker's contract notes are authoritative. © QuantCore Labs.</p><!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</div>
+
+<script type="module">
+import { REGIMES, regimeOn, sharesFor, roundTrip, minBindsBelow, annualDrag, costCurve, PRESETS } from './a-share-costs-core.mjs';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const cny = x => Number.isFinite(x) ? x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '–';
+const cny0 = x => Number.isFinite(x) ? x.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '–';
+const bp = x => Number.isFinite(x) ? x.toFixed(2) + ' bp' : '–';
+function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+const SHORT = { '2023-08-28': 'Since 2023-08', '2022-04-29': '2022-04 to 2023-08', '2015-08-01': '2015-08 to 2022-04' };
+REGIMES.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = SHORT[r.id] || r.label; $('regime').appendChild(o); });
+Object.entries(PRESETS).forEach(([k, p]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = p.label;
+  b.addEventListener('click', () => { $('comm').value = +(p.commission * 1e4).toFixed(2); $('minc').value = p.minCommission; $('incl').value = p.commissionIncludesFees ? '1' : '0'; run(); });
+  $('presets').appendChild(b); });
+let last = null;
+function params() {
+  const regime = REGIMES.find(r => r.id === $('regime').value);
+  return { commission: num('comm') / 1e4, minCommission: num('minc') || 0, commissionIncludesFees: $('incl').value === '1', regime, slippageBps: num('slip') || 0 };
+}
+function drawCurve(o, value) {
+  const c = $('cCurve'), dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = +c.getAttribute('height');
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.height = h + 'px';
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.font = '11px ui-monospace,Menlo,Consolas,monospace';
+  const pts = costCurve(o, 1e3, 1e7, 121), lo = 0, hi = Math.max(5, Math.ceil(Math.min(Math.max(...pts.map(p => p.bps)), 80) / 5) * 5);
+  const l = 40, r = 10, t = 8, b = 20, X = v => l + Math.log10(v / 1e3) / 4 * (w - l - r), Y = v => t + (hi - Math.min(v, hi)) / (hi - lo) * (h - t - b);
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  const step = hi > 40 ? 20 : hi > 20 ? 10 : 5;
+  for (let v = 0; v <= hi; v += step) { const yy = Math.round(Y(v)) + 0.5; g.strokeStyle = css('--line'); g.beginPath(); g.moveTo(l, yy); g.lineTo(w - r, yy); g.stroke(); g.fillStyle = css('--dim'); g.fillText(v + '', l - 5, yy); }
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  [[1e3, '1k'], [1e4, '10k'], [1e5, '100k'], [1e6, '1M'], [1e7, '10M']].forEach(([v, s]) => { g.fillStyle = css('--dim'); g.fillText(s, Math.min(Math.max(X(v), l + 8), w - r - 10), h - 5); });
+  const mb = minBindsBelow(o.commission, o.minCommission);
+  if (mb > 1e3 && mb < 1e7) { g.strokeStyle = css('--warn') || css('--dim'); g.setLineDash([4, 4]); g.beginPath(); g.moveTo(Math.round(X(mb)) + 0.5, t); g.lineTo(Math.round(X(mb)) + 0.5, h - b); g.stroke(); g.setLineDash([]); }
+  g.strokeStyle = css('--acc'); g.lineWidth = 1.8; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(p.value), Y(p.bps)) : g.moveTo(X(p.value), Y(p.bps))); g.stroke(); g.lineWidth = 1;
+  if (value >= 1e3 && value <= 1e7 && last) { g.fillStyle = css('--text'); g.beginPath(); g.arc(X(value), Y(last.rt.bps), 4, 0, 2 * Math.PI); g.fill(); }
+  c._geo = { l, r, w, o };
+}
+function row(tb, label, a, b, c, cls) { const tr = tb.insertRow(); if (cls) tr.className = cls; [label, a, b, c].forEach(x => { tr.insertCell().textContent = x; }); }
+function clear(text) {
+  ['kRt', 'kB', 'kS', 'kD', 'kM', 'kSt'].forEach(id => { $(id).textContent = '–'; });
+  ['kRtc', 'kBc', 'kSc', 'kDc'].forEach(id => { $(id).textContent = '\u00a0'; });
+  $('brk').textContent = ''; $('note').textContent = ''; $('readout').textContent = '\u00a0'; last = null;
+  const m = $('msg'); m.textContent = text; m.className = 'msg err';
+  const c = $('cCurve'); c.getContext('2d').clearRect(0, 0, c.width, c.height); c._geo = null;
+}
+function run() {
+  const o = params(), msg = $('msg'), notes = [];
+  if (!Number.isFinite(o.commission) || o.commission < 0) return clear('Enter a commission rate.');
+  let value = num('amt'); const px = num('px');
+  if (px > 0) { const sh = sharesFor(value, px, $('board').value); $('shares').value = sh ? sh.toLocaleString('en-US') : '0';
+    if (!sh) notes.push($('board').value === 'star' ? 'Below the STAR Market minimum of 200 shares.' : 'Below one lot of 100 shares.');
+    else if (Math.abs(sh * px - value) > 0.005) notes.push('Rounded down to ' + sh.toLocaleString('en-US') + ' shares = ' + cny(sh * px) + ' CNY.');
+    value = sh * px; } else { $('shares').value = '–'; }
+  if (!(value > 0)) return clear(px > 0 && num('amt') > 0 ? notes[0] + ' Enter a larger amount.' : 'Enter an order amount above zero.');
+  const rt = roundTrip({ ...o, value }), drag = annualDrag({ ...o, value }, num('turn') || 0, num('port') || 0);
+  last = { rt, value };
+  $('kRt').textContent = bp(rt.bps); $('kRtc').textContent = cny(rt.total) + ' CNY';
+  $('kB').textContent = bp(rt.buy.total / value * 1e4); $('kBc').textContent = cny(rt.buy.total) + ' CNY';
+  $('kS').textContent = bp(rt.sell.total / value * 1e4); $('kSc').textContent = cny(rt.sell.total) + ' CNY';
+  $('kD').textContent = (drag.fraction * 100).toFixed(2) + '%'; $('kDc').textContent = Number.isFinite(drag.cny) ? cny0(drag.cny) + ' CNY / year' : '\u00a0';
+  const mb = minBindsBelow(o.commission, o.minCommission); $('kM').textContent = mb ? cny0(mb) + ' CNY' : 'no minimum';
+  $('kSt').textContent = rt.total > 0 ? (rt.sell.stamp / rt.total * 100).toFixed(0) + '%' : '–';
+  const tb = $('brk'); tb.textContent = '';
+  row(tb, 'Commission' + (rt.buy.minBinding ? ' (minimum)' : ''), cny(rt.buy.commission), cny(rt.sell.commission), cny(rt.buy.commission + rt.sell.commission));
+  if (!o.commissionIncludesFees) row(tb, 'Exchange + CSRC fees', cny(rt.buy.regulatory), cny(rt.sell.regulatory), cny(rt.buy.regulatory + rt.sell.regulatory));
+  row(tb, 'Transfer fee', cny(rt.buy.transfer), cny(rt.sell.transfer), cny(rt.buy.transfer + rt.sell.transfer));
+  row(tb, 'Stamp duty', cny(0), cny(rt.sell.stamp), cny(rt.sell.stamp));
+  if (o.slippageBps) row(tb, 'Market impact (estimate)', cny(rt.buy.slippage), cny(rt.sell.slippage), cny(rt.buy.slippage + rt.sell.slippage));
+  row(tb, 'Total', cny(rt.buy.total), cny(rt.sell.total), cny(rt.total), 'tot');
+  row(tb, 'Basis points', bp(rt.buy.total / value * 1e4), bp(rt.sell.total / value * 1e4), bp(rt.bps));
+  if (rt.buy.minBinding) notes.push('The ' + o.minCommission + ' CNY minimum commission applies to this order size.');
+  if (o.commission > 0.003) notes.push('Above the 0.3% regulatory cap on commission.');
+  msg.textContent = 'Order value ' + cny(value) + ' CNY · fee schedule ' + o.regime.label.toLowerCase() + '.'; msg.className = 'msg';
+  $('note').textContent = notes.join(' ');
+  $('readout').textContent = 'Dashed line: below this order size the minimum commission binds. Hover the curve to read a size.';
+  drawCurve(o, value);
+}
+['regime', 'incl', 'comm', 'minc', 'amt', 'slip', 'px', 'board', 'turn', 'port'].forEach(id => $(id).addEventListener('input', run));
+function onMove(cx) {
+  const c = $('cCurve'), geo = c._geo; if (!geo) return;
+  const x = cx - c.getBoundingClientRect().left, f = (x - geo.l) / (geo.w - geo.l - geo.r); if (f < 0 || f > 1) return;
+  const v = 1e3 * Math.pow(10, 4 * f), r = roundTrip({ ...geo.o, value: v });
+  $('readout').textContent = 'Order ' + cny0(v) + ' CNY   round trip ' + bp(r.bps) + ' = ' + cny(r.total) + ' CNY';
+}
+$('cCurve').addEventListener('mousemove', e => onMove(e.clientX));
+$('cCurve').addEventListener('touchmove', e => onMove(e.touches[0].clientX), { passive: true });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(run, 100); });
+$('regime').value = regimeOn(new Date().toISOString().slice(0, 10))?.id || REGIMES[0].id;
+run();
+</script>
+</body>
+</html>

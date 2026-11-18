@@ -25,6 +25,8 @@ param(
 # 用 Continue：Windows PowerShell 5.1 在 Stop 模式下会把外部命令写到 stderr 的普通提示当成错误。
 # 每个外部命令的退出码都在下面单独检查。
 $ErrorActionPreference = 'Continue'
+# 用 -File 运行时，"-Add a,b,c" 会作为一个字符串传进来，这里按逗号拆开
+$Add = @($Add | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $Repo = Split-Path -Parent $PSScriptRoot
 Set-Location $Repo
 

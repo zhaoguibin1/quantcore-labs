@@ -74,6 +74,10 @@ The decision was to hold the target. Shares that never filled are still a differ
 
 It means the real fills, leftovers and fees beat trading the full size at the decision price. It is a cost accounting identity, not a statement that the decision itself was a good one.
 
+## Use it in a calculator
+
+- [A-Share Trading Cost Calculator](https://quantcore-labs.com/tools/a-share-costs/)
+
 ## Related
 
 - [Arrival-Price Slippage](https://quantcore-labs.com/glossary/arrival-price/)

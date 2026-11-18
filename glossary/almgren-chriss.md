@@ -80,6 +80,10 @@ With no penalty on inventory variance, the objective only punishes trading speed
 
 No. κ above uses temporary impact η only. In the original linear model, adding permanent impact changes expected cost and does not change this particular trajectory. If your impact model is not that one, do not reuse the path unchanged.
 
+## Use it in a calculator
+
+- [A-Share Trading Cost Calculator](https://quantcore-labs.com/tools/a-share-costs/)
+
 ## Related
 
 - [Implementation Shortfall](https://quantcore-labs.com/glossary/implementation-shortfall/)

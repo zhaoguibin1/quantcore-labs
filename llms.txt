@@ -13,6 +13,7 @@ All tools document their formulas, units and conventions on-page. Glossary entri
 - [Monte Carlo Asset Simulator](https://quantcore-labs.com/tools/monte-carlo-asset-sim/): Simulate price paths under Geometric Brownian Motion with exact log-normal steps; terminal percentiles and horizon VaR compared with closed-form values. Markdown: https://quantcore-labs.com/monte-carlo-asset-sim.md
 - [Factor IC Analyzer](https://quantcore-labs.com/tools/factor-ic/): Paste date, asset, factor and forward return to get rank IC, Pearson IC, ICIR, t-stat, hit rate, quantile-group returns and the top-minus-bottom spread, with IC charts and a per-year table. Markdown: https://quantcore-labs.com/factor-ic.md
 - [Portfolio Style Exposure Analyzer](https://quantcore-labs.com/tools/style-exposure/): Paste a universe with your holdings weights and characteristics such as book-to-price, ROE or volatility; get each tilt as a percentile inside the universe, raw and size-adjusted, by date. Markdown: https://quantcore-labs.com/style-exposure.md
+- [A-Share Trading Cost Calculator](https://quantcore-labs.com/tools/a-share-costs/): Stamp duty, transfer fee, exchange fees and commission on a Shanghai or Shenzhen A-share trade: buy, sell and round-trip cost, where the minimum commission binds, and annual drag from turnover, at the fee schedule for any date since 2015. Markdown: https://quantcore-labs.com/a-share-costs.md
 
 ## Glossary
 
