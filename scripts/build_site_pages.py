@@ -315,6 +315,27 @@ def patch_research(r):
         s = s[:i] + "<!-- FOOTER-LINKS -->" + FOOTER_LINKS + s[i:]
     f.write_text(s, encoding="utf-8")
 
+ICON_LINKS = ('<!-- ICONS --><link rel="icon" href="/favicon.ico" sizes="48x48">'
+              '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+              '<link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- /ICONS -->')
+
+def add_icons():
+    """Put the same icon links in the <head> of every page (idempotent)."""
+    n = 0
+    for f in sorted(REPO.rglob("*.html")):
+        if any(p.startswith(".") for p in f.relative_to(REPO).parts) or "scripts" in f.relative_to(REPO).parts:
+            continue
+        s = f.read_text(encoding="utf-8")
+        if "</head>" not in s:
+            continue
+        if "<!-- ICONS -->" in s:
+            new = re.sub(r"<!-- ICONS -->.*?<!-- /ICONS -->", lambda m: ICON_LINKS, s, count=1, flags=re.S)
+        else:
+            new = s.replace("</head>", ICON_LINKS + "\n</head>", 1)
+        if new != s:
+            f.write_text(new, encoding="utf-8"); n += 1
+    return n
+
 def update_llms():
     p = REPO / "llms.txt"
     s = p.read_text(encoding="utf-8")
@@ -340,4 +361,7 @@ if __name__ == "__main__":
         assert (REPO / r["md"].lstrip("/")).exists(), f"missing Markdown mirror {r['md']}"
         patch_research(r)
     update_llms()
+    for icon in ("favicon.ico", "favicon.svg", "apple-touch-icon.png"):
+        assert (REPO / icon).exists(), f"missing {icon}"
+    print("icon links written on", add_icons(), "pages")
     print("site pages: index.html, 404.html, about/, privacy/; related blocks on", len(TOOLS), "tools")
