@@ -69,6 +69,10 @@ Raw ILLIQ is extremely right-skewed: the most illiquid stocks can be thousands o
 
 The original paper averages within each calendar month or year. A rolling 20-day window updates daily and suits trading signals; use at least 15 valid days so suspensions do not produce noisy values.
 
+## Use it in a calculator
+
+- [Strategy Capacity Calculator](https://quantcore-labs.com/tools/capacity/)
+
 ## Related
 
 - [Volume-Weighted Average Price (VWAP)](https://quantcore-labs.com/glossary/vwap/)

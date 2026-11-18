@@ -83,6 +83,7 @@ No. κ above uses temporary impact η only. In the original linear model, adding
 ## Use it in a calculator
 
 - [A-Share Trading Cost Calculator](https://quantcore-labs.com/tools/a-share-costs/)
+- [Strategy Capacity Calculator](https://quantcore-labs.com/tools/capacity/)
 
 ## Related
 

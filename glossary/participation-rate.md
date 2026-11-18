@@ -64,6 +64,7 @@ There is no universal rate. Higher participation finishes sooner and usually mov
 ## Use it in a calculator
 
 - [A-Share Trading Cost Calculator](https://quantcore-labs.com/tools/a-share-costs/)
+- [Strategy Capacity Calculator](https://quantcore-labs.com/tools/capacity/)
 
 ## Related
 

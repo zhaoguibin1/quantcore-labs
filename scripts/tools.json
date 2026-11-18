@@ -31,5 +31,9 @@
  {"id": "a-share-costs", "url": "/tools/a-share-costs/", "name": "A-Share Trading Cost Calculator",
   "desc": "Stamp duty, transfer fee, exchange fees and commission on a Shanghai or Shenzhen A-share trade: buy, sell and round-trip cost, where the minimum commission binds, and annual drag from turnover, at the fee schedule for any date since 2015.",
   "chips": ["Fee schedules 2015, 2022, 2023", "Minimum-commission effect", "Annual drag from turnover"],
-  "terms": ["implementation-shortfall", "participation-rate", "almgren-chriss"], "code": []}
+  "terms": ["implementation-shortfall", "participation-rate", "almgren-chriss"], "code": []},
+ {"id": "capacity", "url": "/tools/capacity/", "name": "Strategy Capacity Calculator",
+  "desc": "Paste holdings with weights and average daily traded value; get the capacity at a participation cap, the binding stock, square-root market-impact cost by portfolio size, and the size where impact eats a chosen share of the alpha.",
+  "chips": ["Participation-rate capacity", "Square-root market impact", "Checked against NumPy"],
+  "terms": ["participation-rate", "almgren-chriss", "amihud-illiquidity"], "code": []}
 ]

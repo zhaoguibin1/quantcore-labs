@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategy Capacity Calculator: Participation Rate and Market Impact | QuantCore Labs</title>
+<meta name="description" content="How much money can a stock strategy run? Paste holdings with weights and daily traded value: capacity at a participation cap, the binding stock, square-root market-impact cost by portfolio size, and the size where impact eats your alpha.">
+<link rel="canonical" href="https://quantcore-labs.com/tools/capacity/">
+<link rel="alternate" type="text/markdown" href="https://quantcore-labs.com/capacity.md" title="Markdown version for LLMs">
+<meta name="robots" content="index,follow,max-snippet:-1">
+<meta name="theme-color" content="#0b0f14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QuantCore Labs">
+<meta property="og:title" content="Strategy Capacity Calculator">
+<meta property="og:description" content="Capacity at a participation cap, square-root market impact by portfolio size, and the size where impact eats the alpha. Client-side.">
+<meta property="og:url" content="https://quantcore-labs.com/tools/capacity/">
+<meta property="og:image" content="https://quantcore-labs.com/tools/capacity/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://quantcore-labs.com/#org",
+      "name": "QuantCore Labs",
+      "url": "https://quantcore-labs.com/"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://quantcore-labs.com/tools/capacity/#app",
+      "name": "Strategy Capacity Calculator",
+      "url": "https://quantcore-labs.com/tools/capacity/",
+      "applicationCategory": "FinanceApplication",
+      "applicationSubCategory": "Transaction Cost Analysis",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Capacity from a participation cap on average daily traded value",
+        "Binding holding and capacity by holding",
+        "Square-root market-impact cost as annual drag",
+        "Portfolio size at which impact uses a chosen share of gross alpha",
+        "Net alpha and share of trades within the cap at any portfolio size",
+        "Turnover, rebalance frequency and days to trade as inputs",
+        "Client-side computation, data never leaves the browser"
+      ],
+      "image": "https://quantcore-labs.com/tools/capacity/og-image.png",
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://quantcore-labs.com/tools/capacity/#article"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "@id": "https://quantcore-labs.com/tools/capacity/#article",
+      "headline": "Strategy Capacity: Participation Limits and Square-Root Market Impact",
+      "description": "How much money a stock strategy can run: the participation cap on daily traded value, square-root market impact, and the portfolio size at which impact eats the alpha.",
+      "image": "https://quantcore-labs.com/tools/capacity/og-image.png",
+      "inLanguage": "en",
+      "proficiencyLevel": "Expert",
+      "datePublished": "2026-11-18T09:00:00-05:00",
+      "dateModified": "2026-11-18T09:00:00-05:00",
+      "author": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "publisher": {
+        "@id": "https://quantcore-labs.com/#org"
+      },
+      "mainEntityOfPage": "https://quantcore-labs.com/tools/capacity/",
+      "articleBody": "Per rebalance the portfolio trades tau = T x k / 242 of its value, T the annual one-way turnover and k the trading days between rebalances. Stock i trades q = A x w_i x tau and the trade is worked over d days, so participation is q / (d x ADV_i). Capacity at participation cap c is min over i of c x d x ADV_i / (w_i x tau). Impact cost per trade is Y x sigma_i x sqrt(q / (d x ADV_i)); the annual drag is 2T x sum of w_i x Y x sigma_i x sqrt(A x w_i x tau / (d x ADV_i)) and grows with the square root of AUM A."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quantcore-labs.com/tools/capacity/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is strategy capacity?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The largest amount of money a strategy can run before trading it costs too much. Two limits matter: how much of each stock's daily trading volume you can take without moving the market (the participation cap), and how much return the market impact of your own trades eats. The smaller of the two is the practical capacity."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does this calculator estimate capacity?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Each rebalance trades a share of the portfolio equal to annual one-way turnover x days between rebalances / 242, spread across the holdings by weight. The participation capacity is the largest portfolio at which no stock's trade exceeds the cap (for example 5%) of its average daily traded value over the days allowed for trading. The impact cost of each trade follows the square-root law: cost = Y x daily volatility x square root of (trade / daily traded value)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Worked example: 30 stocks with 50 million CNY of daily turnover each",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Equal weights, one-way turnover 8 times a year, rebalancing every 10 trading days and trading each rebalance within one day. Each rebalance trades 33% of the portfolio, so each stock trades 1.1% of the portfolio. At a 5% participation cap the capacity is 0.05 x 50 million / 0.011 = about 227 million CNY. At that size, with Y = 0.7 and 2.5% daily volatility, impact costs about 6.3% a year; impact reaches 3% a year at about 52 million CNY. For most small and mid-cap strategies the impact budget binds well before the participation cap."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What participation rate is safe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There is no single number. Many practitioners keep a single day's trade below 5% to 10% of a stock's average daily volume, and lower for strategies that trade at the open or close or that many others trade at the same time. Spreading a trade over more days raises capacity in proportion but delays the signal."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What value of Y should I use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Studies of large institutional order sets put the coefficient roughly between 0.3 and 1 when volatility is daily and size is measured against daily volume. Calibrate it to your own fills if you have them: compare the average price you got with the price when the order started, against the square root of your participation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data uploaded?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Everything is computed in your browser."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "QuantCore Labs",
+          "item": "https://quantcore-labs.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Strategy Capacity Calculator",
+          "item": "https://quantcore-labs.com/tools/capacity/"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#111821;--line:#1f2a36;--text:#d7e0ea;--dim:#7d8b99;
+  --acc:#4fd1c5;--pos:#5ec27a;--neg:#f0776c;--warn:#e6c15a;
+  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+a{color:var(--acc)}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+.crumb{font:12px var(--mono);color:var(--dim)}
+h1{font:600 26px/1.25 var(--sans);margin:6px 0 4px}
+h1 .tag{font:12px var(--mono);color:var(--acc);border:1px solid var(--acc);border-radius:3px;padding:1px 6px;vertical-align:middle;margin-left:8px;white-space:nowrap;display:inline-block}
+.lede{color:var(--dim);margin:0 0 20px;max-width:780px}
+h2{font:600 17px var(--sans);margin:36px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.grid{display:grid;gap:16px;grid-template-columns:minmax(280px,380px) 1fr}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h3{font:600 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px}
+label{display:block;font:12px var(--mono);color:var(--dim);margin:10px 0 4px}
+textarea,select,input{width:100%;background:#0a0e13;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font:13px var(--mono)}
+textarea{height:220px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{outline:none;border-color:var(--acc)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+button:hover{background:rgba(79,209,197,.1)}
+.msg{font:12px var(--mono);min-height:16px;margin-top:8px;color:var(--dim)}
+.msg.err{color:var(--neg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:#0a0e13;border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.kpi .k{font:11px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font:600 20px var(--mono);margin-top:2px}
+.kpi .s{font:11px var(--mono);color:var(--dim)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+table.stats{width:100%;border-collapse:collapse;font:13px var(--mono);margin-top:14px}
+table.stats td{padding:6px 8px;border-bottom:1px solid var(--line)}
+table.stats td:nth-child(2n){text-align:right}
+table.stats td:nth-child(2n+1){color:var(--dim)}
+canvas{touch-action:pan-y;cursor:crosshair;width:100%;display:block;background:#0a0e13;border:1px solid var(--line);border-radius:4px;margin-top:6px}
+.ctitle{font:12px var(--mono);color:var(--dim);margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle select{width:auto;padding:2px 6px;font-size:11px}
+.readout{font:12px var(--mono);margin-top:8px;padding:6px 8px;background:#0a0e13;border:1px solid var(--line);border-radius:4px;display:flex;flex-wrap:wrap;gap:4px 14px;min-height:30px}
+.scroll{overflow-x:auto}
+.formula{font:13px/1.7 var(--mono);background:#0a0e13;border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.md{font:13px/1.6 var(--mono)}
+.md h3{font:600 14px var(--mono);margin:16px 0 6px;color:var(--acc)}
+.md ul{padding-left:0;list-style:none}
+dl.faq dt{font-weight:600;margin-top:14px}
+dl.faq dd{margin:4px 0 0;color:var(--dim)}
+.disclaimer{margin-top:40px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+table.years{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:420px}
+table.years th,table.years td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.years th{color:var(--dim);font-weight:500}
+table.years td:first-child,table.years th:first-child{text-align:left;color:var(--dim)}
+.note{font:12px var(--mono);color:var(--warn);margin-top:8px;min-height:14px}
+ul.read{padding-left:18px}ul.read li{margin:6px 0}
+table.brk,table.sched{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:460px;margin-top:12px}
+table.brk th,table.brk td,table.sched th,table.sched td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--line)}
+table.brk th,table.sched th{color:var(--dim);font-weight:500}
+table.brk td:first-child,table.brk th:first-child,table.sched td:first-child,table.sched th:first-child{text-align:left}
+table.brk tr.tot td{color:var(--text);font-weight:600;border-top:1px solid var(--dim)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
+.presets button{font:12px var(--mono);padding:4px 9px}
+.src{font:11px var(--mono);color:var(--dim)}
+
+table.names{border-collapse:collapse;font:12px var(--mono);width:100%;min-width:560px;margin-top:8px}
+table.names th,table.names td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--line)}
+table.names th{color:var(--dim);font-weight:500}
+table.names td:first-child,table.names th:first-child{text-align:left}
+table.names tr.bind td{color:var(--warn)}
+.legend{font:11px var(--mono);color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:5px}
+</style>
+<!-- ICONS --><link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><!-- /ICONS -->
+</head>
+<body>
+<div class="wrap">
+<header>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="/">quantcore-labs</a> / tools / capacity</nav>
+  <h1>Strategy Capacity Calculator <span class="tag">CLIENT-SIDE</span></h1>
+  <p class="lede">How much money can a stock strategy run? Paste the holdings with their weights and average daily traded value. The calculator finds the largest portfolio that stays under a participation cap, the stock that binds first, the market-impact cost at each portfolio size from the square-root law, and the size at which impact uses up a chosen share of the strategy's alpha.</p>
+</header>
+<noscript><p><strong>JavaScript is disabled.</strong> The formulas are below and in the <a href="/capacity.md">Markdown version</a>.</p></noscript>
+<main>
+<section aria-labelledby="calc-h">
+<h2 id="calc-h">Calculator</h2>
+<div class="grid">
+  <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+    <h3>Inputs</h3>
+    <label for="hold">Holdings: asset, weight, avg daily traded value (CNY)[, daily volatility]</label>
+    <textarea id="hold" spellcheck="false"></textarea>
+    <div class="btns"><button type="button" id="bSample">Load sample</button><button type="button" id="bClear">Clear</button></div>
+    <div class="row2">
+      <div><label for="turn">One-way turnover per year (×)</label><input type="number" id="turn" value="8" min="0.1" step="0.5"></div>
+      <div><label for="every">Rebalance every (trading days)</label><input type="number" id="every" value="10" min="1" step="1"></div>
+    </div>
+    <div class="row2">
+      <div><label for="days">Days to work each trade</label><input type="number" id="days" value="1" min="1" step="1"></div>
+      <div><label for="cap">Participation cap (% of ADV)</label><input type="number" id="cap" value="5" min="0.1" max="100" step="0.5"></div>
+    </div>
+    <div class="row2">
+      <div><label for="Y" title="Square-root law coefficient, usually 0.3 to 1">Impact coefficient Y</label><input type="number" id="Y" value="0.7" min="0" step="0.05"></div>
+      <div><label for="sig" title="Used for rows without a volatility column">Default daily volatility (%)</label><input type="number" id="sig" value="2.5" min="0" step="0.1"></div>
+    </div>
+    <div class="row2">
+      <div><label for="alpha">Gross alpha (% per year)</label><input type="number" id="alpha" value="15" min="0" step="0.5"></div>
+      <div><label for="share">Impact budget (% of alpha)</label><input type="number" id="share" value="30" min="1" max="100" step="5"></div>
+    </div>
+    <label for="aum">Your portfolio size (CNY)</label><input type="number" id="aum" value="50000000" min="0" step="1000000">
+    <div class="msg" id="msg" role="status"></div>
+    <div class="note" id="note"></div>
+  </form>
+  <div class="panel" aria-live="polite">
+    <h3>Results</h3>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Capacity at cap</div><div class="v" id="kCap">–</div><div class="s" id="kCapc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Impact-budget size</div><div class="v" id="kBud">–</div><div class="s" id="kBudc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Impact at your size</div><div class="v" id="kDrag">–</div><div class="s">per year</div></div>
+      <div class="kpi"><div class="k">Net alpha at your size</div><div class="v" id="kNet">–</div><div class="s" id="kNetc">&nbsp;</div></div>
+      <div class="kpi"><div class="k">Max participation</div><div class="v" id="kPart">–</div><div class="s">at your size</div></div>
+      <div class="kpi"><div class="k">Trades within cap</div><div class="v" id="kWin">–</div><div class="s">by value, at your size</div></div>
+    </div>
+    <div class="ctitle"><span>Annual impact cost by portfolio size (% per year, size on log scale)</span></div>
+    <canvas id="cCurve" height="230" role="img" aria-label="Annual impact cost by portfolio size"></canvas>
+    <div class="legend"><span><i style="background:var(--acc)"></i>impact cost</span><span><i style="background:var(--pos)"></i>gross alpha</span><span><i style="background:var(--warn)"></i>impact budget</span><span><i style="background:var(--neg)"></i>participation capacity</span><span><i style="background:var(--text)"></i>your size</span></div>
+    <div class="readout" id="readout" aria-live="off">&nbsp;</div>
+    <div class="ctitle"><span>Most constraining holdings (at your size)</span></div>
+    <div class="scroll"><table class="names"><thead><tr><th>Asset</th><th>Weight</th><th>ADV (CNY)</th><th>Daily vol</th><th>Trade / rebalance</th><th>Participation</th><th>Impact / trade</th><th>Capacity</th></tr></thead><tbody id="names"></tbody></table></div>
+  </div>
+</div>
+</section>
+
+<section aria-labelledby="method-h">
+<h2 id="method-h">Formulas and conventions</h2>
+<div class="formula">tau          = min(1, T × k / 242)               share of the portfolio traded one way per rebalance
+trade_i      = A × w_i × tau                     CNY, for portfolio size A and weight w_i
+participation_i = trade_i / (d × ADV_i)          d = days allowed to work the trade
+capacity     = min_i  c × d × ADV_i / (w_i × tau)        c = participation cap
+impact_i     = Y × sigma_i × sqrt(participation_i)       share of trade_i (square-root law)
+annual drag  = 2T × Σ_i w_i × impact_i                   share of the portfolio per year, grows with sqrt(A)
+budget size  = A at which annual drag = budget share × gross alpha
+net alpha    = gross alpha − annual drag</div>
+<p>T is annual one-way turnover: 8 means the whole portfolio is bought 8 times and sold 8 times a year. Trades are spread across holdings by weight, as when a strategy replaces names at the same weights. The factor 2 counts the buy and the sell. ADV is average daily traded value in CNY, for example the 20-day average; sigma is daily return volatility. Weights are normalised to sum to one. Fees and stamp duty are not included: use the <a href="/tools/a-share-costs/">A-share trading cost calculator</a> for those and add them to the impact drag.</p>
+</section>
+
+<section aria-labelledby="read-h">
+<h2 id="read-h">What the numbers say</h2>
+<ul class="read">
+<li><strong>The smallest, heaviest-weighted names set the capacity.</strong> The participation limit is a minimum across holdings, so one illiquid stock at full weight can halve the capacity of the whole book. Capping weights by liquidity raises capacity at once.</li>
+<li><strong>Impact usually binds first.</strong> At a 5% participation cap, the square-root law with Y = 0.7 and 2.5% daily volatility costs about 39 bp per trade; at 8 round trips a year that is 6.3% of the portfolio. Few strategies can give up that much, so their real capacity is the impact-budget size, well below the participation capacity.</li>
+<li><strong>Cost grows with the square root of size.</strong> Four times the money doubles the impact cost per year; the net alpha falls slowly at first and then quickly.</li>
+<li><strong>Turnover and patience are the levers.</strong> Halving turnover halves the drag at any size. Spreading trades over more days raises the participation capacity in proportion and lowers the impact per trade, at the price of trading on older signals.</li>
+<li><strong>This is an estimate, not a fill.</strong> Real impact depends on the time of day, the order type, other traders doing the same thing, and limit-up and limit-down days when a stock cannot be traded at all.</li>
+</ul>
+</section>
+
+<section aria-labelledby="ai-h" class="md">
+<h2 id="ai-h">Summary for AI agents (Markdown mirror)</h2>
+<p># Strategy Capacity Calculator</p>
+<p>&gt; Client-side calculator of how much money a stock strategy can run: capacity at a participation cap on average daily traded value, square-root market impact by portfolio size, and the size where impact uses a chosen share of alpha. URL: https://quantcore-labs.com/tools/capacity/</p>
+<h3>## Worked example</h3>
+<ul>
+<li>- 30 equal-weight stocks, each 50 million CNY daily traded value; turnover 8×/year; rebalance every 10 days; trade within 1 day; cap 5%</li>
+<li>- Capacity 227 million CNY; impact at that size 6.3%/year (Y 0.7, daily vol 2.5%); impact reaches 3%/year at 52 million CNY</li>
+</ul>
+<p>Full Markdown: <a href="/capacity.md">/capacity.md</a> · Core module: <a href="/tools/capacity/capacity-core.mjs">capacity-core.mjs</a></p>
+</section>
+
+<section aria-labelledby="faq-h">
+<h2 id="faq-h">FAQ</h2>
+<dl class="faq">
+<dt>What is strategy capacity?</dt>
+<dd>The largest amount of money a strategy can run before trading it costs too much. Two limits matter: how much of each stock&#x27;s daily trading volume you can take without moving the market (the participation cap), and how much return the market impact of your own trades eats. The smaller of the two is the practical capacity.</dd>
+<dt>How does this calculator estimate capacity?</dt>
+<dd>Each rebalance trades a share of the portfolio equal to annual one-way turnover x days between rebalances / 242, spread across the holdings by weight. The participation capacity is the largest portfolio at which no stock&#x27;s trade exceeds the cap (for example 5%) of its average daily traded value over the days allowed for trading. The impact cost of each trade follows the square-root law: cost = Y x daily volatility x square root of (trade / daily traded value).</dd>
+<dt>Worked example: 30 stocks with 50 million CNY of daily turnover each</dt>
+<dd>Equal weights, one-way turnover 8 times a year, rebalancing every 10 trading days and trading each rebalance within one day. Each rebalance trades 33% of the portfolio, so each stock trades 1.1% of the portfolio. At a 5% participation cap the capacity is 0.05 x 50 million / 0.011 = about 227 million CNY. At that size, with Y = 0.7 and 2.5% daily volatility, impact costs about 6.3% a year; impact reaches 3% a year at about 52 million CNY. For most small and mid-cap strategies the impact budget binds well before the participation cap.</dd>
+<dt>What participation rate is safe?</dt>
+<dd>There is no single number. Many practitioners keep a single day&#x27;s trade below 5% to 10% of a stock&#x27;s average daily volume, and lower for strategies that trade at the open or close or that many others trade at the same time. Spreading a trade over more days raises capacity in proportion but delays the signal.</dd>
+<dt>What value of Y should I use?</dt>
+<dd>Studies of large institutional order sets put the coefficient roughly between 0.3 and 1 when volatility is daily and size is measured against daily volume. Calibrate it to your own fills if you have them: compare the average price you got with the price when the order started, against the square root of your participation.</dd>
+<dt>Is my data uploaded?</dt>
+<dd>No. Everything is computed in your browser.</dd>
+</dl>
+</section>
+<!-- ASKAI:BEGIN (generated by scripts/generate_glossary.py) -->
+<section aria-label="Ask an AI about this page" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;padding:0;border:0;font-size:15px">Ask an AI about this page</h2>
+<p style="margin:0 0 6px"><a href="https://chatgpt.com/?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fcapacity.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fcapacity%2F%29%20and%20explain%20%22Strategy%20Capacity%20Calculator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">ChatGPT</a> · <a href="https://claude.ai/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fcapacity.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fcapacity%2F%29%20and%20explain%20%22Strategy%20Capacity%20Calculator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Claude</a> · <a href="https://www.perplexity.ai/search/new?q=Read%20https%3A%2F%2Fquantcore-labs.com%2Fcapacity.md%20%28the%20Markdown%20version%20of%20https%3A%2F%2Fquantcore-labs.com%2Ftools%2Fcapacity%2F%29%20and%20explain%20%22Strategy%20Capacity%20Calculator%22%20to%20me%3A%20what%20it%20computes%2C%20the%20formulas%20and%20conventions%20it%20uses%2C%20and%20how%20to%20read%20its%20output.%20Keep%20to%20what%20the%20page%20says%2C%20point%20out%20anything%20you%20add%20from%20elsewhere%2C%20then%20ask%20what%20I%20want%20to%20go%20deeper%20on." target="_blank" rel="noopener nofollow" style="color:#22d3ee">Perplexity</a> · <button type="button" data-prompt="Read https://quantcore-labs.com/capacity.md (the Markdown version of https://quantcore-labs.com/tools/capacity/) and explain &quot;Strategy Capacity Calculator&quot; to me: what it computes, the formulas and conventions it uses, and how to read its output. Keep to what the page says, point out anything you add from elsewhere, then ask what I want to go deeper on." onclick="var b=this;navigator.clipboard.writeText(b.dataset.prompt).then(function(){b.textContent='Copied'})" style="font:inherit;color:#22d3ee;background:none;border:1px solid rgba(148,163,184,.35);border-radius:6px;padding:1px 8px;cursor:pointer">Copy prompt</button></p>
+<p style="margin:0;color:#94a3b8;font-size:12px">Opens the assistant in a new tab with a question about this page already typed in. You need your own account there; nothing you entered on this page is sent.</p>
+</section>
+<!-- ASKAI:END -->
+<!-- RELATED:BEGIN (generated by scripts/build_site_pages.py) -->
+<section aria-label="Related concepts" style="margin:28px 0 0;padding:14px 16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;font:13px/1.7 ui-monospace,Menlo,Consolas,monospace">
+<h2 style="margin:0 0 6px;font-size:15px">Related concepts</h2><p style="margin:0 0 8px"><a href="/glossary/participation-rate/" style="color:#22d3ee">Participation Rate (Percent of Volume)</a> · <a href="/glossary/almgren-chriss/" style="color:#22d3ee">Almgren-Chriss Optimal Execution Trajectory</a> · <a href="/glossary/amihud-illiquidity/" style="color:#22d3ee">Amihud Illiquidity Measure (ILLIQ)</a></p>
+<p style="margin:0">Other calculators: <a href="/option-greeks-calc/" style="color:#22d3ee">Black-Scholes Option Greeks</a> · <a href="/tools/iv-smile/" style="color:#22d3ee">Implied Volatility Smile &amp; Surface</a> · <a href="/tools/performance-analytics/" style="color:#22d3ee">Performance &amp; Drawdown Analytics</a> · <a href="/tools/portfolio-efficient-frontier/" style="color:#22d3ee">Markowitz Efficient Frontier</a> · <a href="/tools/monte-carlo-asset-sim/" style="color:#22d3ee">Monte Carlo Asset Simulator</a> · <a href="/tools/factor-ic/" style="color:#22d3ee">Factor IC Analyzer</a> · <a href="/tools/style-exposure/" style="color:#22d3ee">Portfolio Style Exposure Analyzer</a> · <a href="/tools/a-share-costs/" style="color:#22d3ee">A-Share Trading Cost Calculator</a></p>
+</section>
+<!-- RELATED:END -->
+</main>
+<footer class="disclaimer"><p>For educational and analytical use only. Not investment advice. Market impact is a model estimate; actual costs depend on how and when you trade. © QuantCore Labs.</p><!-- FOOTER-LINKS --><p style="margin-top:6px"><a href="/">Home</a> · <a href="/glossary/">Glossary</a> · <a href="/code/">Code</a> · <a href="/about/">About</a> · <a href="/about/#contact">Contact</a> · <a href="/privacy/">Privacy</a> · <a href="/llms.txt">llms.txt</a></p></footer>
+</div>
+
+<script type="module">
+import { parseHoldings, setup, capacity, shareWithinCap, impactDrag, maxParticipation, aumForDrag, curve, sampleHoldings } from './capacity-core.mjs';
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : NaN; };
+const money = x => !Number.isFinite(x) ? '–' : x >= 1e9 ? (x / 1e9).toFixed(x >= 1e10 ? 1 : 2) + ' bn' : x >= 1e6 ? (x / 1e6).toFixed(x >= 1e8 ? 0 : 1) + ' M' : x >= 1e3 ? (x / 1e3).toFixed(0) + ' k' : x.toFixed(0);
+const pct = (x, d = 2) => Number.isFinite(x) ? (x * 100).toFixed(d) + '%' : '–';
+function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+let geo = null;
+function clear(text) {
+  ['kCap', 'kBud', 'kDrag', 'kNet', 'kPart', 'kWin'].forEach(id => { $(id).textContent = '–'; });
+  ['kCapc', 'kBudc', 'kNetc'].forEach(id => { $(id).textContent = '\u00a0'; });
+  $('names').textContent = ''; $('note').textContent = ''; $('readout').textContent = '\u00a0'; geo = null;
+  const m = $('msg'); m.textContent = text; m.className = 'msg err';
+  const c = $('cCurve'); c.getContext('2d').clearRect(0, 0, c.width, c.height);
+}
+function draw(S, cap, bud, A, alpha, budget) {
+  const c = $('cCurve'), dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = +c.getAttribute('height');
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.height = h + 'px';
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.font = '11px ui-monospace,Menlo,Consolas,monospace';
+  const ref = [cap, bud, A].filter(v => v > 0 && Number.isFinite(v));
+  let lo = Math.pow(10, Math.floor(Math.log10(Math.min(...ref, 1e7) / 10))), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...ref, 1e8) * 10)));
+  lo = Math.max(lo, 1e4); hi = Math.min(hi, 1e12); if (hi / lo < 1e3) hi = lo * 1e3;
+  const pts = curve(S, lo, hi, 121);
+  const top = Math.max(alpha, 0.01) * 1.6, yMax = Math.max(0.01, Math.ceil(top * 100 / 5) * 5 / 100);
+  const l = 44, r = 10, t = 8, b = 20, dec = Math.log10(hi / lo);
+  const X = v => l + Math.log10(v / lo) / dec * (w - l - r), Y = v => t + (yMax - Math.min(v, yMax)) / yMax * (h - t - b);
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  const step = yMax > 0.4 ? 0.1 : yMax > 0.2 ? 0.05 : yMax > 0.08 ? 0.02 : 0.01;
+  for (let v = 0; v <= yMax + 1e-9; v += step) { const yy = Math.round(Y(v)) + 0.5; g.strokeStyle = css('--line'); g.beginPath(); g.moveTo(l, yy); g.lineTo(w - r, yy); g.stroke(); g.fillStyle = css('--dim'); g.fillText((v * 100).toFixed(0) + '%', l - 5, yy); }
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  for (let e = Math.ceil(Math.log10(lo)); e <= Math.log10(hi); e++) { const v = Math.pow(10, e); g.fillStyle = css('--dim'); g.fillText(v >= 1e9 ? v / 1e9 + 'bn' : v >= 1e6 ? v / 1e6 + 'M' : v / 1e3 + 'k', Math.min(Math.max(X(v), l + 12), w - r - 14), h - 5); }
+  const hline = (v, col) => { if (!(v > 0) || v > yMax) return; g.strokeStyle = col; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(l, Math.round(Y(v)) + 0.5); g.lineTo(w - r, Math.round(Y(v)) + 0.5); g.stroke(); g.setLineDash([]); };
+  const vline = (v, col, dash) => { if (!(v >= lo && v <= hi)) return; g.strokeStyle = col; if (dash) g.setLineDash([4, 4]); g.beginPath(); g.moveTo(Math.round(X(v)) + 0.5, t); g.lineTo(Math.round(X(v)) + 0.5, h - b); g.stroke(); g.setLineDash([]); };
+  hline(alpha, css('--pos')); hline(alpha * budget, css('--warn')); g.lineWidth = 1.5; vline(cap, css('--neg'), true); g.lineWidth = 1; vline(A, css('--text'), false);
+  g.strokeStyle = css('--acc'); g.lineWidth = 1.8; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(X(p.aum), Y(p.drag)) : g.moveTo(X(p.aum), Y(p.drag))); g.stroke(); g.lineWidth = 1;
+  if (bud >= lo && bud <= hi && alpha * budget <= yMax) { g.fillStyle = css('--warn'); g.beginPath(); g.arc(X(bud), Y(alpha * budget), 4, 0, 2 * Math.PI); g.fill(); }
+  geo = { l, r, w, lo, dec, S, alpha };
+}
+function run() {
+  const p = parseHoldings($('hold').value);
+  if (p.error) return clear(p.error);
+  const turnover = num('turn'), every = Math.round(num('every')), days = Math.round(num('days')), capP = num('cap') / 100, Yc = num('Y'), sig = num('sig') / 100;
+  if (!(turnover > 0)) return clear('Enter a turnover above zero.');
+  if (!(every >= 1) || !(days >= 1)) return clear('Rebalance interval and days to trade must be at least 1.');
+  if (!(capP > 0)) return clear('Enter a participation cap above zero.');
+  const S = setup(p.rows, { turnover, every, days, cap: capP, Y: Yc >= 0 ? Yc : 0.7, sigma: sig > 0 ? sig : 0.025 });
+  const alpha = (num('alpha') || 0) / 100, budget = Math.min(1, (num('share') || 0) / 100), A = num('aum') > 0 ? num('aum') : NaN;
+  const cap = capacity(S), bud = aumForDrag(S, alpha * budget), notes = [];
+  $('kCap').textContent = money(cap.aum); $('kCapc').textContent = 'binding: ' + cap.binding;
+  $('kBud').textContent = alpha > 0 ? money(bud) : '–'; $('kBudc').textContent = alpha > 0 ? 'impact = ' + pct(alpha * budget, 1) + ' / yr' : 'enter alpha';
+  if (Number.isFinite(A)) {
+    const d = impactDrag(S, A), mp = maxParticipation(S, A), win = shareWithinCap(S, A);
+    $('kDrag').textContent = pct(d); $('kNet').textContent = alpha > 0 ? pct(alpha - d) : '–'; $('kNet').className = 'v ' + (alpha - d < 0 ? 'neg' : '');
+    $('kNetc').textContent = alpha > 0 ? 'impact uses ' + (d / alpha * 100).toFixed(0) + '% of alpha' : '\u00a0';
+    $('kPart').textContent = pct(mp, 1); $('kPart').className = 'v ' + (mp > capP ? 'neg' : '');
+    $('kWin').textContent = pct(win, 0);
+    if (mp > capP) notes.push('At your size, some trades exceed the ' + pct(capP, 1) + ' cap; ' + pct(1 - win, 0) + ' of the traded value would need more days.');
+  } else { ['kDrag', 'kNet', 'kPart', 'kWin'].forEach(id => { $(id).textContent = '–'; }); $('kNetc').textContent = '\u00a0'; }
+  if (alpha > 0 && bud < cap.aum) notes.push('Impact reaches the budget at ' + money(bud) + ', before the participation cap at ' + money(cap.aum) + '.');
+  if (S.tau >= 1) notes.push('Turnover × interval exceeds one full portfolio per rebalance; capped at 100%.');
+  const missing = S.rows.filter(r => !Number.isFinite(r.vol)).length;
+  if (missing && missing < S.rows.length) notes.push(missing + ' rows use the default volatility.');
+  const tb = $('names'); tb.textContent = '';
+  const byName = new Map(S.rows.map(r => [r.asset, r]));
+  cap.perName.slice(0, 12).forEach((x, i) => {
+    const r = byName.get(x.asset), q = Number.isFinite(A) ? A * r.w * S.tau : NaN, part = q / (S.d * r.adv);
+    const tr = tb.insertRow(); if (i === 0) tr.className = 'bind';
+    [r.asset, pct(r.w), money(r.adv), pct(r.sig), money(q), pct(part, 1), Number.isFinite(part) ? (S.Y * r.sig * Math.sqrt(part) * 1e4).toFixed(1) + ' bp' : '–', money(x.cap)].forEach(v => { tr.insertCell().textContent = v; });
+  });
+  const m = $('msg'); m.className = 'msg';
+  m.textContent = S.rows.length + ' holdings' + (p.skipped ? ', ' + p.skipped + ' rows skipped' : '') + ' · each rebalance trades ' + pct(S.tau, 1) + ' of the portfolio' + (Math.abs(p.weightSum - 1) > 0.005 ? ' · weights rescaled from ' + p.weightSum.toFixed(3) : '') + '.';
+  $('note').textContent = notes.join(' ');
+  $('readout').textContent = 'Hover the chart to read the impact cost at any portfolio size.';
+  draw(S, cap.aum, bud, A, alpha, budget);
+}
+function onMove(cx) {
+  const c = $('cCurve'); if (!geo) return;
+  const x = cx - c.getBoundingClientRect().left, f = (x - geo.l) / (geo.w - geo.l - geo.r); if (f < 0 || f > 1) return;
+  const A = geo.lo * Math.pow(10, geo.dec * f), d = impactDrag(geo.S, A);
+  $('readout').textContent = 'Portfolio ' + money(A) + ' CNY   impact ' + pct(d) + ' / yr' + (geo.alpha > 0 ? '   net alpha ' + pct(geo.alpha - d) : '') + '   max participation ' + pct(maxParticipation(geo.S, A), 1) + '   within cap ' + pct(shareWithinCap(geo.S, A), 0);
+}
+$('cCurve').addEventListener('mousemove', e => onMove(e.clientX));
+$('cCurve').addEventListener('touchmove', e => onMove(e.touches[0].clientX), { passive: true });
+['hold', 'turn', 'every', 'days', 'cap', 'Y', 'sig', 'alpha', 'share', 'aum'].forEach(id => $(id).addEventListener('input', run));
+$('bSample').addEventListener('click', () => { $('hold').value = sampleHoldings(); run(); });
+$('bClear').addEventListener('click', () => { $('hold').value = ''; run(); });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(run, 100); });
+$('hold').value = sampleHoldings(); run();
+</script>
+</body>
+</html>
